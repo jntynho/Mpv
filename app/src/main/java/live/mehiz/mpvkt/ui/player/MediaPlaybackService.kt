@@ -1,3 +1,4 @@
+// Modified for Luma: document the media-session notification exemption.
 package live.mehiz.mpvkt.ui.player
 
 import android.app.Notification
@@ -430,6 +431,8 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
       .build()
   }
 
+  // Media-session notifications are exempt from Android 13 notification permission.
+  @android.annotation.SuppressLint("NotificationPermission")
   private fun updateNotification() {
     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(NOTIFICATION_ID, createNotification())

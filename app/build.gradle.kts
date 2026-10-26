@@ -17,6 +17,8 @@ plugins {
 android {
   namespace = "live.mehiz.mpvkt"
   compileSdk = 36
+  // Incomplete upstream translations intentionally fall back to English.
+  lint { warning += "MissingTranslation" }
 
   defaultConfig {
     applicationId = "io.github.jntynho.luma"
@@ -146,7 +148,6 @@ dependencies {
   ksp(libs.room.compiler)
   implementation(libs.room.ktx)
 
-  implementation(libs.detekt.gradle.plugin)
   detektPlugins(libs.detekt.rules.compose)
   detektPlugins(libs.detekt.formatter)
 
