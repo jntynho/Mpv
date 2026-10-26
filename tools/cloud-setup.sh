@@ -52,6 +52,6 @@ if os.path.exists('/etc/ssl/certs/java/cacerts'):
 e['JAVA_TOOL_OPTIONS']=opts
 sdk=[os.environ['ANDROID_HOME']+'/cmdline-tools/latest/bin/sdkmanager','--sdk_root='+os.environ['ANDROID_HOME']]
 subprocess.run(sdk+['--licenses'],input='y\n'*100,text=True,env=e,check=True)
-subprocess.run(sdk+['platforms;android-36','build-tools;35.0.0','platform-tools'],env=e,check=True)
+subprocess.run(sdk+['platforms;android-36','build-tools;35.0.0','platform-tools','ndk;27.0.12077973'],env=e,check=True)
 PY
 bash ./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview

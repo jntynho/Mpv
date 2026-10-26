@@ -18,4 +18,5 @@
 <string name="mpv_name_desc">الاسم: تنازلي</string>
 <string name="mpv_duration">المدة: الأطول أولًا</string>
 <string name="mpv_more">المزيد من الخيارات</string>
+<string name="mpv_library_permission">اسمح بالوصول للفيديوهات لعرض مكتبتك.</string>
 </resources>

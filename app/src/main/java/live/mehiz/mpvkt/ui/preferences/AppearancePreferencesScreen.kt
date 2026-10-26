@@ -72,18 +72,6 @@ object AppearancePreferencesScreen : Screen {
             title = { Text(stringResource(R.string.luma_oled)) },
             summary = { Text(stringResource(R.string.luma_oled_summary)) },
           )
-          val compactHome by preferences.compactHome.collectAsState()
-          SwitchPreference(
-            value = compactHome,
-            onValueChange = { preferences.compactHome.set(it) },
-            title = { Text(stringResource(R.string.luma_compact)) },
-          )
-          val showTips by preferences.showTips.collectAsState()
-          SwitchPreference(
-            value = showTips,
-            onValueChange = { preferences.showTips.set(it) },
-            title = { Text(stringResource(R.string.luma_tips)) },
-          )
           val darkMode by preferences.darkMode.collectAsState()
           MultiChoiceSegmentedButton(
             choices = DarkMode.entries.map { context.getString(it.titleRes) }.toImmutableList(),

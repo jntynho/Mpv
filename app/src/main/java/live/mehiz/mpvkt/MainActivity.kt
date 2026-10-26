@@ -21,8 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -57,23 +55,35 @@ class MainActivity : ComponentActivity() {
   @Composable
   fun Navigator() {
     val backstack = rememberNavBackStack<Screen>(HomeScreen)
-    val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     CompositionLocalProvider(LocalBackStack provides backstack) {
       NavDisplay(
         backStack = backstack,
         onBack = { if (backstack.size > 1) backstack.removeLastOrNull() else finish() },
         entryProvider = { route -> NavEntry(route) { (it as Screen).Content() } },
-        transitionSpec = {
-          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) } togetherWith
-            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) }
-        },
         popTransitionSpec = {
-          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) } togetherWith
-            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) }
+          fadeIn(animationSpec = tween(220)) +
+            slideIn(animationSpec = tween(220)) { IntOffset(-it.width / 2, 0) } togetherWith
+            fadeOut(animationSpec = tween(220)) +
+            slideOut(animationSpec = tween(220)) { IntOffset(it.width / 2, 0) }
+        },
+        transitionSpec = {
+          fadeIn(animationSpec = tween(220)) +
+            slideIn(animationSpec = tween(220)) { IntOffset(it.width / 2, 0) } togetherWith
+            fadeOut(animationSpec = tween(220)) +
+            slideOut(animationSpec = tween(220)) { IntOffset(-it.width / 2, 0) }
         },
         predictivePopTransitionSpec = {
-          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) } togetherWith
-            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) }
+          (
+            fadeIn(animationSpec = tween(220)) +
+              scaleIn(
+                animationSpec = tween(220, delayMillis = 30),
+                initialScale = .9f,
+                TransformOrigin(-1f, .5f),
+              )
+            ).togetherWith(
+            fadeOut(animationSpec = tween(220)) +
+              scaleOut(animationSpec = tween(220, delayMillis = 30), targetScale = .9f, TransformOrigin(-1f, .5f)),
+          )
         },
       )
     }

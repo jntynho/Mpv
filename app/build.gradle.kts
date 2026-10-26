@@ -17,15 +17,17 @@ plugins {
 android {
   namespace = "live.mehiz.mpvkt"
   compileSdk = 36
+  ndkVersion = "27.0.12077973"
   // Incomplete upstream translations intentionally fall back to English.
   lint { warning += "MissingTranslation" }
 
   defaultConfig {
     applicationId = "io.github.jntynho.luma"
+    ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     minSdk = 21
     targetSdk = 36
-    versionCode = 3
-    versionName = "0.3.0"
+    versionCode = 4
+    versionName = "0.4.0"
 
     vectorDrawables {
       useSupportLibrary = true
@@ -46,7 +48,7 @@ android {
   buildTypes {
     named("release") {
       isMinifyEnabled = true
-      isShrinkResources = false
+      isShrinkResources = true
       proguardFiles(
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro",
@@ -126,7 +128,6 @@ dependencies {
   implementation(libs.bundles.compose.navigation3)
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.constraintlayout)
-  implementation(libs.androidx.compose.animation.graphics)
   implementation(libs.material)
   implementation(libs.androidx.preferences.ktx)
   implementation(libs.androidx.documentfile)
