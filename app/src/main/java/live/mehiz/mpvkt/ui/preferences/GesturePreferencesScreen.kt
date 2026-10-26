@@ -30,6 +30,7 @@ import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.player.CustomKeyCodes
 import live.mehiz.mpvkt.ui.player.SingleActionGesture
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.FooterPreference
 import me.zhanghai.compose.preference.ListPreference
@@ -52,7 +53,7 @@ object GesturePreferencesScreen : Screen {
             Text(stringResource(R.string.pref_gesture))
           },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(Icons.AutoMirrored.Default.ArrowBack, null)
             }
           },

@@ -50,6 +50,7 @@ import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.ConfirmDialog
 import live.mehiz.mpvkt.presentation.crash.CrashActivity
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -79,7 +80,7 @@ object AdvancedPreferencesScreen : Screen {
             Text(stringResource(R.string.pref_advanced))
           },
           navigationIcon = {
-            IconButton(onClick = backStack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(Icons.AutoMirrored.Default.ArrowBack, null)
             }
           },

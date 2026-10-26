@@ -35,6 +35,7 @@ import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.custombuttons.CustomButtonsScreen
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preference
@@ -51,7 +52,7 @@ object PreferencesScreen : Screen {
         TopAppBar(
           title = { Text(text = stringResource(R.string.pref_preferences)) },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
             }
           },

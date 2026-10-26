@@ -38,6 +38,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.crash.CrashActivity.Companion.collectDeviceInfo
 import live.mehiz.mpvkt.ui.theme.spacing
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -55,7 +56,7 @@ object AboutScreen : Screen {
         TopAppBar(
           title = { Text(text = stringResource(id = R.string.pref_about_title)) },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
             }
           },
@@ -146,7 +147,7 @@ object LibrariesScreen : Screen {
         TopAppBar(
           title = { Text(text = stringResource(R.string.pref_about_oss_libraries)) },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
             }
           },

@@ -7,3 +7,6 @@ import androidx.navigation3.runtime.NavBackStack
 val LocalBackStack = compositionLocalOf<NavBackStack> {
   error("LocalBackStack not initialized!")
 }
+
+/** One committed back action shared by toolbar buttons and system gestures. */
+val LocalNavigateBack = compositionLocalOf<() -> Unit> { error("Navigation back action not initialized") }

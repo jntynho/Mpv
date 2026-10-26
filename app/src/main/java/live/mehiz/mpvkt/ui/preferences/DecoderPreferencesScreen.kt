@@ -23,6 +23,7 @@ import live.mehiz.mpvkt.preferences.DecoderPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.player.Debanding
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.ListPreference
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -43,7 +44,7 @@ object DecoderPreferencesScreen : Screen {
             Text(stringResource(R.string.pref_decoder))
           },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(Icons.AutoMirrored.Default.ArrowBack, null)
             }
           },

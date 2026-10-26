@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import live.mehiz.mpvkt.ui.utils.navigationMotion
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -83,9 +84,10 @@ object HomeScreen : Screen {
       owner.lifecycle.addObserver(observer)
       onDispose { owner.lifecycle.removeObserver(observer) }
     }
-    BackHandler(searching || selectedFolder != null) {
+    val goBack: () -> Unit = {
       if (searching) { searching = false; query = "" } else selectedFolder = null
     }
+    BackHandler(searching || selectedFolder != null, onBack = goBack)
     val colors = MaterialTheme.colorScheme
     Scaffold(topBar = {
       CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -97,12 +99,23 @@ object HomeScreen : Screen {
               placeholder = { Text(stringResource(R.string.mpv_search)) },
               colors = TextFieldDefaults.colors(focusedContainerColor = colors.surface, unfocusedContainerColor = colors.surface,
                 focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent))
-          } else Text(if (selectedFolder == null) "MPV" else state.videos.firstOrNull {
-            it.folderId == selectedFolder }?.folder ?: "MPV", maxLines = 1, overflow = TextOverflow.Ellipsis)
+          } else {
+            val title = if (selectedFolder == null) "MPV" else state.videos.firstOrNull { it.folderId == selectedFolder }?.folder ?: "MPV"
+            AnimatedContent(targetState = title, transitionSpec = {
+              (fadeIn(tween(240)) togetherWith fadeOut(tween(160)))
+                .using(SizeTransform(clip = true, sizeAnimationSpec = { _, _ -> tween(280) }))
+            }, label = "library_header_title") {
+              Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+          }
         }, navigationIcon = {
-          if (searching || selectedFolder != null) IconButton(onClick = {
-            if (searching) { searching = false; query = "" } else selectedFolder = null
-          }) { Icon(if (searching) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mpv_back)) }
+          AnimatedVisibility(visible = searching || selectedFolder != null,
+            enter = fadeIn(tween(240)) + expandHorizontally(tween(280)),
+            exit = fadeOut(tween(180)) + shrinkHorizontally(tween(280))) {
+            IconButton(onClick = goBack) {
+              Icon(if (searching) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mpv_back))
+            }
+          }
         }, actions = {
           if (!searching) {
             IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.mpv_search)) }
@@ -133,17 +146,11 @@ object HomeScreen : Screen {
         }
         PullToRefreshBox(isRefreshing = state.loading, onRefresh = { if (!state.loading) library.reload() }, modifier = Modifier.weight(1f)) {
           AnimatedContent(targetState = selectedFolder, modifier = Modifier.fillMaxSize(), transitionSpec = {
-            if (targetState == null) {
-              fadeIn(tween(220)) + slideIn(tween(220)) { IntOffset(-it.width / 2, 0) } togetherWith
-                fadeOut(tween(220)) + slideOut(tween(220)) { IntOffset(it.width / 2, 0) }
-            } else {
-              fadeIn(tween(220)) + slideIn(tween(220)) { IntOffset(it.width / 2, 0) } togetherWith
-                fadeOut(tween(220)) + slideOut(tween(220)) { IntOffset(-it.width / 2, 0) }
-            }
+            navigationMotion(back = targetState == null)
           }, label = "library_navigation") { folder ->
             val videos = state.videos.filter { (folder == null || it.folderId == folder) &&
               (it.name.contains(query, true) || it.path.contains(query, true) || it.folder.contains(query, true)) }
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
               if (state.failed) item { Text(stringResource(R.string.mpv_library_error)) }
               else if (access && !state.loading && videos.isEmpty()) item { Text(stringResource(R.string.mpv_empty)) }
