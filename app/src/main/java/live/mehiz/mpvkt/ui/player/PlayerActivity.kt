@@ -1,3 +1,4 @@
+// Modified for Luma: compatible back navigation and private PiP receiver.
 package live.mehiz.mpvkt.ui.player
 
 import android.annotation.SuppressLint
@@ -28,6 +29,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.addCallback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.layout.boundsInWindow
@@ -110,6 +112,17 @@ class PlayerActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    onBackPressedDispatcher.addCallback(this) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isPipSupported &&
+        viewModel.paused == false && playerPreferences.automaticallyEnterPip.get() &&
+        viewModel.sheetShown.value == Sheets.None && viewModel.panelShown.value == Panels.None) {
+        enterPictureInPictureMode(createPipParams())
+      } else {
+        isEnabled = false
+        onBackPressedDispatcher.onBackPressed()
+        isEnabled = true
+      }
+    }
     setContentView(binding.root)
 
     setupMPV()
@@ -201,16 +214,6 @@ class PlayerActivity : AppCompatActivity() {
     super.onUserLeaveHint()
   }
 
-  @SuppressLint("NewApi")
-  override fun onBackPressed() {
-    if (isPipSupported && viewModel.paused == false && playerPreferences.automaticallyEnterPip.get()) {
-      if (viewModel.sheetShown.value == Sheets.None && viewModel.panelShown.value == Panels.None) {
-        enterPictureInPictureMode()
-      }
-    } else {
-      super.onBackPressed()
-    }
-  }
 
   override fun onStart() {
     super.onStart()
@@ -691,11 +694,10 @@ class PlayerActivity : AppCompatActivity() {
         }
       }
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      registerReceiver(pipReceiver, IntentFilter(PIP_INTENTS_FILTER), RECEIVER_NOT_EXPORTED)
-    } else {
-      registerReceiver(pipReceiver, IntentFilter(PIP_INTENTS_FILTER))
-    }
+    androidx.core.content.ContextCompat.registerReceiver(
+      this, pipReceiver, IntentFilter(PIP_INTENTS_FILTER),
+      androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+    )
     super.onPictureInPictureModeChanged(true, newConfig)
   }
 
