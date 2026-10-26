@@ -18,4 +18,5 @@
 <string name="mpv_name_desc">Name: Z–A</string>
 <string name="mpv_duration">Duration: longest first</string>
 <string name="mpv_more">More options</string>
+<string name="mpv_library_permission">Allow video access to display your library.</string>
 </resources>

@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="luma_tagline">A quieter way to watch</string>
-  <string name="luma_headline">Your next moment.</string>
-  <string name="luma_open">Open a video</string>
-  <string name="luma_open_hint">Your films. Your space. Just press play.</string>
-  <string name="luma_files">Browse a folder</string>
-  <string name="luma_files_hint">Explore your collection</string>
-  <string name="luma_stream">Stream a link</string>
-  <string name="luma_stream_hint">Paste a media URL below</string>
-  <string name="luma_url_hint">https://example.com/video.mp4</string>
-  <string name="luma_ready">Made for your media</string>
-  <string name="luma_tip_body">Subtitles, audio tracks, gestures and advanced mpv controls. Make every detail yours in Settings.</string>
   <string name="luma_oled">OLED black</string>
   <string name="luma_oled_summary">Use a pure black background in dark mode</string>
-  <string name="luma_compact">Compact home</string>
-  <string name="luma_tips">Show home tips</string>
   <string name="luma_settings">Settings</string>
-  <string name="luma_folder_error">This folder could not be opened. Please choose another folder.</string>
 </resources>

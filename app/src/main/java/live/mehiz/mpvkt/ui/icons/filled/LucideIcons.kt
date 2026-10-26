@@ -125,7 +125,7 @@ private val iconScreenRotation by lazy { lucide("rotate-cw", false, "M21 12a9 9 
 val Icons.Filled.ScreenRotation: ImageVector get() = iconScreenRotation
 private val iconSearch by lazy { lucide("search", false, "m21 21-4.34-4.34", "M3.0,11.0a8.0,8.0 0 1,0 16.0,0a8.0,8.0 0 1,0 -16.0,0") }
 val Icons.Filled.Search: ImageVector get() = iconSearch
-private val iconSettings by lazy { lucide("settings-2", false, "M14 17H5", "M19 7h-9", "M14.0,17.0a3.0,3.0 0 1,0 6.0,0a3.0,3.0 0 1,0 -6.0,0", "M4.0,7.0a3.0,3.0 0 1,0 6.0,0a3.0,3.0 0 1,0 -6.0,0") }
+private val iconSettings by lazy { lucide("settings", false, "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915", "M9.0,12.0a3.0,3.0 0 1,0 6.0,0a3.0,3.0 0 1,0 -6.0,0") }
 val Icons.Filled.Settings: ImageVector get() = iconSettings
 private val iconStar by lazy { lucide("star", false, "M11.525 2.295a0.53.53 0 0 1 0.95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a0.53.53 0 0 1 0.294.904l-3.736 3.638a2.123 2.123 0 0 0-0.611 1.878l0.882 5.14a0.53.53 0 0 1-0.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a0.53.53 0 0 1-0.77-0.56l0.881-5.139a2.122 2.122 0 0 0-0.611-1.879L2.16 9.795a0.53.53 0 0 1 0.294-0.906l5.165-0.755a2.122 2.122 0 0 0 1.597-1.16z") }
 val Icons.Filled.Star: ImageVector get() = iconStar
@@ -137,7 +137,7 @@ private val iconTerminal by lazy { lucide("terminal", false, "M12 19h8", "m4 17 
 val Icons.Filled.Terminal: ImageVector get() = iconTerminal
 private val iconTimer by lazy { lucide("timer", false, "M10,2L14,2", "M12,14L15,11", "M4.0,14.0a8.0,8.0 0 1,0 16.0,0a8.0,8.0 0 1,0 -16.0,0") }
 val Icons.Filled.Timer: ImageVector get() = iconTimer
-private val iconTune by lazy { lucide("sliders-horizontal", false, "M10 5H3", "M12 19H3", "M14 3v4", "M16 17v4", "M21 12h-9", "M21 19h-5", "M21 5h-7", "M8 10v4", "M8 12H3") }
+private val iconTune by lazy { lucide("arrow-down-wide-narrow", false, "m3 16 4 4 4-4", "M7 20V4", "M11 4h10", "M11 8h7", "M11 12h4") }
 val Icons.Filled.Tune: ImageVector get() = iconTune
 private val iconVolumeDown by lazy { lucide("volume-1", false, "M11 4.702a0.705.705 0 0 0-1.203-0.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 0.997.413l3.383 3.384A0.705.705 0 0 0 11 19.298z", "M16 9a5 5 0 0 1 0 6") }
 val Icons.Filled.VolumeDown: ImageVector get() = iconVolumeDown

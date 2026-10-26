@@ -33,7 +33,7 @@ jobs:
           import os, subprocess, sys
           command = [sys.argv[1], '--sdk_root=' + os.environ['ANDROID_HOME']]
           subprocess.run(command + ['--licenses'], input='y\n' * 100, text=True, check=True)
-          subprocess.run(command + ['platforms;android-36', 'build-tools;35.0.0'], check=True)
+          subprocess.run(command + ['platforms;android-36', 'build-tools;35.0.0', 'ndk;27.0.12077973'], check=True)
           PYCODE
       - name: Build installable APKs and validate
         shell: bash
@@ -62,6 +62,8 @@ jobs:
             ci-reports/
             app/build/reports/
             app/build/test-results/
+            app/build/outputs/mapping/preview/usage.txt
+            app/build/outputs/mapping/preview/resources.txt
           if-no-files-found: warn
       - name: Check both native architectures and APK signatures
         shell: bash
