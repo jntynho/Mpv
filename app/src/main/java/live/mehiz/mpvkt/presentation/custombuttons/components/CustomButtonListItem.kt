@@ -15,6 +15,7 @@ import live.mehiz.mpvkt.ui.icons.outlined.Star
 import live.mehiz.mpvkt.ui.icons.outlined.StarOutline
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -89,9 +90,9 @@ fun CustomButtonListItem(
       }
       Spacer(modifier = Modifier.weight(1f))
 
-      val starColor = Color(0xFFFDD835)
+      val starColor = if (isPrimary) Color(0xFFFDD835) else MaterialTheme.colorScheme.onSurfaceVariant
       val starImage = if (isPrimary) Icons.Outlined.Star else Icons.Outlined.StarOutline
-      IconButton(onClick = onTogglePrimary) {
+      IconToggleButton(checked = isPrimary, onCheckedChange = { onTogglePrimary() }) {
         Icon(
           imageVector = starImage,
           tint = starColor,

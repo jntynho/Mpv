@@ -69,9 +69,9 @@ fun SubtitleDelayPanel(
 
     var affectedSubtitle by remember { mutableStateOf(SubtitleDelayType.Primary) }
     val delay by MPVLib.propDouble["sub-delay"].collectAsState()
-    val delayInt by remember { derivedStateOf { (delay!! * 1000).toInt() } }
+    val delayInt by remember { derivedStateOf { ((delay ?: 0.0) * 1000).toInt() } }
     val secondaryDelay by MPVLib.propDouble["secondary-sub-delay"].collectAsState()
-    val secondaryDelayInt by remember { derivedStateOf { (secondaryDelay!! * 1000).toInt() } }
+    val secondaryDelayInt by remember { derivedStateOf { ((secondaryDelay ?: 0.0) * 1000).toInt() } }
     val speed by MPVLib.propFloat["sub-speed"].collectAsState()
     SubtitleDelayCard(
       delayMs = if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelayInt else delayInt,
@@ -86,13 +86,14 @@ fun SubtitleDelayPanel(
           else -> MPVLib.setPropertyFloat("secondary-sub-delay", it / 1000f)
         }
       },
-      speed = speed!!,
+      speed = speed ?: preferences.defaultSubSpeed.get(),
       onSpeedChange = { MPVLib.setPropertyFloat("sub-speed", round(it * 1000) / 1000f) },
       affectedSubtitle = affectedSubtitle,
       onTypeChange = { affectedSubtitle = it },
       onApply = {
-        preferences.defaultSubDelay.set(delayInt)
-        if (speed!! in 0.1f..10f) preferences.defaultSubSpeed.set(speed!!)
+        if (affectedSubtitle != SubtitleDelayType.Secondary) preferences.defaultSubDelay.set(delayInt)
+        if (affectedSubtitle != SubtitleDelayType.Primary) preferences.defaultSecondarySubDelay.set(secondaryDelayInt)
+        speed?.takeIf { it in 0.1f..10f }?.let { preferences.defaultSubSpeed.set(it) }
       },
       onReset = {
         MPVLib.setPropertyFloat("sub-delay", preferences.defaultSubDelay.get() / 1000f)

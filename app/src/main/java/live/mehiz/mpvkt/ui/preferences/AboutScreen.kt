@@ -75,7 +75,7 @@ object AboutScreen : Screen {
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
           Image(
-            painterResource(id = R.drawable.mpv_icon),
+            painterResource(id = R.drawable.fa_launcher),
             null,
             modifier = Modifier.size(160.dp),
           )
@@ -84,6 +84,8 @@ object AboutScreen : Screen {
             style = MaterialTheme.typography.headlineSmall,
           )
         }
+        Text("Icons: Font Awesome Free · Fonticons, Inc. · CC BY 4.0", Modifier.padding(horizontal = 16.dp),
+          style = MaterialTheme.typography.bodySmall)
         HorizontalDivider()
         ProvidePreferenceLocals {
           Preference(

@@ -43,9 +43,9 @@ fun AudioDelayPanel(
 
     val delay by MPVLib.propDouble["audio-delay"].collectAsState()
     DelayCard(
-      delayMs = (delay!! * 1000).toInt(),
+      delayMs = ((delay ?: 0.0) * 1000).toInt(),
       onDelayChange = { MPVLib.setPropertyDouble("audio-delay", it / 1000.0) },
-      onApply = { preferences.defaultAudioDelay.set((delay!! * 1000).toInt()) },
+      onApply = { preferences.defaultAudioDelay.set(((delay ?: 0.0) * 1000).toInt()) },
       onReset = { MPVLib.setPropertyDouble("audio-delay", (preferences.defaultAudioDelay.get() / 1000.0)) },
       title = { AudioDelayCardTitle(onClose = onDismissRequest) },
       delayType = DelayType.Audio,

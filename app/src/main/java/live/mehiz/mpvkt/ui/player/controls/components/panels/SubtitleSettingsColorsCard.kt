@@ -175,7 +175,10 @@ fun resetColors(preferences: SubtitlesPreferences, type: SubColorType) {
   }
 }
 
-val getCurrentMPVColor: (SubColorType) -> Int = { MPVLib.getPropertyString(it.property)!!.uppercase().toColorInt() }
+val getCurrentMPVColor: (SubColorType) -> Int = { type ->
+  runCatching { MPVLib.getPropertyString(type.property)?.uppercase()?.toColorInt() }.getOrNull()
+    ?: if (type == SubColorType.Text) android.graphics.Color.WHITE else android.graphics.Color.TRANSPARENT
+}
 
 @Composable
 fun SubtitlesColorPicker(
