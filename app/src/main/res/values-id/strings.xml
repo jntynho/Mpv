@@ -1,3 +1,4 @@
+<!-- Modified for Luma Player: branding and appearance customization. -->
 <resources>
     <string name="app_name" translatable="false">Luma Player</string>
 

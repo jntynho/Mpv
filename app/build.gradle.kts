@@ -1,3 +1,4 @@
+// Modified for Luma Player: interface, appearance, or build configuration.
 import com.android.build.api.variant.FilterConfiguration
 import io.gitlab.arturbosch.detekt.Detekt
 import org.apache.commons.io.output.ByteArrayOutputStream

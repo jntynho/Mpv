@@ -1,3 +1,4 @@
+// Modified for Luma Player: interface, appearance, or build configuration.
 package live.mehiz.mpvkt.preferences
 
 import live.mehiz.mpvkt.preferences.preference.PreferenceStore

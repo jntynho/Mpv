@@ -1,3 +1,4 @@
+// Modified for Luma Player: interface, appearance, or build configuration.
 package live.mehiz.mpvkt.ui.preferences
 
 import androidx.compose.foundation.background

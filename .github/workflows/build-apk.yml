@@ -36,7 +36,33 @@ jobs:
           subprocess.run(command + ['platforms;android-36', 'build-tools;35.0.0'], check=True)
           PYCODE
       - name: Build installable APKs and validate
-        run: bash ./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview
+        shell: bash
+        run: |
+          mkdir -p ci-reports
+          set +e
+          set -o pipefail
+          bash ./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview 2>&1 | tee ci-reports/build.log
+          result=$?
+          if [ "$result" -ne 0 ]; then
+            python3 - <<'PYCODE'
+          import pathlib
+          lines = pathlib.Path('ci-reports/build.log').read_text(errors='replace').splitlines()
+          errors = [line for line in lines if line.startswith(('e: ', '> ', 'Execution failed', 'FAILURE:'))]
+          for line in errors[-25:]:
+              print('::error::' + line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+          PYCODE
+          fi
+          exit "$result"
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Luma-validation-reports
+          path: |
+            ci-reports/
+            app/build/reports/
+            app/build/test-results/
+          if-no-files-found: warn
       - name: Check both native architectures and APK signatures
         shell: bash
         run: |
