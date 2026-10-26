@@ -47,7 +47,7 @@ jobs:
             python3 - <<'PYCODE'
           import pathlib
           lines = pathlib.Path('ci-reports/build.log').read_text(errors='replace').splitlines()
-          errors = [line for line in lines if line.startswith(('e: ', '> ', 'Execution failed', 'FAILURE:'))]
+          errors = [line.strip() for line in lines if line.lstrip().startswith(('e: ', '> ', 'Execution failed', 'FAILURE:'))]
           for line in errors[-25:]:
               print('::error::' + line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
           PYCODE
