@@ -1,4 +1,4 @@
-name: Build Luma APKs
+name: Build MPV APKs
 on:
   push:
   pull_request:
@@ -57,7 +57,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Luma-validation-reports
+          name: MPV-validation-reports
           path: |
             ci-reports/
             app/build/reports/
@@ -77,17 +77,17 @@ jobs:
           sha256sum *.apk > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Luma-arm64-64bit
+          name: MPV-arm64-64bit
           path: app/build/outputs/apk/preview/app-arm64-v8a-preview.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: Luma-armv7-32bit
+          name: MPV-armv7-32bit
           path: app/build/outputs/apk/preview/app-armeabi-v7a-preview.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: Luma-universal-and-checksums
+          name: MPV-universal-and-checksums
           path: |
             app/build/outputs/apk/preview/app-universal-preview.apk
             app/build/outputs/apk/preview/SHA256SUMS.txt
@@ -102,7 +102,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: Luma-*
+          pattern: MPV-*
           path: artifacts
       - name: Publish direct APK downloads
         env:
@@ -113,9 +113,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir release-assets
-          cp artifacts/Luma-arm64-64bit/app-arm64-v8a-preview.apk release-assets/Luma-Player-arm64-v8a.apk
-          cp artifacts/Luma-armv7-32bit/app-armeabi-v7a-preview.apk release-assets/Luma-Player-armeabi-v7a.apk
-          cp artifacts/Luma-universal-and-checksums/app-universal-preview.apk release-assets/Luma-Player-universal.apk
+          cp artifacts/MPV-arm64-64bit/app-arm64-v8a-preview.apk release-assets/MPV-arm64-v8a.apk
+          cp artifacts/MPV-armv7-32bit/app-armeabi-v7a-preview.apk release-assets/MPV-armeabi-v7a.apk
+          cp artifacts/MPV-universal-and-checksums/app-universal-preview.apk release-assets/MPV-universal.apk
           (cd release-assets && sha256sum *.apk > SHA256SUMS.txt)
           cat > release-notes.md <<'NOTES'
           Download an APK below directly; no ZIP extraction is needed.
@@ -129,4 +129,4 @@ jobs:
           No user-configured Secrets are required; publication uses GitHub's automatic workflow token.
           NOTES
           gh release create "$RELEASE_TAG" release-assets/*.apk release-assets/SHA256SUMS.txt \
-            --verify-tag --title "Luma Player $RELEASE_TAG" --notes-file release-notes.md
+            --verify-tag --title "MPV $RELEASE_TAG" --notes-file release-notes.md

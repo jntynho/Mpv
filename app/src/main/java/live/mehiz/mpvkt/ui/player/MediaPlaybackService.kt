@@ -398,7 +398,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
     return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
       .setContentTitle(mediaTitle)
       .setContentText(mediaArtist.ifBlank { getString(R.string.notification_playing) })
-      .setSmallIcon(R.drawable.ic_launcher_foreground_monochrome)
+      .setSmallIcon(R.drawable.mpv_notification)
       .setLargeIcon(mediaThumbnail)
       .setContentIntent(pendingOpenAppIntent)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

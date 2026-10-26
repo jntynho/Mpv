@@ -112,6 +112,12 @@ object PlayerPreferencesScreen : Screen {
           PreferenceCategory(
             title = { Text(stringResource(R.string.pref_player_seeking_title)) }
           )
+          val pinchZoomGesture by preferences.pinchZoomGesture.collectAsState()
+          SwitchPreference(
+            value = pinchZoomGesture,
+            onValueChange = preferences.pinchZoomGesture::set,
+            title = { Text(stringResource(R.string.mpv_pinch_zoom)) },
+          )
           val horizontalSeekGesture by preferences.horizontalSeekGesture.collectAsState()
           SwitchPreference(
             value = horizontalSeekGesture,
