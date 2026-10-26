@@ -92,3 +92,41 @@ jobs:
             app/build/outputs/apk/preview/app-universal-preview.apk
             app/build/outputs/apk/preview/SHA256SUMS.txt
           if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Luma-*
+          path: artifacts
+      - name: Publish direct APK downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir release-assets
+          cp artifacts/Luma-arm64-64bit/app-arm64-v8a-preview.apk release-assets/Luma-Player-arm64-v8a.apk
+          cp artifacts/Luma-armv7-32bit/app-armeabi-v7a-preview.apk release-assets/Luma-Player-armeabi-v7a.apk
+          cp artifacts/Luma-universal-and-checksums/app-universal-preview.apk release-assets/Luma-Player-universal.apk
+          (cd release-assets && sha256sum *.apk > SHA256SUMS.txt)
+          cat > release-notes.md <<'NOTES'
+          Download an APK below directly; no ZIP extraction is needed.
+
+          - arm64-v8a: Android ARM 64-bit
+          - armeabi-v7a: Android ARM 32-bit
+          - universal: all included architectures
+
+          These APKs use automatic test signing, not a permanent production signing identity.
+          Updates across builds may require uninstalling the previous version.
+          No user-configured Secrets are required; publication uses GitHub's automatic workflow token.
+          NOTES
+          gh release create "$RELEASE_TAG" release-assets/*.apk release-assets/SHA256SUMS.txt \
+            --verify-tag --title "Luma Player $RELEASE_TAG" --notes-file release-notes.md
