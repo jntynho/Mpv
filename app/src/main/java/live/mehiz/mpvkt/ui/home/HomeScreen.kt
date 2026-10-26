@@ -10,12 +10,18 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
+import live.mehiz.mpvkt.ui.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,6 +62,12 @@ object HomeScreen : Screen {
     val state by library.state.collectAsState()
     var folders by rememberSaveable { mutableStateOf(true) }
     var selectedFolder by rememberSaveable { mutableStateOf<String?>(null) }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var sortMenu by remember { mutableStateOf(false) }
+    var moreMenu by remember { mutableStateOf(false) }
+    val savedSort = remember { context.getSharedPreferences("library_ui", Context.MODE_PRIVATE) }
+    var sort by rememberSaveable { mutableStateOf(savedSort.getInt("sort", 0).coerceIn(0, 3)) }
+    val direction = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
     var query by rememberSaveable { mutableStateOf("") }
     var streamDialog by rememberSaveable { mutableStateOf(false) }
     var url by rememberSaveable { mutableStateOf("") }
@@ -79,25 +91,58 @@ object HomeScreen : Screen {
       owner.lifecycle.addObserver(observer)
       onDispose { owner.lifecycle.removeObserver(observer) }
     }
-    BackHandler(selectedFolder != null) { selectedFolder = null }
+    BackHandler(searching || selectedFolder != null) {
+      if (searching) { searching = false; query = "" } else selectedFolder = null
+    }
     val visible = state.videos.filter { (selectedFolder == null || it.folderId == selectedFolder) &&
       (it.name.contains(query, true) || it.folder.contains(query, true)) }
     val colors = MaterialTheme.colorScheme
     Scaffold(topBar = {
-      TopAppBar(title = { Text(if (selectedFolder == null) "MPV" else
-        state.videos.firstOrNull { it.folderId == selectedFolder }?.folder ?: stringResource(R.string.mpv_folders)) },
-        navigationIcon = { if (selectedFolder != null) IconButton(onClick = { selectedFolder = null }) {
-          Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mpv_back))
-        } }, actions = {
-          IconButton(onClick = { picker.launch(arrayOf("video/*", "audio/*")) }) { Icon(Icons.Default.Add, stringResource(R.string.luma_open)) }
-          IconButton(onClick = { streamDialog = true }) { Icon(Icons.Default.Link, stringResource(R.string.luma_stream)) }
+      TopAppBar(title = {
+        if (searching) {
+          val focus = remember { FocusRequester() }
+          LaunchedEffect(Unit) { focus.requestFocus() }
+          TextField(query, { query = it }, Modifier.fillMaxWidth().focusRequester(focus), singleLine = true,
+            placeholder = { Text(stringResource(R.string.mpv_search)) },
+            colors = TextFieldDefaults.colors(focusedContainerColor = colors.surface,
+              unfocusedContainerColor = colors.surface, focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+              unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent))
+        } else Column {
+          Text(if (selectedFolder == null) "MPV" else state.videos.firstOrNull { it.folderId == selectedFolder }?.folder ?: "MPV",
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
+          Text(stringResource(R.string.mpv_video_count, visible.size), style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant)
+        }
+      }, navigationIcon = {
+        if (searching || selectedFolder != null) IconButton(onClick = {
+          if (searching) { searching = false; query = "" } else selectedFolder = null
+        }) { Icon(if (searching) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mpv_back)) }
+      }, actions = {
+        if (!searching) {
+          IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.mpv_search)) }
+          Box {
+            IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Tune, stringResource(R.string.mpv_sort)) }
+            DropdownMenu(sortMenu, { sortMenu = false }) {
+              listOf(R.string.mpv_recent, R.string.mpv_name_asc, R.string.mpv_name_desc, R.string.mpv_duration).forEachIndexed { index, label ->
+                DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
+                  sort = index; savedSort.edit().putInt("sort", index).apply(); sortMenu = false
+                }, trailingIcon = { if (sort == index) Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
+              }
+            }
+          }
           IconButton(onClick = { backstack.add(PreferencesScreen) }) { Icon(Icons.Default.Settings, stringResource(R.string.luma_settings)) }
-        })
+        }
+        Box {
+          IconButton(onClick = { moreMenu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.mpv_more)) }
+          DropdownMenu(moreMenu, { moreMenu = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.luma_open)) }, onClick = { moreMenu = false; picker.launch(arrayOf("video/*", "audio/*")) })
+            DropdownMenuItem(text = { Text(stringResource(R.string.luma_stream)) }, onClick = { moreMenu = false; streamDialog = true })
+            DropdownMenuItem(text = { Text(stringResource(R.string.mpv_refresh)) }, onClick = { moreMenu = false; library.reload() })
+          }
+        }
+      })
     }) { padding ->
       Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), singleLine = true,
-          placeholder = { Text(stringResource(R.string.mpv_search)) }, leadingIcon = { Icon(Icons.Default.Search, null) },
-          shape = RoundedCornerShape(24.dp))
         Row(Modifier.padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
           FilterChip(folders, { folders = true; selectedFolder = null }, label = { Text(stringResource(R.string.mpv_folders)) })
           FilterChip(!folders, { folders = false; selectedFolder = null }, label = { Text(stringResource(R.string.mpv_videos)) })
@@ -114,14 +159,34 @@ object HomeScreen : Screen {
         if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (state.failed) Text(stringResource(R.string.mpv_library_error))
         if (access && !state.loading && !state.failed && visible.isEmpty()) Text(stringResource(R.string.mpv_empty))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
-          if (folders && selectedFolder == null) {
-            items(visible.groupBy { it.folderId }.entries.sortedBy { it.value.first().folder.lowercase() }, key = { it.key }) { entry ->
-              Card(onClick = { selectedFolder = entry.key }, shape = RoundedCornerShape(22.dp),
+        AnimatedContent(targetState = selectedFolder to folders, modifier = Modifier.weight(1f),
+          transitionSpec = {
+            val sign = if (initialState.first != null && targetState.first == null) -direction else direction
+            (slideInHorizontally(tween(420, easing = FastOutSlowInEasing)) { it * sign } togetherWith
+              slideOutHorizontally(tween(420, easing = FastOutSlowInEasing)) { -it * sign })
+              .using(SizeTransform(clip = true))
+          }, label = "library_navigation") { location ->
+          val pageVideos = state.videos.filter { (location.first == null || it.folderId == location.first) &&
+            (it.name.contains(query, true) || it.folder.contains(query, true)) }
+          val sortedVideos = when (sort) {
+            1 -> pageVideos.sortedBy { it.name.lowercase() }
+            2 -> pageVideos.sortedByDescending { it.name.lowercase() }
+            3 -> pageVideos.sortedByDescending { it.duration }
+            else -> pageVideos
+          }
+        LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
+          if (location.second && location.first == null) {
+            items(pageVideos.groupBy { it.folderId }.entries.let { groups -> when (sort) {
+              1 -> groups.sortedBy { it.value.first().folder.lowercase() }
+              2 -> groups.sortedByDescending { it.value.first().folder.lowercase() }
+              3 -> groups.sortedByDescending { it.value.sumOf { video -> video.duration } }
+              else -> groups.toList()
+            } }, key = { it.key }) { entry ->
+              Card(onClick = { selectedFolder = entry.key }, shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerLow)) {
-                Row(Modifier.fillMaxWidth().padding(if (compact) 12.dp else 18.dp), verticalAlignment = Alignment.CenterVertically,
+                Row(Modifier.fillMaxWidth().padding(if (compact) 12.dp else 16.dp), verticalAlignment = Alignment.CenterVertically,
                   horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                  Icon(Icons.Default.Folder, null, Modifier.size(40.dp), tint = colors.primary.copy(alpha = .85f))
+                  Icon(Icons.Default.Folder, null, Modifier.size(32.dp), tint = colors.primary.copy(alpha = .85f))
                   Column(Modifier.weight(1f)) {
                     Text(entry.value.first().folder, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(stringResource(R.string.mpv_video_count, entry.value.size), style = MaterialTheme.typography.bodySmall,
@@ -131,12 +196,12 @@ object HomeScreen : Screen {
               }
             }
           } else {
-            items(visible, key = { it.uri }) { video ->
+            items(sortedVideos, key = { it.uri }) { video ->
               Card(onClick = { playFile(video.uri, context) }, shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerLow)) {
-                Row(Modifier.fillMaxWidth().padding(if (compact) 12.dp else 18.dp), verticalAlignment = Alignment.CenterVertically,
+                Row(Modifier.fillMaxWidth().padding(if (compact) 12.dp else 16.dp), verticalAlignment = Alignment.CenterVertically,
                   horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                  Icon(Icons.Default.PlayCircle, null, Modifier.size(36.dp), tint = colors.primary)
+                  Icon(Icons.Default.PlayCircle, null, Modifier.size(28.dp), tint = colors.primary)
                   Column(Modifier.weight(1f)) {
                     Text(video.name, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text("${video.duration / 60000}:${(video.duration / 1000 % 60).toString().padStart(2, '0')}",
@@ -146,6 +211,7 @@ object HomeScreen : Screen {
               }
             }
           }
+        }
         }
       }
     }

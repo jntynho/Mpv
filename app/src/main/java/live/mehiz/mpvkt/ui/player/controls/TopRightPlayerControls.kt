@@ -1,11 +1,11 @@
 package live.mehiz.mpvkt.ui.player.controls
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.Bookmarks
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Subtitles
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.filled.Audiotrack
+import live.mehiz.mpvkt.ui.icons.filled.Bookmarks
+import live.mehiz.mpvkt.ui.icons.filled.MoreVert
+import live.mehiz.mpvkt.ui.icons.filled.Subtitles
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

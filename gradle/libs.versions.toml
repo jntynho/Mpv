@@ -20,7 +20,6 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version = "1.4.0" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.1" }
-androidx-material3-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version = "1.7.8" }
 androidx-compose-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version = "1.1.1" }
 androidx-compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics-android" }
 androidx-preferences-ktx = { group = "androidx.preference", name = "preference-ktx", version = "1.2.1" }
@@ -57,7 +56,6 @@ truetype-parser = { module = "io.github.yubyf:truetypeparser-light", version = "
 
 about-libs-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "about-libs" }
 about-libs-ui-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "about-libs" }
-simple-icons = { module = "br.com.devsrsouza.compose.icons:simple-icons", version = "1.1.1" }
 
 [bundles]
 koin = ["koin-core", "koin-android", "koin-compose", "koin-viewmodel", "koin-startup"]

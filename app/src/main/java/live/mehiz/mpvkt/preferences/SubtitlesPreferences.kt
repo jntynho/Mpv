@@ -1,10 +1,10 @@
 package live.mehiz.mpvkt.preferences
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
-import androidx.compose.material.icons.automirrored.filled.FormatAlignRight
-import androidx.compose.material.icons.filled.FormatAlignCenter
-import androidx.compose.material.icons.filled.FormatAlignJustify
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.automirrored.filled.FormatAlignLeft
+import live.mehiz.mpvkt.ui.icons.automirrored.filled.FormatAlignRight
+import live.mehiz.mpvkt.ui.icons.filled.FormatAlignCenter
+import live.mehiz.mpvkt.ui.icons.filled.FormatAlignJustify
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
