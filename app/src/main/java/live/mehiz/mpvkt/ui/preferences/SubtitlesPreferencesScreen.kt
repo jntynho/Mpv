@@ -29,6 +29,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SwitchPreference
@@ -52,7 +53,7 @@ object SubtitlesPreferencesScreen : Screen {
             Text(stringResource(R.string.pref_subtitles))
           },
           navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
+            IconButton(onClick = LocalNavigateBack.current) {
               Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
             }
           },

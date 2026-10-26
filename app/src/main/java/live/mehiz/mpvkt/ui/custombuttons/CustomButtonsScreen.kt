@@ -13,6 +13,7 @@ import live.mehiz.mpvkt.presentation.custombuttons.CustomButtonsScreen
 import live.mehiz.mpvkt.presentation.custombuttons.components.CustomButtonAddDialog
 import live.mehiz.mpvkt.presentation.custombuttons.components.CustomButtonDeleteDialog
 import live.mehiz.mpvkt.presentation.custombuttons.components.CustomButtonEditDialog
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -39,7 +40,7 @@ object CustomButtonsScreen : Screen {
       onClickMoveUp = viewModel::moveUp,
       onClickMoveDown = viewModel::moveDown,
       onClickFaq = { uriHandler.openUri(CUSTOM_BUTTONS_DOC_URL) },
-      onNavigateBack = backstack::removeLastOrNull,
+      onNavigateBack = LocalNavigateBack.current,
     )
 
     when (dialog) {

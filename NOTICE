@@ -7,3 +7,5 @@ Native mpv/FFmpeg components retain their own licenses; see upstream distributio
 
 Bundled support library sources: third_party/seeker (Apache-2.0), third_party/fsaf (Unlicense).
 Each includes its license and pinned upstream provenance.
+
+MPV 0.5 interface artwork uses Tabler Icons (MIT); source and license under third_party/tabler and bundled app assets.

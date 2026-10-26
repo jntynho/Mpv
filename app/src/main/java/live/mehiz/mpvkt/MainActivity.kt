@@ -1,6 +1,16 @@
 package live.mehiz.mpvkt
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.unit.dp
+import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
+import live.mehiz.mpvkt.ui.utils.navigationMotion
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -55,37 +65,26 @@ class MainActivity : ComponentActivity() {
   @Composable
   fun Navigator() {
     val backstack = rememberNavBackStack<Screen>(HomeScreen)
-    CompositionLocalProvider(LocalBackStack provides backstack) {
+    val goBack: () -> Unit = {
+      if (backstack.size > 1) backstack.removeLastOrNull() else finish()
+    }
+    CompositionLocalProvider(LocalBackStack provides backstack, LocalNavigateBack provides goBack) {
+      Box(Modifier.fillMaxSize()) {
       NavDisplay(
         backStack = backstack,
-        onBack = { if (backstack.size > 1) backstack.removeLastOrNull() else finish() },
+        onBack = { goBack() },
         entryProvider = { route -> NavEntry(route) { (it as Screen).Content() } },
-        popTransitionSpec = {
-          fadeIn(animationSpec = tween(220)) +
-            slideIn(animationSpec = tween(220)) { IntOffset(-it.width / 2, 0) } togetherWith
-            fadeOut(animationSpec = tween(220)) +
-            slideOut(animationSpec = tween(220)) { IntOffset(it.width / 2, 0) }
-        },
-        transitionSpec = {
-          fadeIn(animationSpec = tween(220)) +
-            slideIn(animationSpec = tween(220)) { IntOffset(it.width / 2, 0) } togetherWith
-            fadeOut(animationSpec = tween(220)) +
-            slideOut(animationSpec = tween(220)) { IntOffset(-it.width / 2, 0) }
-        },
-        predictivePopTransitionSpec = {
-          (
-            fadeIn(animationSpec = tween(220)) +
-              scaleIn(
-                animationSpec = tween(220, delayMillis = 30),
-                initialScale = .9f,
-                TransformOrigin(-1f, .5f),
-              )
-            ).togetherWith(
-            fadeOut(animationSpec = tween(220)) +
-              scaleOut(animationSpec = tween(220, delayMillis = 30), targetScale = .9f, TransformOrigin(-1f, .5f)),
-          )
-        },
+        popTransitionSpec = { navigationMotion(back = true) },
+        transitionSpec = { navigationMotion(back = false) },
+        predictivePopTransitionSpec = { navigationMotion(back = true) },
       )
+        // Draw-only overlay: no click handler or semantics, touches reach the content.
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(64.dp).background(
+          Brush.verticalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = .82f)))))
+      }
+      // Registered after NavDisplay to handle internal back on gesture completion.
+      // A cancelled gesture never invokes goBack; dialogs/popups retain their window-level handling.
+      BackHandler(enabled = backstack.size > 1, onBack = goBack)
     }
   }
 }
