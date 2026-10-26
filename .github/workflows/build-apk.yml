@@ -10,18 +10,31 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
       - name: Install Android SDK
-        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Pin Java-17-compatible command-line tools, independent of runner updates.
+          curl --fail --location --silent --show-error \
+            https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip \
+            -o "$RUNNER_TEMP/android-tools.zip"
+          unzip -q "$RUNNER_TEMP/android-tools.zip" -d "$RUNNER_TEMP/luma-sdk-tools"
+          sdk="$RUNNER_TEMP/luma-sdk-tools/cmdline-tools/bin/sdkmanager"
+          python3 - "$sdk" <<'PYCODE'
+          import os, subprocess, sys
+          command = [sys.argv[1], '--sdk_root=' + os.environ['ANDROID_HOME']]
+          subprocess.run(command + ['--licenses'], input='y\n' * 100, text=True, check=True)
+          subprocess.run(command + ['platforms;android-36', 'build-tools;35.0.0'], check=True)
+          PYCODE
       - name: Build installable APKs and validate
         run: bash ./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview
       - name: Check both native architectures and APK signatures
