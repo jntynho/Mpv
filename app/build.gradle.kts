@@ -52,6 +52,7 @@ android {
     }
     create("preview") {
       initWith(getByName("release"))
+      matchingFallbacks += listOf("release")
 
       signingConfig = signingConfigs["debug"]
       applicationIdSuffix = ".preview"
@@ -136,7 +137,7 @@ dependencies {
   implementation(platform(libs.koin.bom))
   implementation(libs.bundles.koin)
 
-  implementation(libs.seeker)
+  implementation(project(":third_party:seeker"))
   implementation(libs.compose.prefs)
   implementation(libs.bundles.about.libs)
   implementation(libs.simple.icons)
@@ -152,7 +153,7 @@ dependencies {
   implementation(libs.kotlinx.immutable.collections)
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.truetype.parser)
-  implementation(libs.fsaf)
+  implementation(project(":third_party:fsaf"))
 }
 
 detekt {

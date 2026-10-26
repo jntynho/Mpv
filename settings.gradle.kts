@@ -17,11 +17,11 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
-    maven(url = "https://jitpack.io") {
-      content { includeGroupByRegex("com\\.github\\..*") }
-    }
+
   }
 }
 
 rootProject.name = "LumaPlayer"
 include(":app")
+
+include(":third_party:seeker", ":third_party:fsaf")

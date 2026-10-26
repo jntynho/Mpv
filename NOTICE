@@ -4,3 +4,6 @@ Upstream commit: 01a93062dd73f642cbb0511f6a05f1fd344b36a9
 Original source license: Apache-2.0 (see LICENSE).
 Modifications: Luma branding, home interface, appearance settings and build pipeline.
 Native mpv/FFmpeg components retain their own licenses; see upstream distribution.
+
+Bundled support library sources: third_party/seeker (Apache-2.0), third_party/fsaf (Unlicense).
+Each includes its license and pinned upstream provenance.
