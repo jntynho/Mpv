@@ -2,6 +2,8 @@ package live.mehiz.mpvkt.ui.player.controls
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -86,6 +88,7 @@ fun GestureHandler(
   val brightnessGesture = playerPreferences.brightnessGesture.get()
   val volumeGesture by playerPreferences.volumeGesture.collectAsState()
   val swapVolumeAndBrightness by playerPreferences.swapVolumeAndBrightness.collectAsState()
+  val pinchZoomGesture by playerPreferences.pinchZoomGesture.collectAsState()
   val seekGesture by playerPreferences.horizontalSeekGesture.collectAsState()
   val preciseSeeking by playerPreferences.preciseSeeking.collectAsState()
   val showSeekbarWhenSeeking by playerPreferences.showSeekBarWhenSeeking.collectAsState()
@@ -99,6 +102,27 @@ fun GestureHandler(
     modifier = modifier
       .fillMaxSize()
       .windowInsetsPadding(WindowInsets.safeGestures)
+      .pointerInput(areControlsLocked, panelShown, allowGesturesInPanels, pinchZoomGesture) {
+        if (!pinchZoomGesture || areControlsLocked || (panelShown != Panels.None && !allowGesturesInPanels)) return@pointerInput
+        awaitPointerEventScope {
+          var pinching = false
+          do {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            val count = event.changes.count { it.pressed }
+            if (count >= 2) {
+              pinching = true
+              val factor = event.calculateZoom()
+              if (factor.isFinite() && factor > 0f && factor != 1f) {
+                val current = MPVLib.getPropertyFloat("video-zoom") ?: 0f
+                MPVLib.setPropertyFloat("video-zoom", pinchZoom(current, factor))
+              }
+            }
+            // Consume remaining fingers until release so pinch cannot become a seek or volume swipe.
+            if (pinching) event.changes.forEach { it.consume() }
+            if (count == 0) pinching = false
+          } while (true)
+        }
+      }
       .pointerInput(Unit) {
         var originalSpeed = MPVLib.getPropertyFloat("speed") ?: 1f
         detectTapGestures(
@@ -171,6 +195,11 @@ fun GestureHandler(
             startingX = it.x
             wasPlayerAlreadyPause = paused ?: false
             viewModel.pause()
+          },
+          onDragCancel = {
+            viewModel.gestureSeekAmount.update { null }
+            viewModel.hideSeekBar()
+            if (!wasPlayerAlreadyPause) viewModel.unpause()
           },
           onDragEnd = {
             viewModel.gestureSeekAmount.update { null }

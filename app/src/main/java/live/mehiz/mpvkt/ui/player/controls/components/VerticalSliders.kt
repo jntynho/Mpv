@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Color
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,14 +36,6 @@ import live.mehiz.mpvkt.ui.theme.spacing
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-fun percentage(value: Float, range: ClosedFloatingPointRange<Float>): Float {
-  return ((value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-}
-
-fun percentage(value: Int, range: ClosedRange<Int>): Float {
-  return ((value - range.start - 0f) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-}
-
 @Composable
 fun VerticalSlider(
   value: Float,
@@ -49,21 +44,20 @@ fun VerticalSlider(
   overflowValue: Float? = null,
   overflowRange: ClosedFloatingPointRange<Float>? = null,
 ) {
-  require(range.contains(value)) { "Value must be within the provided range" }
   Box(
     modifier = modifier
-      .height(120.dp)
-      .aspectRatio(0.2f)
+      .height(112.dp)
+      .width(6.dp)
       .clip(RoundedCornerShape(16.dp))
-      .background(MaterialTheme.colorScheme.background),
+      .background(Color.White.copy(alpha = .22f)),
     contentAlignment = Alignment.BottomCenter,
   ) {
-    val targetHeight by animateFloatAsState(percentage(value, range), label = "vsliderheight")
+    val targetHeight by animateFloatAsState(percentage(value, range), animationSpec = tween(90), label = "vsliderheight")
     Box(
       Modifier
         .fillMaxWidth()
         .fillMaxHeight(targetHeight)
-        .background(MaterialTheme.colorScheme.tertiary),
+        .background(Color.White.copy(alpha = .95f)),
     )
     if (overflowRange != null && overflowValue != null) {
       val overflowHeight by animateFloatAsState(
@@ -88,21 +82,20 @@ fun VerticalSlider(
   overflowValue: Int? = null,
   overflowRange: ClosedRange<Int>? = null,
 ) {
-  require(range.contains(value)) { "Value must be within the provided range" }
   Box(
     modifier = modifier
-      .height(120.dp)
-      .aspectRatio(0.2f)
+      .height(112.dp)
+      .width(6.dp)
       .clip(RoundedCornerShape(16.dp))
-      .background(MaterialTheme.colorScheme.background),
+      .background(Color.White.copy(alpha = .22f)),
     contentAlignment = Alignment.BottomCenter,
   ) {
-    val targetHeight by animateFloatAsState(percentage(value, range), label = "vsliderheight")
+    val targetHeight by animateFloatAsState(percentage(value, range), animationSpec = tween(90), label = "vsliderheight")
     Box(
       Modifier
         .fillMaxWidth()
         .fillMaxHeight(targetHeight)
-        .background(MaterialTheme.colorScheme.tertiary),
+        .background(Color.White.copy(alpha = .95f)),
     )
     if (overflowRange != null && overflowValue != null) {
       val overflowHeight by animateFloatAsState(

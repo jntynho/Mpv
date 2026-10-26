@@ -13,6 +13,7 @@ class PlayerPreferences(
   val drawOverDisplayCutout = preferenceStore.getBoolean("draw_over_cutout", true)
 
   val holdForMultipleSpeed = preferenceStore.getFloat("hold_for_multiple_speed", 2f)
+  val pinchZoomGesture = preferenceStore.getBoolean("pinch_zoom_gesture", true)
   val horizontalSeekGesture = preferenceStore.getBoolean("horizontal_seek_gesture", true)
   val showSeekBarWhenSeeking = preferenceStore.getBoolean("show_seekbar_when_seeking")
   val preciseSeeking = preferenceStore.getBoolean("precise_seeking")

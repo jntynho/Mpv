@@ -1,6 +1,6 @@
 <!-- Modified for Luma Player: branding and appearance customization. -->
 <resources>
-    <string name="app_name" translatable="false">Luma Player</string>
+    <string name="app_name" translatable="false">MPV</string>
 
     <string name="generic_reset">Reset</string>
     <string name="generic_share">Bagikan</string>

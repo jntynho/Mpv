@@ -75,7 +75,7 @@ object AboutScreen : Screen {
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
           Image(
-            painterResource(id = R.drawable.ic_launcher_foreground),
+            painterResource(id = R.drawable.mpv_icon),
             null,
             modifier = Modifier.size(160.dp),
           )

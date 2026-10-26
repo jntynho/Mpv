@@ -55,7 +55,6 @@ fun ControlsButton(
         indication = null,
       )
       .clip(RoundedCornerShape(16.dp))
-      .background(Color(0xB3101719))
       .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
       .indication(
         interactionSource,
@@ -98,7 +97,6 @@ fun ControlsButton(
 
       )
       .clip(RoundedCornerShape(16.dp))
-      .background(Color(0xB3101719))
       .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
       .indication(
         interactionSource,
