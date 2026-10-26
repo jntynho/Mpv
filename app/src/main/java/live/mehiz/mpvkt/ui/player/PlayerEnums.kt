@@ -48,7 +48,11 @@ enum class Decoder(val title: String, val value: String) {
 
   companion object {
     fun getDecoderFromValue(value: String): Decoder {
-      return Decoder.entries.first { it.value == value }
+      return Decoder.entries.firstOrNull { it.value == value } ?: when {
+        value == "no" || value.isBlank() -> SW
+        value.startsWith("mediacodec") -> if (value.endsWith("copy")) HW else HWPlus
+        else -> Auto
+      }
     }
   }
 }

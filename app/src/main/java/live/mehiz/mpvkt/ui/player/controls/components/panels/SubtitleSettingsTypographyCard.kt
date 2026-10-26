@@ -118,13 +118,13 @@ fun SubtitleSettingsTypographyCard(
       val isItalic by MPVLib.propBoolean["sub-italic"].collectAsState()
       val mpvJustify by MPVLib.propString["sub-justify"].collectAsState()
       val justify by remember {
-        derivedStateOf { SubtitleJustification.entries.first { it.value == mpvJustify } }
+        derivedStateOf { SubtitleJustification.entries.firstOrNull { it.value == mpvJustify } ?: preferences.justification.get() }
       }
       val font by MPVLib.propString["sub-font"].collectAsState()
       val fontSize by MPVLib.propInt["sub-font-size"].collectAsState()
       val mpvBorderStyle by MPVLib.propString["sub-border-style"].collectAsState()
       val borderStyle by remember {
-        derivedStateOf { SubtitlesBorderStyle.entries.first { it.value == mpvBorderStyle } }
+        derivedStateOf { SubtitlesBorderStyle.entries.firstOrNull { it.value == mpvBorderStyle } ?: preferences.borderStyle.get() }
       }
       val borderSize by MPVLib.propInt["sub-outline-size"].collectAsState()
       val shadowOffset by MPVLib.propInt["sub-shadow-offset"].collectAsState()
@@ -202,7 +202,7 @@ fun SubtitleSettingsTypographyCard(
           modifier = Modifier.size(32.dp),
         )
         ExposedTextDropDownMenu(
-          selectedValue = font!!,
+          selectedValue = font ?: preferences.font.get(),
           options = fonts.toImmutableList(),
           label = stringResource(R.string.player_sheets_sub_typography_font),
           onValueChangedEvent = {
@@ -244,7 +244,7 @@ fun SubtitleSettingsTypographyCard(
       }
       SliderItem(
         stringResource(R.string.player_sheets_sub_typography_border_size),
-        value = borderSize!!,
+        value = borderSize ?: preferences.borderSize.get(),
         valueText = borderSize.toString(),
         onChange = {
           preferences.borderSize.set(it)
@@ -255,7 +255,7 @@ fun SubtitleSettingsTypographyCard(
       )
       SliderItem(
         stringResource(R.string.player_sheets_subtitles_shadow_offset),
-        value = shadowOffset!!,
+        value = shadowOffset ?: preferences.shadowOffset.get(),
         valueText = shadowOffset.toString(),
         onChange = {
           preferences.shadowOffset.set(it)

@@ -49,7 +49,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   private var mediaArtist = ""
   private var positionMs: Long?
     get() = MPVLib.getPropertyDouble("time-pos")?.times(1000L)?.toLong()
-    set(value) = MPVLib.command("seek", (value!! / 1000f).toString(), "absolute")
+    set(value) { value?.let { MPVLib.command("seek", (it.coerceAtLeast(0) / 1000.0).toString(), "absolute") } }
   private val durationMs: Long?
     get() = (MPVLib.getPropertyDouble("duration")?.times(1000L))?.toLong()
   private var paused: Boolean?
@@ -59,24 +59,24 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   private lateinit var mediaSession: MediaSessionCompat
 
   private lateinit var audioManager: AudioManager
+  @Volatile private var focusReleased = false
+  private var resumeAfterTransientLoss = false
   private var audioFocusRequest: AudioFocusRequest? = null
   private var audioFocusCallback: AudioManager.OnAudioFocusChangeListener? = null
-
-  init {
-    MPVLib.addObserver(this)
-  }
 
   @Suppress("EmptyFunctionBlock")
   override fun eventProperty(property: String) {
   }
 
   override fun eventProperty(property: String, value: Long) {
+    if (focusReleased) return
     when (property) {
       "duration", "time-pos" -> updatePlaybackState()
     }
   }
 
   override fun eventProperty(property: String, value: Boolean) {
+    if (focusReleased) return
     when (property) {
       "pause" -> {
         updatePlaybackState()
@@ -86,6 +86,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   override fun eventProperty(property: String, value: String) {
+    if (focusReleased) return
     when (property) {
       "metadata/artist" -> {
         mediaArtist = value
@@ -103,6 +104,10 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
 
   @Suppress("EmptyFunctionBlock")
   override fun eventProperty(property: String, value: Double) {
+    if (focusReleased) return
+    when (property) {
+      "duration", "time-pos", "speed" -> updatePlaybackState()
+    }
   }
 
   @Suppress("EmptyFunctionBlock")
@@ -130,6 +135,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
       "pause" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
       "duration" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
       "time-pos" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
+      "speed" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
       "media-title" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
       "metadata/artist" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
     ).onEach {
@@ -145,9 +151,12 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    androidx.core.app.ServiceCompat.startForeground(this, NOTIFICATION_ID, createNotification(),
+      if (Build.VERSION.SDK_INT >= 29) android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK else 0)
+    if (paused == false && !requestAudioFocus()) pauseMedia()
     MediaButtonReceiver.handleIntent(mediaSession, intent)
     handleIntent(intent)
-    return START_STICKY
+    return START_NOT_STICKY
   }
 
   override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: android.os.Bundle?) =
@@ -163,7 +172,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
     when (intent.action) {
       ACTION_PLAY -> playMedia()
       ACTION_PAUSE -> pauseMedia()
-      ACTION_STOP -> stopSelf()
+      ACTION_STOP -> stopMedia()
       ACTION_SKIP_FORWARD -> seekForward()
       ACTION_SKIP_BACKWARD -> seekBackward()
     }
@@ -208,6 +217,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
         },
       )
 
+      isActive = true
       setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
       setSessionToken(sessionToken)
       setPlaybackState(
@@ -231,10 +241,17 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
 
   private fun setupAudioFocus() {
     audioFocusCallback = AudioManager.OnAudioFocusChangeListener { focusChange ->
+      if (focusReleased) return@OnAudioFocusChangeListener
       when (focusChange) {
-        AudioManager.AUDIOFOCUS_LOSS -> pauseMedia()
-        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pauseMedia()
-        AudioManager.AUDIOFOCUS_GAIN -> if (paused == false) playMedia()
+        AudioManager.AUDIOFOCUS_LOSS -> { resumeAfterTransientLoss = false; pauseMedia() }
+        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+          resumeAfterTransientLoss = resumeAfterTransientLoss || paused == false
+          pauseMedia()
+        }
+        AudioManager.AUDIOFOCUS_GAIN -> {
+          if (resumeAfterTransientLoss) { paused = false; updateNotification() }
+          resumeAfterTransientLoss = false
+        }
       }
     }
 
@@ -246,13 +263,14 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
 
       audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(audioAttributes)
-        .setAcceptsDelayedFocusGain(true)
+        .setAcceptsDelayedFocusGain(false)
         .setOnAudioFocusChangeListener(audioFocusCallback!!)
         .build()
     }
   }
 
   private fun requestAudioFocus(): Boolean {
+    focusReleased = false
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       audioFocusRequest?.let {
         val result = audioManager.requestAudioFocus(it)
@@ -266,6 +284,12 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
       )
       result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
+  }
+
+  fun releasePlaybackFocus() {
+    focusReleased = true
+    MPVLib.removeObserver(this)
+    abandonAudioFocus()
   }
 
   private fun abandonAudioFocus() {
@@ -333,7 +357,6 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   private fun updatePlaybackState() {
-    Log.d(TAG, "$positionMs / $durationMs")
     try {
       val stateBuilder = PlaybackStateCompat.Builder()
         .setActions(getAvailableActions())
@@ -344,7 +367,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
             PlaybackStateCompat.STATE_PLAYING
           },
           positionMs ?: 0,
-          1.0f,
+          MPVLib.getPropertyDouble("speed")?.toFloat() ?: 1.0f,
         )
 
       mediaSession.setPlaybackState(stateBuilder.build())
@@ -416,7 +439,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
         pendingSkipForwardIntent,
       )
       .addAction(
-        R.drawable.sharp_shadow_24,
+        R.drawable.fa_stop,
         getString(R.string.notification_stop),
         pendingStopIntent,
       )
@@ -440,9 +463,8 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
 
   override fun onDestroy() {
     try {
-      MPVLib.removeObserver(this)
+      releasePlaybackFocus()
       mediaSession.release()
-      abandonAudioFocus()
       super.onDestroy()
     } catch (e: Exception) {
       Log.e(TAG, "Error in onDestroy", e)

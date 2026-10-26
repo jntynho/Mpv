@@ -34,10 +34,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
    * Returns the video aspect ratio. Rotation is taken into account.
    */
   fun getVideoOutAspect(): Double? {
-    return MPVLib.getPropertyDouble("video-params/aspect")?.let {
-      if (it < 0.001) return 0.0
-      if ((MPVLib.getPropertyInt("video-params/rotate") ?: 0) % 180 == 90) 1.0 / it else it
-    }
+    return effectiveVideoAspect(MPVLib.getPropertyDouble("video-params/aspect"),
+      MPVLib.getPropertyInt("video-params/rotate") ?: 0)
   }
 
   class TrackDelegate(private val name: String) {
@@ -153,6 +151,7 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
 
   private val observedProps = mapOf(
     "pause" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
+    "video-params/rotate" to MPVLib.mpvFormat.MPV_FORMAT_INT64,
     "video-params/aspect" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
     "eof-reached" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
 

@@ -13,7 +13,7 @@ object Icons {
   val Default get() = Filled
  }
 }
-internal fun tabler(name: String, mirrored: Boolean, vararg paths: String): ImageVector =
- ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f, autoMirror = mirrored).apply {
-  paths.forEach { addPath(PathParser().parsePathString(it).toNodes(), stroke = SolidColor(Color.Black), strokeLineWidth = 1.65f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round) }
+internal fun fontAwesome(name: String, mirrored: Boolean, width: Int, height: Int, vararg paths: String): ImageVector =
+ ImageVector.Builder(name, (24f * width / height).dp, 24.dp, width.toFloat(), height.toFloat(), autoMirror = mirrored).apply {
+  paths.forEach { addPath(PathParser().parsePathString(it).toNodes(), fill = SolidColor(Color.Black), pathFillType = PathFillType.NonZero) }
  }.build()

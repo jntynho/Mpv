@@ -120,7 +120,7 @@ object HomeScreen : Screen {
           if (!searching) {
             IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.mpv_search)) }
             Box {
-              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Tune, stringResource(R.string.mpv_sort)) }
+              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Sort, stringResource(R.string.mpv_sort)) }
               DropdownMenu(sortMenu, { sortMenu = false }) {
                 listOf(R.string.mpv_recent, R.string.mpv_name_asc, R.string.mpv_name_desc, R.string.mpv_duration).forEachIndexed { index, label ->
                   DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {

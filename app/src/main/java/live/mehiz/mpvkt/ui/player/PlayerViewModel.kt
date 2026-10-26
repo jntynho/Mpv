@@ -52,32 +52,23 @@ class PlayerViewModelProviderFactory(
 
 @Suppress("TooManyFunctions")
 class PlayerViewModel(
-  private val activity: PlayerActivity,
+  private var activity: PlayerActivity,
 ) : ViewModel() {
+  fun attachActivity(current: PlayerActivity) {
+    if (activity === current) return
+    activity = current
+    viewModelScope.launch(Dispatchers.IO) {
+      val buttons = _customButtons.value.getButtons()
+      if (!current.isDestroyed && buttons.isNotEmpty()) current.setupCustomButtons(buttons)
+    }
+  }
+
   private val playerPreferences: PlayerPreferences by inject(PlayerPreferences::class.java)
   private val gesturePreferences: GesturePreferences by inject(GesturePreferences::class.java)
   private val audioPreferences: AudioPreferences by inject(AudioPreferences::class.java)
   private val mpvKtDatabase: MpvKtDatabase by inject(MpvKtDatabase::class.java)
   private val json: Json by inject(Json::class.java)
 
-  init {
-    viewModelScope.launch(Dispatchers.IO) {
-      try {
-        val buttons = mpvKtDatabase.customButtonDao().getCustomButtons().first()
-        buttons.firstOrNull { it.id == playerPreferences.primaryCustomButtonId.get() }?.let {
-          _primaryButton.update { _ -> it }
-          // If the button text is not empty, it has been set buy a lua script in which
-          // case we don't want to override it
-          if (_primaryButtonTitle.value.isEmpty()) setPrimaryCustomButtonTitle(it)
-        }
-        activity.setupCustomButtons(buttons)
-        _customButtons.update { _ -> CustomButtonsUiState.Success(buttons) }
-      } catch (e: Exception) {
-        Log.e(TAG, e.message ?: "Unable to fetch buttons")
-        _customButtons.update { _ -> CustomButtonsUiState.Error(e.message ?: "Unable to fetch buttons") }
-      }
-    }
-  }
 
   private val _customButtons = MutableStateFlow<CustomButtonsUiState>(CustomButtonsUiState.Loading)
   val customButtons = _customButtons.asStateFlow()
@@ -286,7 +277,7 @@ class PlayerViewModel(
     isVolumeSliderShown.update { true }
   }
 
-  fun changeVideoAspect(aspect: VideoAspect) {
+  fun changeVideoAspect(aspect: VideoAspect, notify: Boolean = true) {
     var ratio = -1.0
     var pan = 1.0
     when (aspect) {
@@ -302,31 +293,22 @@ class PlayerViewModel(
       VideoAspect.Stretch -> {
         val dm = DisplayMetrics()
         activity.windowManager.defaultDisplay.getRealMetrics(dm)
-        ratio = dm.widthPixels / dm.heightPixels.toDouble()
+        val width = activity.player.width.takeIf { it > 0 } ?: dm.widthPixels
+        val height = activity.player.height.takeIf { it > 0 } ?: dm.heightPixels
+        ratio = if (height > 0) width / height.toDouble() else -1.0
         pan = 0.0
       }
     }
     MPVLib.setPropertyDouble("panscan", pan)
     MPVLib.setPropertyDouble("video-aspect-override", ratio)
     playerPreferences.videoAspect.set(aspect)
-    playerUpdate.update { PlayerUpdates.AspectRatio }
+    if (notify) playerUpdate.update { PlayerUpdates.AspectRatio }
   }
 
   fun cycleScreenRotations() {
-    activity.requestedOrientation = when (activity.requestedOrientation) {
-      ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
-      ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
-      ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
-      -> {
-        playerPreferences.orientation.set(PlayerOrientation.SensorPortrait)
-        ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-      }
-
-      else -> {
-        playerPreferences.orientation.set(PlayerOrientation.SensorLandscape)
-        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-      }
-    }
+    val next = nextManualRotation(activity.resources.configuration.orientation)
+    playerPreferences.orientation.set(next)
+    orientationRequest(next, activity.player.getVideoOutAspect())?.let { activity.requestedOrientation = it }
   }
 
   @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -410,7 +392,7 @@ class PlayerViewModel(
     MPVLib.setPropertyString(property, "")
   }
 
-  private val inputMethodManager = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+  private val inputMethodManager get() = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
   private fun forceShowSoftwareKeyboard() {
     inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
   }
@@ -517,6 +499,26 @@ class PlayerViewModel(
   fun setPrimaryCustomButtonTitle(button: CustomButtonEntity) {
     _primaryButtonTitle.update { _ -> button.title }
   }
+  init {
+    viewModelScope.launch(Dispatchers.IO) {
+      try {
+        val buttons = mpvKtDatabase.customButtonDao().getCustomButtons().first()
+        buttons.firstOrNull { it.id == playerPreferences.primaryCustomButtonId.get() }?.let {
+          _primaryButton.update { _ -> it }
+          // If the button text is not empty, it has been set buy a lua script in which
+          // case we don't want to override it
+          if (_primaryButtonTitle.value.isEmpty()) setPrimaryCustomButtonTitle(it)
+        }
+        activity.setupCustomButtons(buttons)
+        _customButtons.update { _ -> CustomButtonsUiState.Success(buttons) }
+      } catch (e: Exception) {
+        Log.e(TAG, e.message ?: "Unable to fetch buttons")
+        _customButtons.update { _ -> CustomButtonsUiState.Error(e.message ?: "Unable to fetch buttons") }
+      }
+    }
+  }
+
+
 }
 
 fun Float.normalize(inMin: Float, inMax: Float, outMin: Float, outMax: Float): Float {
