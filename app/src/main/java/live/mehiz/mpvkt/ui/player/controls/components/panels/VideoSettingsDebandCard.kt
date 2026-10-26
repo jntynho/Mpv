@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Gradient
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.NotInterested
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.filled.Gradient
+import live.mehiz.mpvkt.ui.icons.filled.Memory
+import live.mehiz.mpvkt.ui.icons.filled.NotInterested
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme

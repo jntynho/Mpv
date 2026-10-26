@@ -12,4 +12,10 @@
   <string name="mpv_library_error">تعذر قراءة المكتبة. تحقق من الإذن ثم حدّث المكتبة.</string>
   <string name="mpv_video_count">%1$d فيديو</string>
   <string name="mpv_pinch_zoom">التكبير بإصبعين</string>
+<string name="mpv_sort">الفرز حسب</string>
+<string name="mpv_recent">الأحدث إضافة</string>
+<string name="mpv_name_asc">الاسم: تصاعدي</string>
+<string name="mpv_name_desc">الاسم: تنازلي</string>
+<string name="mpv_duration">المدة: الأطول أولًا</string>
+<string name="mpv_more">المزيد من الخيارات</string>
 </resources>

@@ -10,10 +10,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.RestartAlt
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.filled.Add
+import live.mehiz.mpvkt.ui.icons.filled.Close
+import live.mehiz.mpvkt.ui.icons.filled.RestartAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton

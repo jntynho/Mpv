@@ -12,4 +12,10 @@
   <string name="mpv_library_error">Cannot read the library. Check video permission and try refreshing.</string>
   <string name="mpv_video_count">%1$d videos</string>
   <string name="mpv_pinch_zoom">Pinch to zoom</string>
+<string name="mpv_sort">Sort by</string>
+<string name="mpv_recent">Recently added</string>
+<string name="mpv_name_asc">Name: A–Z</string>
+<string name="mpv_name_desc">Name: Z–A</string>
+<string name="mpv_duration">Duration: longest first</string>
+<string name="mpv_more">More options</string>
 </resources>

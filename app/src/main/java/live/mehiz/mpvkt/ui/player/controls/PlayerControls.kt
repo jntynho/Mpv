@@ -27,8 +27,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.filled.Lock
+import live.mehiz.mpvkt.ui.icons.filled.Play
+import live.mehiz.mpvkt.ui.icons.filled.Pause
+import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
@@ -348,7 +351,7 @@ fun PlayerControls(
           },
         ) {
           val showLoadingCircle by playerPreferences.showLoadingCircle.collectAsState()
-          val icon = AnimatedImageVector.animatedVectorResource(R.drawable.anim_play_to_pause)
+
           val interaction = remember { MutableInteractionSource() }
           when {
             gestureSeekAmount != null -> {
@@ -374,8 +377,9 @@ fun PlayerControls(
               )
             }
 
-            controlsShown && !areControlsLocked -> Image(
-              painter = rememberAnimatedVectorPainter(icon, paused == false),
+            controlsShown && !areControlsLocked -> Icon(
+              imageVector = if (paused == false) Icons.Default.Pause else Icons.Default.Play,
+              tint = Color.White,
               modifier = Modifier
                 .size(96.dp)
                 .clip(CircleShape)

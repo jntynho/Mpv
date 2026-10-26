@@ -24,8 +24,8 @@ android {
     applicationId = "io.github.jntynho.luma"
     minSdk = 21
     targetSdk = 36
-    versionCode = 2
-    versionName = "0.2.0"
+    versionCode = 3
+    versionName = "0.3.0"
 
     vectorDrawables {
       useSupportLibrary = true
@@ -126,7 +126,6 @@ dependencies {
   implementation(libs.bundles.compose.navigation3)
   implementation(libs.androidx.appcompat)
   implementation(libs.androidx.compose.constraintlayout)
-  implementation(libs.androidx.material3.icons.extended)
   implementation(libs.androidx.compose.animation.graphics)
   implementation(libs.material)
   implementation(libs.androidx.preferences.ktx)
@@ -142,7 +141,6 @@ dependencies {
   implementation(project(":third_party:seeker"))
   implementation(libs.compose.prefs)
   implementation(libs.bundles.about.libs)
-  implementation(libs.simple.icons)
 
   implementation(libs.room.runtime)
   ksp(libs.room.compiler)

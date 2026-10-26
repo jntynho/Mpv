@@ -64,16 +64,16 @@ class MainActivity : ComponentActivity() {
         onBack = { if (backstack.size > 1) backstack.removeLastOrNull() else finish() },
         entryProvider = { route -> NavEntry(route) { (it as Screen).Content() } },
         transitionSpec = {
-          slideIn(animationSpec = tween(280)) { IntOffset(it.width * direction, 0) } togetherWith
-            slideOut(animationSpec = tween(280)) { IntOffset(-it.width * direction / 4, 0) }
+          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) } togetherWith
+            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) }
         },
         popTransitionSpec = {
-          slideIn(animationSpec = tween(280)) { IntOffset(-it.width * direction / 4, 0) } togetherWith
-            slideOut(animationSpec = tween(280)) { IntOffset(it.width * direction, 0) }
+          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) } togetherWith
+            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) }
         },
         predictivePopTransitionSpec = {
-          slideIn(animationSpec = tween(280)) { IntOffset(-it.width * direction / 4, 0) } togetherWith
-            slideOut(animationSpec = tween(280)) { IntOffset(it.width * direction, 0) }
+          slideIn(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(-it.width * direction, 0) } togetherWith
+            slideOut(animationSpec = tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing)) { IntOffset(it.width * direction, 0) }
         },
       )
     }
