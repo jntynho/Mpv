@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="luma_tagline">مساحتك لمشاهدة أهدأ</string>
+  <string name="luma_headline">لحظتك القادمة.</string>
+  <string name="luma_open">افتح فيديو</string>
+  <string name="luma_open_hint">أفلامك، مساحتك. ابدأ المشاهدة.</string>
+  <string name="luma_files">تصفح مجلدًا</string>
+  <string name="luma_files_hint">استكشف مجموعتك</string>
+  <string name="luma_stream">شغّل رابطًا</string>
+  <string name="luma_stream_hint">ألصق رابط الفيديو أدناه</string>
+  <string name="luma_url_hint">https://example.com/video.mp4</string>
+  <string name="luma_ready">مصمم لوسائطك</string>
+  <string name="luma_tip_body">ترجمة ومسارات صوت وإيماءات وإعدادات mpv متقدمة. خصص كل التفاصيل من الإعدادات.</string>
+  <string name="luma_oled">سواد OLED</string>
+  <string name="luma_oled_summary">استخدم خلفية سوداء تمامًا في الوضع الداكن</string>
+  <string name="luma_compact">واجهة رئيسية مختصرة</string>
+  <string name="luma_tips">إظهار نصائح الواجهة الرئيسية</string>
+  <string name="luma_settings">الإعدادات</string>
+  <string name="luma_folder_error">تعذر فتح المجلد. اختر مجلدًا آخر.</string>
+</resources>
