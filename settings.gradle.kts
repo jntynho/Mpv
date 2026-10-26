@@ -1,3 +1,4 @@
+// Modified for Luma Player: project identity and dependency repositories.
 pluginManagement {
   repositories {
     google {
