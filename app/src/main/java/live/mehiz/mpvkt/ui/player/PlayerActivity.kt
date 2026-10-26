@@ -135,7 +135,7 @@ class PlayerActivity : AppCompatActivity() {
       MpvKtTheme {
         PlayerControls(
           viewModel = viewModel,
-          onBackPress = ::finish,
+          onBackPress = onBackPressedDispatcher::onBackPressed,
           modifier = Modifier.onGloballyPositioned {
             pipRect = it.boundsInWindow().toAndroidRect()
           },

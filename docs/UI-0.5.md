@@ -7,3 +7,7 @@
 - docs/tabler-preview.png is rendered from the actual bundled paths, not a screenshot of Android. No device/emulator is connected: gesture priority, IME, dialogs, rapid back, RTL, animation feel and touch-through require device validation.
 
 Validation: testDebugUnitTest, lintDebug, assembleDebug and assemblePreview succeeded. Seven tests passed, including all 75 Tabler vectors and RTL back-arrow mirroring. Lint has zero errors (warnings remain). Both ARM APK signatures, 16KB alignment, libmpv presence and bundled Tabler license verified. No device-level gesture validation is claimed.
+
+0.5.1 audit: the player toolbar previously bypassed its dispatcher with finish(). It now invokes the same onBackPressedDispatcher path as the system, including the existing automatic-PiP policy. This avoids a second back behavior inside playback.
+
+0.5.1 final: seven unit tests, lintDebug and assemblePreview succeeded; both ARM APK signatures and 16KB alignment verified again after the player dispatcher fix.
