@@ -8,4 +8,5 @@ Native mpv/FFmpeg components retain their own licenses; see upstream distributio
 Bundled support library sources: third_party/seeker (Apache-2.0), third_party/fsaf (Unlicense).
 Each includes its license and pinned upstream provenance.
 
-MPV 0.6 interface artwork uses Font Awesome Free 7.3.1 Classic Solid, copyright Fonticons, Inc., licensed CC BY 4.0. Official icon paths are converted into filled Compose/native vectors; attribution and license under third_party/fontawesome and bundled app assets. No Pro/Regular artwork is bundled.
+MPV 0.7 interface icons use selected Iconsax Outline/Broken artwork by Lusaxweb, under the original Iconsax custom license. See third_party/iconsax and bundled app assets.
+Only the unchanged home-library folder artwork remains from Font Awesome Free 7.3.1, copyright Fonticons, Inc., CC BY 4.0, per the user's explicit preservation requirement. Its attribution/license are under third_party/folder-artwork and bundled app assets. The Font Awesome icon implementation and all other glyphs were removed.

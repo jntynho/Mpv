@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.CatchingPokemon
+import live.mehiz.mpvkt.ui.icons.CatchingPokemon
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -116,7 +116,7 @@ fun ControlsButton(
 @Composable
 private fun PreviewControlsButton() {
   ControlsButton(
-    Icons.Default.CatchingPokemon,
+    Icons.CatchingPokemon,
     onClick = {},
   )
 }

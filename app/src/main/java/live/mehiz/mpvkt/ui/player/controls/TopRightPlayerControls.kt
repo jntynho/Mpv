@@ -2,10 +2,10 @@ package live.mehiz.mpvkt.ui.player.controls
 
 import androidx.compose.foundation.layout.Row
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Audiotrack
-import live.mehiz.mpvkt.ui.icons.filled.Bookmarks
-import live.mehiz.mpvkt.ui.icons.filled.MoreVert
-import live.mehiz.mpvkt.ui.icons.filled.Subtitles
+import live.mehiz.mpvkt.ui.icons.Audiotrack
+import live.mehiz.mpvkt.ui.icons.Bookmarks
+import live.mehiz.mpvkt.ui.icons.MoreVert
+import live.mehiz.mpvkt.ui.icons.Subtitles
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,22 +44,22 @@ fun TopRightPlayerControls(
     )
     if (isChaptersVisible) {
       ControlsButton(
-        Icons.Default.Bookmarks,
+        Icons.Bookmarks,
         onClick = onChaptersClick,
       )
     }
     ControlsButton(
-      Icons.Default.Subtitles,
+      Icons.Subtitles,
       onClick = onSubtitlesClick,
       onLongClick = onSubtitlesLongClick,
     )
     ControlsButton(
-      Icons.Default.Audiotrack,
+      Icons.Audiotrack,
       onClick = onAudioClick,
       onLongClick = onAudioLongClick,
     )
     ControlsButton(
-      Icons.Default.MoreVert,
+      Icons.MoreVert,
       onClick = onMoreClick,
       onLongClick = onMoreLongClick,
     )

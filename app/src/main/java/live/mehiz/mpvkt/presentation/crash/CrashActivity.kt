@@ -29,8 +29,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.ContentCopy
-import live.mehiz.mpvkt.ui.icons.outlined.BugReport
+import live.mehiz.mpvkt.ui.icons.ContentCopy
+import live.mehiz.mpvkt.ui.icons.BugReport
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -212,7 +212,7 @@ class CrashActivity : ComponentActivity() {
                 )
               },
             ) {
-              Icon(Icons.Default.ContentCopy, null)
+              Icon(Icons.ContentCopy, null)
             }
           }
           OutlinedButton(
@@ -236,7 +236,7 @@ class CrashActivity : ComponentActivity() {
       ) {
         Spacer(Modifier.height(paddingValues.calculateTopPadding()))
         Icon(
-          Icons.Outlined.BugReport,
+          Icons.BugReport,
           null,
           modifier = Modifier.size(48.dp),
           tint = MaterialTheme.colorScheme.primary,

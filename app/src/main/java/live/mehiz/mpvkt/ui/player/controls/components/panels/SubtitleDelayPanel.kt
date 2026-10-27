@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.ArrowDropDown
-import live.mehiz.mpvkt.ui.icons.filled.Close
-import live.mehiz.mpvkt.ui.icons.filled.Refresh
+import live.mehiz.mpvkt.ui.icons.ArrowDropDown
+import live.mehiz.mpvkt.ui.icons.Close
+import live.mehiz.mpvkt.ui.icons.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -274,7 +274,7 @@ fun DelayCard(
           onClick = onReset,
           enabled = isDirectionPositive == null,
         ) {
-          Icon(Icons.Default.Refresh, null)
+          Icon(Icons.Refresh, null)
         }
       }
     }
@@ -304,7 +304,7 @@ fun SubtitleDelayTitle(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodyMedium,
       )
-      Icon(Icons.Default.ArrowDropDown, null)
+      Icon(Icons.ArrowDropDown, null)
       DropdownMenu(
         expanded = showDropDownMenu,
         onDismissRequest = { showDropDownMenu = false },
@@ -323,7 +323,7 @@ fun SubtitleDelayTitle(
     Spacer(Modifier.weight(1f))
     IconButton(onClose) {
       Icon(
-        Icons.Default.Close,
+        Icons.Close,
         null,
         modifier = Modifier.size(32.dp),
       )

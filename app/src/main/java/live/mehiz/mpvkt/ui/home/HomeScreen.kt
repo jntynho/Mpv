@@ -47,8 +47,8 @@ import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.*
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
+import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.player.PlayerActivity
 import live.mehiz.mpvkt.ui.preferences.PreferencesScreen
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
@@ -113,23 +113,23 @@ object HomeScreen : Screen {
             enter = fadeIn(tween(240)) + expandHorizontally(tween(280)),
             exit = fadeOut(tween(180)) + shrinkHorizontally(tween(280))) {
             IconButton(onClick = goBack) {
-              Icon(if (searching) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mpv_back))
+              Icon(if (searching) Icons.Close else Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
             }
           }
         }, actions = {
           if (!searching) {
-            IconButton(onClick = { searching = true }) { Icon(Icons.Default.Search, stringResource(R.string.mpv_search)) }
+            IconButton(onClick = { searching = true }) { Icon(Icons.Search, stringResource(R.string.mpv_search)) }
             Box {
-              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Default.Sort, stringResource(R.string.mpv_sort)) }
+              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Sort, stringResource(R.string.mpv_sort)) }
               DropdownMenu(sortMenu, { sortMenu = false }) {
                 listOf(R.string.mpv_recent, R.string.mpv_name_asc, R.string.mpv_name_desc, R.string.mpv_duration).forEachIndexed { index, label ->
                   DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
                     sort = index; savedSort.edit().putInt("sort", index).apply(); sortMenu = false
-                  }, trailingIcon = { if (sort == index) Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
+                  }, trailingIcon = { if (sort == index) Icon(Icons.Star, null, Modifier.size(16.dp)) })
                 }
               }
             }
-            IconButton(onClick = { backstack.add(PreferencesScreen) }) { Icon(Icons.Default.Settings, stringResource(R.string.luma_settings)) }
+            IconButton(onClick = { backstack.add(PreferencesScreen) }) { Icon(Icons.Settings, stringResource(R.string.luma_settings)) }
           }
         })
       }

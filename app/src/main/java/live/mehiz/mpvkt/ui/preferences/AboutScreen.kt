@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
+import live.mehiz.mpvkt.ui.icons.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,7 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
-import live.mehiz.mpvkt.ui.icons.filled.Code
+import live.mehiz.mpvkt.ui.icons.Code
 import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.BuildConfig
 import live.mehiz.mpvkt.R
@@ -57,7 +57,7 @@ object AboutScreen : Screen {
           title = { Text(text = stringResource(id = R.string.pref_about_title)) },
           navigationIcon = {
             IconButton(onClick = LocalNavigateBack.current) {
-              Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+              Icon(imageVector = Icons.AutoMirrored.ArrowBack, contentDescription = null)
             }
           },
         )
@@ -75,7 +75,7 @@ object AboutScreen : Screen {
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
           Image(
-            painterResource(id = R.drawable.fa_launcher),
+            painterResource(id = R.drawable.mpv_launcher_foreground),
             null,
             modifier = Modifier.size(160.dp),
           )
@@ -84,7 +84,9 @@ object AboutScreen : Screen {
             style = MaterialTheme.typography.headlineSmall,
           )
         }
-        Text("Icons: Font Awesome Free · Fonticons, Inc. · CC BY 4.0", Modifier.padding(horizontal = 16.dp),
+        Text(stringResource(R.string.mpv_icons_credit), Modifier.padding(horizontal = 16.dp),
+          style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.mpv_folder_credit), Modifier.padding(horizontal = 16.dp),
           style = MaterialTheme.typography.bodySmall)
         HorizontalDivider()
         ProvidePreferenceLocals {
@@ -130,7 +132,7 @@ object AboutScreen : Screen {
               )
             },
           ) {
-            Icon(imageVector = Icons.Default.Code, contentDescription = null)
+            Icon(imageVector = Icons.Code, contentDescription = null)
           }
         }
       }
@@ -150,7 +152,7 @@ object LibrariesScreen : Screen {
           title = { Text(text = stringResource(R.string.pref_about_oss_libraries)) },
           navigationIcon = {
             IconButton(onClick = LocalNavigateBack.current) {
-              Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+              Icon(imageVector = Icons.AutoMirrored.ArrowBack, contentDescription = null)
             }
           },
         )

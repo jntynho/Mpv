@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Close
+import live.mehiz.mpvkt.ui.icons.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -73,7 +73,7 @@ fun AudioDelayCardTitle(
     )
     IconButton(onClose) {
       Icon(
-        Icons.Default.Close,
+        Icons.Close,
         null,
         modifier = Modifier.size(32.dp),
       )

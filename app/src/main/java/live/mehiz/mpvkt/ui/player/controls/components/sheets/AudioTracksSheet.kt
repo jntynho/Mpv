@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.MoreTime
+import live.mehiz.mpvkt.ui.icons.MoreTime
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,7 @@ fun AudioTracksSheet(
         onAddAudioTrack,
         actions = {
           IconButton(onClick = onOpenDelayPanel) {
-            Icon(Icons.Default.MoreTime, null)
+            Icon(Icons.MoreTime, null)
           }
         }
       )

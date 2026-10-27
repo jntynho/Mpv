@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mpv_icons_style_title">نمط الأيقونات</string>
+    <string name="mpv_icons_style_outline">Outline — خطوط متصلة</string>
+    <string name="mpv_icons_style_broken">Broken — خطوط متقطعة</string>
+    <string name="mpv_icons_credit">الأيقونات: Iconsax · Lusaxweb</string>
+    <string name="mpv_folder_credit">رسم المجلد: Fonticons, Inc. · CC BY 4.0</string>
+</resources>

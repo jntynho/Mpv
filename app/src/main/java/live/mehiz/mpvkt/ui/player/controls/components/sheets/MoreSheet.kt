@@ -21,12 +21,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Headset
-import live.mehiz.mpvkt.ui.icons.filled.HeadsetOff
-import live.mehiz.mpvkt.ui.icons.filled.KeyboardAlt
-import live.mehiz.mpvkt.ui.icons.filled.Tune
-import live.mehiz.mpvkt.ui.icons.outlined.Schedule
-import live.mehiz.mpvkt.ui.icons.outlined.Timer
+import live.mehiz.mpvkt.ui.icons.Headset
+import live.mehiz.mpvkt.ui.icons.HeadsetOff
+import live.mehiz.mpvkt.ui.icons.KeyboardAlt
+import live.mehiz.mpvkt.ui.icons.Tune
+import live.mehiz.mpvkt.ui.icons.Schedule
+import live.mehiz.mpvkt.ui.icons.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -111,7 +111,7 @@ fun MoreSheet(
             onCheckedChange = { playerPreferences.automaticBackgroundPlayback.set(it) }
           ) {
             Icon(
-              if (backgroundPlayback) Icons.Default.Headset else Icons.Default.HeadsetOff,
+              if (backgroundPlayback) Icons.Headset else Icons.HeadsetOff,
               null
             )
           }
@@ -121,7 +121,7 @@ fun MoreSheet(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
             ) {
-              Icon(imageVector = Icons.Outlined.Timer, contentDescription = null)
+              Icon(imageVector = Icons.Timer, contentDescription = null)
               Text(
                 text =
                 if (remainingTime == 0) {
@@ -147,7 +147,7 @@ fun MoreSheet(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
             ) {
-              Icon(imageVector = Icons.Default.Tune, contentDescription = null)
+              Icon(imageVector = Icons.Tune, contentDescription = null)
               Text(text = stringResource(id = R.string.player_sheets_filters_title))
             }
           }
@@ -289,7 +289,7 @@ fun TimePickerDialog(
         ) {
           IconButton(onClick = { currentLayoutType = if (currentLayoutType == 0) 1 else 0 }) {
             Icon(
-              imageVector = if (currentLayoutType == 0) Icons.Outlined.Schedule else Icons.Default.KeyboardAlt,
+              imageVector = if (currentLayoutType == 0) Icons.Schedule else Icons.KeyboardAlt,
               contentDescription = null,
             )
           }

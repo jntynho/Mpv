@@ -2,7 +2,7 @@ package live.mehiz.mpvkt.ui.player.controls
 
 import androidx.compose.foundation.layout.Row
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
+import live.mehiz.mpvkt.ui.icons.ArrowBack
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +23,7 @@ fun TopLeftPlayerControls(
     verticalAlignment = Alignment.CenterVertically
   ) {
     ControlsButton(
-      icon = Icons.AutoMirrored.Default.ArrowBack,
+      icon = Icons.AutoMirrored.ArrowBack,
       onClick = onBackClick
     )
     Text(

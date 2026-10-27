@@ -26,7 +26,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.PlayCircle
+import live.mehiz.mpvkt.ui.icons.PlayCircle
 
 /** Bounded shared cache; never hold an Activity or decode on the UI thread. */
 internal object Thumbnails {
@@ -68,6 +68,6 @@ fun VideoThumbnail(context: Context, uri: String, modifier: Modifier = Modifier,
   val bitmap by produceState<Bitmap?>(null, uri, revision) { value = Thumbnails.load(appContext, uri, revision) }
   Box(modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
     if (bitmap != null) Image(bitmap!!.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-    else Icon(Icons.Default.PlayCircle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    else Icon(Icons.PlayCircle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
   }
 }

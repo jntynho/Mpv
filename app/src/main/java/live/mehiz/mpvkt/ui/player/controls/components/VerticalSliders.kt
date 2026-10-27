@@ -14,13 +14,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.VolumeDown
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.VolumeMute
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.VolumeOff
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.VolumeUp
-import live.mehiz.mpvkt.ui.icons.filled.BrightnessHigh
-import live.mehiz.mpvkt.ui.icons.filled.BrightnessLow
-import live.mehiz.mpvkt.ui.icons.filled.BrightnessMedium
+import live.mehiz.mpvkt.ui.icons.VolumeDown
+import live.mehiz.mpvkt.ui.icons.VolumeMute
+import live.mehiz.mpvkt.ui.icons.VolumeOff
+import live.mehiz.mpvkt.ui.icons.VolumeUp
+import live.mehiz.mpvkt.ui.icons.BrightnessHigh
+import live.mehiz.mpvkt.ui.icons.BrightnessLow
+import live.mehiz.mpvkt.ui.icons.BrightnessMedium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -133,10 +133,10 @@ fun BrightnessSlider(
     )
     Icon(
       when (percentage(brightness, range)) {
-        in 0f..0.3f -> Icons.Default.BrightnessLow
-        in 0.3f..0.6f -> Icons.Default.BrightnessMedium
-        in 0.6f..1f -> Icons.Default.BrightnessHigh
-        else -> Icons.Default.BrightnessMedium
+        in 0f..0.3f -> Icons.BrightnessLow
+        in 0.3f..0.6f -> Icons.BrightnessMedium
+        in 0.6f..1f -> Icons.BrightnessHigh
+        else -> Icons.BrightnessMedium
       },
       null,
     )
@@ -171,11 +171,11 @@ fun VolumeSlider(
     )
     Icon(
       when (percentage) {
-        0 -> Icons.AutoMirrored.Default.VolumeOff
-        in 0..30 -> Icons.AutoMirrored.Default.VolumeMute
-        in 30..60 -> Icons.AutoMirrored.Default.VolumeDown
-        in 60..100 -> Icons.AutoMirrored.Default.VolumeUp
-        else -> Icons.AutoMirrored.Default.VolumeOff
+        0 -> Icons.AutoMirrored.VolumeOff
+        in 0..30 -> Icons.AutoMirrored.VolumeMute
+        in 30..60 -> Icons.AutoMirrored.VolumeDown
+        in 60..100 -> Icons.AutoMirrored.VolumeUp
+        else -> Icons.AutoMirrored.VolumeOff
       },
       null,
     )

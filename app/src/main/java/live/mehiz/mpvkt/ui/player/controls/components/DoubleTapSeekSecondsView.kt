@@ -1,5 +1,9 @@
 package live.mehiz.mpvkt.ui.player.controls.components
 
+import live.mehiz.mpvkt.ui.icons.Play
+
+import live.mehiz.mpvkt.ui.icons.Icons
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Row
@@ -13,9 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import live.mehiz.mpvkt.R
 
 /**
  * View that shows the arrows animation when double tapping to seek
@@ -60,7 +62,7 @@ private fun DoubleTapArrow(
   alpha: Float,
 ) {
   Icon(
-    painter = painterResource(R.drawable.ic_play_seek_triangle),
+    imageVector = Icons.Play,
     contentDescription = null,
     modifier = Modifier
       .size(width = 16.dp, height = 20.dp)

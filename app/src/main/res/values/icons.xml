@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mpv_icons_style_title">Icon style</string>
+    <string name="mpv_icons_style_outline">Outline</string>
+    <string name="mpv_icons_style_broken">Broken</string>
+    <string name="mpv_icons_credit">Icons: Iconsax · Lusaxweb</string>
+    <string name="mpv_folder_credit">Folder artwork: Fonticons, Inc. · CC BY 4.0</string>
+</resources>
