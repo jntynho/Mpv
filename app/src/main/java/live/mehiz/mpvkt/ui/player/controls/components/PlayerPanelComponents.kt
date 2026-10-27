@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
+import androidx.compose.ui.platform.LocalDensity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import live.mehiz.mpvkt.R
@@ -99,18 +101,20 @@ fun PlayerPanelFooter(title: String, onClick: () -> Unit, note: String? = null) 
 fun PlayerScrollArea(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
   val state = rememberScrollState()
   val scope = rememberCoroutineScope()
+  val scrollJob = remember { arrayOfNulls<Job>(1) }
   Box(modifier) {
     Column(Modifier.fillMaxSize().verticalScroll(state).padding(end = 10.dp), content = content)
     ThinPlayerScrollbar(state.isScrollInProgress, state.maxValue > 0,
       fraction = { if (state.maxValue > 0) state.value.toFloat() / state.maxValue else 0f },
       proportion = { state.viewportSize.toFloat() / (state.viewportSize + state.maxValue).coerceAtLeast(1) },
-      onFraction = { f -> scope.launch { state.scrollTo((f * state.maxValue).roundToInt()) } })
+      onFraction = { f -> scrollJob[0]?.cancel(); scrollJob[0] = scope.launch { state.scrollTo((f * state.maxValue).roundToInt()) } })
   }
 }
 
 @Composable
 fun PlayerLazyScrollArea(modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(), content: LazyListScope.() -> Unit) {
   val scope = rememberCoroutineScope()
+  val scrollJob = remember { arrayOfNulls<Job>(1) }
   Box(modifier) {
     LazyColumn(Modifier.fillMaxSize().padding(end = 10.dp), state = state, content = content)
     val overflow by remember(state) { derivedStateOf { state.canScrollForward || state.canScrollBackward } }
@@ -122,7 +126,7 @@ fun PlayerLazyScrollArea(modifier: Modifier = Modifier, state: LazyListState = r
           (info.visibleItemsInfo.firstOrNull()?.size ?: 1).coerceAtLeast(1)) / total
       },
       proportion = { state.layoutInfo.run { visibleItemsInfo.size.toFloat() / totalItemsCount.coerceAtLeast(1) } },
-      onFraction = { f -> scope.launch {
+      onFraction = { f -> scrollJob[0]?.cancel(); scrollJob[0] = scope.launch {
         val info = state.layoutInfo
         val count = info.totalItemsCount
         if (count > 0) state.scrollToItem((f * (count - info.visibleItemsInfo.size).coerceAtLeast(0)).roundToInt().coerceIn(0, count - 1))
@@ -135,6 +139,7 @@ private fun BoxScope.ThinPlayerScrollbar(
   scrolling: Boolean, overflow: Boolean,
   fraction: () -> Float, proportion: () -> Float, onFraction: (Float) -> Unit,
 ) {
+  val minThumb = with(LocalDensity.current) { 24.dp.toPx() }
   var dragging by remember { mutableStateOf(false) }
   var visible by remember { mutableStateOf(false) }
   var height by remember { mutableFloatStateOf(1f) }
@@ -149,9 +154,9 @@ private fun BoxScope.ThinPlayerScrollbar(
   if (overflow) Canvas(Modifier.align(AbsoluteAlignment.CenterRight).fillMaxHeight().width(14.dp)
     .padding(vertical = 8.dp).onSizeChanged { height = it.height.toFloat().coerceAtLeast(1f) }
     .graphicsLayer { this.alpha = alpha }
-    .draggable(orientation = Orientation.Vertical,
+    .draggable(orientation = Orientation.Vertical, enabled = visible || dragging,
       state = rememberDraggableState { dy ->
-        val thumb = (height * currentProportion().coerceIn(0f, 1f)).coerceAtLeast(24f)
+        val thumb = (height * currentProportion().coerceIn(0f, 1f)).coerceIn(minThumb.coerceAtMost(height), height)
         move((currentFraction() + dy / (height - thumb).coerceAtLeast(1f)).coerceIn(0f, 1f))
       }, onDragStarted = { dragging = true }, onDragStopped = { dragging = false })) {
     val thumb = (size.height * proportion().coerceIn(0f, 1f)).coerceIn(24.dp.toPx().coerceAtMost(size.height), size.height)

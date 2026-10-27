@@ -99,7 +99,7 @@ fun VideoTimer(
       .fillMaxHeight()
       .clickable(
         interactionSource = interactionSource,
-        indication = ripple(),
+        indication = ripple(bounded = false, radius = 24.dp),
         onClick = onClick,
       )
       .wrapContentHeight(Alignment.CenterVertically),

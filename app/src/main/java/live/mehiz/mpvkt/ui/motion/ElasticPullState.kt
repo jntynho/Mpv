@@ -27,15 +27,21 @@ internal class ElasticPullState(
   private val canRefresh: () -> Boolean = { false },
   private val onRefresh: (suspend () -> Unit)? = null,
   private val reduceMotion: Boolean = false,
+  private val platformOverscroll: Boolean = false,
 ) {
   var offset by mutableFloatStateOf(0f); private set
   var refreshing by mutableStateOf(false); private set
   private var raw = 0f
   private var job: Job? = null
   private fun interrupt() {
-    if (job?.isActive == true) { job?.cancel(); raw = rawPull(offset, limit) }
+    if (job?.isActive == true) { job?.cancel(); raw = if (platformOverscroll) sign(offset) * SpringMath.obtainTouchDistance(offset, limit) else rawPull(offset, limit) }
   }
   private suspend fun animate(target: Float) {
+    if (platformOverscroll && !reduceMotion) {
+      SpringEngine().runSettleAnimation(offset, target, 0f, { offset = it }, {})
+      offset = target
+      return
+    }
     AnimationState(offset).animateTo(target, if (reduceMotion) tween(100) else spring(dampingRatio = .88f, stiffness = 320f)) { offset = value }
     offset = target
   }
@@ -65,16 +71,17 @@ internal class ElasticPullState(
       interrupt()
       if (raw != 0f && available.y * raw < 0) {
         val consume = sign(available.y) * minOf(abs(available.y), abs(raw))
-        raw += consume; offset = dampedPull(raw, limit)
+        raw += consume; offset = if (platformOverscroll) sign(raw) * SpringMath.obtainDampingDistance(abs(raw) / limit, limit) else dampedPull(raw, limit)
         return Offset(0f, consume)
       }
       return Offset.Zero
     }
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
       if (!enabled || refreshing || source != NestedScrollSource.UserInput || available.y == 0f) return Offset.Zero
+      if (platformOverscroll && available.y < 0f) return Offset.Zero
       if (onRefresh != null && available.y > 0f && !canRefresh()) return Offset.Zero
       interrupt()
-      raw += available.y; offset = dampedPull(raw, limit)
+      raw += available.y; offset = if (platformOverscroll) sign(raw) * SpringMath.obtainDampingDistance(abs(raw) / limit, limit) else dampedPull(raw, limit)
       return Offset(0f, available.y)
     }
     override suspend fun onPreFling(available: Velocity): Velocity {
@@ -83,7 +90,7 @@ internal class ElasticPullState(
       return Velocity(0f, available.y)
     }
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-      if (enabled && !reduceMotion && !refreshing && abs(offset) < .1f && job?.isActive != true) {
+      if (enabled && !platformOverscroll && !reduceMotion && !refreshing && abs(offset) < .1f && job?.isActive != true) {
         val pulse = edgePulse(available.y, limit)
         if (pulse != 0f) {
           job = scope.launch {

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
+import live.mehiz.mpvkt.presentation.components.SlimPlayerSlider
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
@@ -82,14 +83,9 @@ private fun AudioVolumeControl() {
       Text(stringResource(R.string.mpv_panel_volume), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
       Text("${value.roundToInt()}%", color = color, style = MaterialTheme.typography.labelMedium)
     }
-    Slider(value, onValueChange = { v ->
+    SlimPlayerSlider(value, onValueChange = { v ->
       requested = v; dragging = true
       PlaybackControl.enqueue("volume") { MPVLib.setPropertyInt("volume", v.roundToInt()) }
-    }, valueRange = 0f..max, onValueChangeFinished = { dragging = false },
-      thumb = { Box(Modifier.size(10.dp).background(color, CircleShape)) },
-      track = { slider -> Canvas(Modifier.fillMaxWidth().height(3.dp)) {
-        drawRoundRect(inactive, size = size, cornerRadius = CornerRadius(size.height))
-        drawRoundRect(color, size = Size(size.width * (slider.value / max), size.height), cornerRadius = CornerRadius(size.height))
-      } })
+    }, valueRange = 0f..max, onValueChangeFinished = { dragging = false })
   }
 }

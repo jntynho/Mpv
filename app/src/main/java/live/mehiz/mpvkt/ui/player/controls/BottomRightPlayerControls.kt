@@ -35,21 +35,8 @@ fun BottomRightPlayerControls(
 ) {
   Row(modifier) {
     if (customButton != null) {
-      Box(modifier = Modifier.padding(end = MaterialTheme.spacing.smaller)) {
-        Button(onClick = {}) {
-          Text(text = customButtonTitle)
-        }
-        Box(
-          modifier = Modifier
-            .matchParentSize()
-            .combinedClickable(
-              onClick = customButton::execute,
-              onLongClick = customButton::executeLongClick,
-              interactionSource = remember { MutableInteractionSource() },
-              indication = null,
-            ),
-        )
-      }
+      ControlsButton(text = customButtonTitle, onClick = customButton::execute,
+        onLongClick = customButton::executeLongClick)
     }
 
     if (isPipAvailable) {

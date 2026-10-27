@@ -49,6 +49,7 @@ import com.github.k1rakishou.fsaf.FileManager
 import com.yubyf.truetypeparser.TTFFile
 import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import live.mehiz.mpvkt.R
@@ -77,7 +78,7 @@ fun SubtitleSettingsTypographyCard(
   val preferences = koinInject<SubtitlesPreferences>()
   val fileManager = koinInject<FileManager>()
   var isExpanded by remember { mutableStateOf(true) }
-  val fonts by remember { mutableStateOf(mutableListOf(preferences.font.defaultValue())) }
+  var fonts by remember { mutableStateOf(listOf(preferences.font.defaultValue())) }
   var fontsLoadingIndicator: (@Composable () -> Unit)? by remember {
     val indicator: (@Composable () -> Unit) = {
       CircularProgressIndicator(Modifier.size(32.dp))
@@ -89,16 +90,22 @@ fun SubtitleSettingsTypographyCard(
       fontsLoadingIndicator = null
       return@LaunchedEffect
     }
-    withContext(Dispatchers.IO) {
-      fonts.addAll(
-        fileManager.listFiles(
-          fileManager.fromUri(preferences.fontsFolder.get().toUri()) ?: return@withContext,
-        ).filter {
+    try {
+      val loaded = withContext(Dispatchers.IO) {
+        val folder = fileManager.fromUri(preferences.fontsFolder.get().toUri()) ?: return@withContext emptyList<String>()
+        fileManager.listFiles(folder).filter {
           fileManager.isFile(it) && fileManager.getName(it).lowercase().matches(".*\\.[ot]tf$".toRegex())
-        }.mapNotNull {
-          runCatching { TTFFile.open(fileManager.getInputStream(it)!!).families.values.first() }.getOrNull()
-        }.distinct(),
-      )
+        }.mapNotNull { file ->
+          kotlinx.coroutines.currentCoroutineContext().ensureActive()
+          runCatching { fileManager.getInputStream(file)?.use { TTFFile.open(it).families.values.firstOrNull() } }.getOrNull()
+        }.distinct()
+      }
+      fonts = (listOf(preferences.font.defaultValue()) + loaded).distinct()
+    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+      throw cancelled
+    } catch (_: Exception) {
+      // A revoked document grant must not crash or close the player's panel.
+    } finally {
       fontsLoadingIndicator = null
     }
   }

@@ -12,11 +12,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import live.mehiz.mpvkt.ui.theme.spacing
 import kotlin.math.max
@@ -34,7 +33,6 @@ fun TintedSliderItem(
   min: Int = 0,
   icon: @Composable () -> Unit = {},
 ) {
-  val haptic = LocalHapticFeedback.current
 
   Row(
     modifier = modifier
@@ -61,12 +59,11 @@ fun TintedSliderItem(
         val newValue = it.toInt()
         if (newValue != value) {
           onChange(newValue)
-          haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
       },
       modifier = Modifier.weight(1.5f),
       valueRange = min.toFloat()..max.toFloat(),
-      steps = max - min,
+      steps = (max - min - 1).coerceAtLeast(0),
       tint = tint
     )
   }
@@ -82,9 +79,9 @@ fun TintedSlider(
   @IntRange steps: Int = 0,
   onValueChangeFinished: (() -> Unit)? = null,
   tint: Color = MaterialTheme.colorScheme.primaryContainer,
-  interactionSource: MutableInteractionSource = MutableInteractionSource()
+  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
-  Slider(
+  SlimPlayerSlider(
     value = value,
     onValueChange = onValueChange,
     modifier = modifier,

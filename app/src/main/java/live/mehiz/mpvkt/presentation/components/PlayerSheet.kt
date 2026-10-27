@@ -5,7 +5,6 @@ import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -40,18 +39,17 @@ private class PaneMotion {
   var position by mutableFloatStateOf(1f); private set
   private var job: Job? = null
 
-  fun animate(scope: CoroutineScope, target: Float, duration: Int, entrance: Boolean = false, finished: () -> Unit = {}) {
+  fun animate(scope: CoroutineScope, target: Float, duration: Int, finished: () -> Unit = {}) {
     stop()
     job = scope.launch {
       AnimationState(position).animateTo(target,
-        if (entrance) spring(dampingRatio = .86f, stiffness = 230f, visibilityThreshold = .001f)
-        else tween(duration, easing = paneEasing)) { position = value }
+        tween(duration, easing = paneEasing)) { position = value }
       position = target
       finished()
     }
   }
   fun stop() { job?.cancel() }
-  fun drag(delta: Float) { position = (position + delta).coerceIn(-.01f, 1f) }
+  fun drag(delta: Float) { position = (position + delta).coerceIn(0f, 1f) }
 }
 
 /** One surface for the lifetime of the player pane; only its inner page changes. */
@@ -82,7 +80,7 @@ fun PlayerSheet(
     if (laidOut && !closing) {
       // Finish the first layout before moving a newly composed, potentially expensive pane.
       if (!reduceMotion) withFrameNanos { }
-      if (!closing) motion.animate(scope, 0f, if (reduceMotion) 0 else 360, entrance = !reduceMotion)
+      if (!closing) motion.animate(scope, 0f, if (reduceMotion) 0 else 300)
     }
   }
   DisposableEffect(motion) { onDispose(motion::stop) }

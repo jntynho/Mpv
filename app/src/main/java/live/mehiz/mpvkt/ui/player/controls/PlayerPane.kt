@@ -3,6 +3,8 @@ package live.mehiz.mpvkt.ui.player.controls
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ internal fun PlayerPane(
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   val savedPages = rememberSaveableStateHolder()
   PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }) { close ->
+    CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory) {
     Column(Modifier.fillMaxSize()) {
       PlayerPanelHeader(title = page.title(), icon = page.icon(), onClose = close, onBack = onBack.takeIf { pages.size > 1 }, animateTitle = !reduceMotion)
       AnimatedContent(
@@ -53,6 +56,7 @@ internal fun PlayerPane(
         val destination = history.last()
         savedPages.SaveableStateProvider(destination.key) { content(destination) }
       }
+    }
     }
   }
 }
