@@ -25,15 +25,16 @@ fun ElasticRefreshBox(
 ) {
   val scope = rememberCoroutineScope()
   val density = LocalDensity.current
+  val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
   val canRefresh by rememberUpdatedState(!loading)
   val refresh by rememberUpdatedState(onRefresh)
-  val pull = remember(density, reduceMotion) {
-    ElasticPullState(scope, with(density) { 144.dp.toPx() }, true,
+  val pull = remember(density, reduceMotion, window) {
+    ElasticPullState(scope, window.height.toFloat().coerceAtLeast(with(density) { 144.dp.toPx() }), true,
       threshold = with(density) { 64.dp.toPx() }, hold = with(density) { 56.dp.toPx() },
-      canRefresh = { canRefresh }, onRefresh = { refresh() }, reduceMotion = reduceMotion)
+      canRefresh = { canRefresh }, onRefresh = { refresh() }, reduceMotion = reduceMotion, platformOverscroll = true)
   }
   DisposableEffect(pull) { onDispose(pull::cancel) }
-  CompositionLocalProvider(LocalOverscrollFactory provides null) {
+  CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory) {
     Box(modifier.nestedScroll(pull.connection)) {
       Box(Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(40.dp).graphicsLayer {
         val progress = (pull.offset / pull.threshold).coerceIn(0f, 1f)
@@ -46,10 +47,7 @@ fun ElasticRefreshBox(
       Box(Modifier.fillMaxSize().graphicsLayer {
         val offset = pull.offset
         translationY = if (offset >= 0f) offset else offset * .3f
-        if (!reduceMotion) {
-          scaleY = 1f + abs(offset) / size.height.coerceAtLeast(1f) * .25f
-          transformOrigin = TransformOrigin(.5f, if (offset >= 0f) 0f else 1f)
-        }
+
       }, content = content)
     }
   }

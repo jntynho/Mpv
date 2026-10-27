@@ -54,11 +54,11 @@ fun ControlsButton(
         interactionSource = interactionSource,
         indication = null,
       )
-      .clip(RoundedCornerShape(16.dp))
+      .clip(CircleShape)
       .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
       .indication(
         interactionSource,
-        ripple()
+        ripple(bounded = false, radius = 24.dp)
       )
       .padding(MaterialTheme.spacing.medium),
   ) {
@@ -96,11 +96,11 @@ fun ControlsButton(
         indication = null,
 
       )
-      .clip(RoundedCornerShape(16.dp))
+      .clip(CircleShape)
       .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
       .indication(
         interactionSource,
-        ripple()
+        ripple(bounded = false, radius = 24.dp)
       )
       .padding(MaterialTheme.spacing.medium),
   ) {

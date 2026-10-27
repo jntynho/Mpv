@@ -51,11 +51,15 @@ internal fun LibraryHeader(
   LaunchedEffect(searching) { if (!searching) { focusManager.clearFocus(); keyboard?.hide() } }
   CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Surface {
+      BoxWithConstraints {
+      // Measure both outgoing and incoming titles at the final reserved width.
+      // Only their viewport moves; ellipsis does not change on every animation frame.
+      val titleWidth = (maxWidth - 212.dp).coerceAtLeast(1.dp)
       Row(Modifier.fillMaxWidth().statusBarsPadding().height(headerHeight).padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(48.dp * back).height(48.dp).clipToBounds(), contentAlignment = Alignment.CenterStart) {
           if (back > 0f) IconButton(onClick = onBack, enabled = searching || inFolder,
-            modifier = Modifier.requiredSize(48.dp).graphicsLayer { alpha = back }) {
+            modifier = Modifier.wrapContentSize(Alignment.CenterStart, unbounded = true).requiredSize(48.dp).graphicsLayer { alpha = back }) {
             androidx.compose.animation.Crossfade(searching, animationSpec = tween(if (reduceMotion) 0 else 140), label = "header_back_icon") {
               Icon(if (it) Icons.Close else Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
             }
@@ -86,19 +90,20 @@ internal fun LibraryHeader(
             androidx.compose.animation.Crossfade(title, Modifier.fillMaxWidth(), tween(if (reduceMotion) 0 else 180),
               label = "bounded_header_title") {
               Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-                Text(it, Modifier.fillMaxWidth(), style = MaterialTheme.typography.titleLarge,
+                Text(it, Modifier.widthIn(max = titleWidth).fillMaxWidth(), style = MaterialTheme.typography.titleLarge,
                   maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
               }
             }
           }
         }
         Box(Modifier.width(144.dp * (1f - search)).height(48.dp).clipToBounds()) {
-          if (search < 1f) Row(Modifier.requiredWidth(144.dp).graphicsLayer { alpha = 1f - search }) {
+          if (search < 1f) Row(Modifier.wrapContentSize(Alignment.CenterStart, unbounded = true).requiredWidth(144.dp).graphicsLayer { alpha = 1f - search }) {
             IconButton(onClick = onSearch, enabled = !searching) { Icon(Icons.Search, stringResource(R.string.mpv_search)) }
             LibrarySortButton(sort, countEnabled = !inFolder, reduceMotion = reduceMotion, enabled = !searching, onSelect = onSort)
             IconButton(onClick = onSettings, enabled = !searching) { Icon(Icons.Settings, stringResource(R.string.luma_settings)) }
           }
         }
+      }
       }
     }
   }

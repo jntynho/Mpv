@@ -21,6 +21,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ripple
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,9 +43,9 @@ fun CurrentChapter(
 ) {
   Box(
     modifier = modifier
-      .clip(RoundedCornerShape(25))
+      .clip(RoundedCornerShape(50))
       .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6F))
-      .clickable(onClick = onClick)
+      .clickable(interactionSource = remember { MutableInteractionSource() }, indication = ripple(bounded = false, radius = 24.dp), onClick = onClick)
       .padding(horizontal = MaterialTheme.spacing.small, vertical = MaterialTheme.spacing.smaller),
   ) {
     AnimatedContent(
@@ -55,7 +58,7 @@ fun CurrentChapter(
           (slideInVertically { height -> -height } + fadeIn())
             .togetherWith(slideOutVertically { height -> height } + fadeOut())
         }.using(
-          SizeTransform(clip = false),
+          SizeTransform(clip = true),
         )
       },
       label = "Chapter",
@@ -94,6 +97,7 @@ fun CurrentChapter(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
+            modifier = Modifier.weight(1f, fill = false),
             overflow = TextOverflow.Ellipsis,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,

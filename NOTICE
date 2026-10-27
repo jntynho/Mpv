@@ -10,3 +10,8 @@ Each includes its license and pinned upstream provenance.
 
 MPV 0.7 interface icons use selected Iconsax Outline/Broken artwork by Lusaxweb, under the original Iconsax custom license. See third_party/iconsax and bundled app assets.
 Only the unchanged home-library folder artwork remains from Font Awesome Free 7.3.1, copyright Fonticons, Inc., CC BY 4.0, per the user's explicit preservation requirement. Its attribution/license are under third_party/folder-artwork and bundled app assets. The Font Awesome icon implementation and all other glyphs were removed.
+
+Miuix overscroll and spring implementation (0.9.4)
+Copyright 2025 compose-miuix-ui contributors, Apache-2.0.
+Adapted OverscrollFactory.kt and SpringUtils.kt to the app's refresh coordinator and Compose 1.9 WindowInfo API.
+Source: https://github.com/miuix-kotlin-multiplatform/miuix

@@ -16,9 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -35,7 +33,6 @@ fun SliderItem(
   min: Int = 0,
   icon: @Composable () -> Unit = {},
 ) {
-  val haptic = LocalHapticFeedback.current
 
   Row(
     modifier = modifier
@@ -56,18 +53,17 @@ fun SliderItem(
       Text(valueText)
     }
 
-    Slider(
+    SlimPlayerSlider(
       value = value.toFloat(),
       onValueChange = {
         val newValue = it.toInt()
         if (newValue != value) {
           onChange(newValue)
-          haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
       },
       modifier = Modifier.weight(1.5f),
       valueRange = min.toFloat()..max.toFloat(),
-      steps = max - min,
+      steps = (max - min - 1).coerceAtLeast(0),
     )
   }
 }
@@ -84,7 +80,6 @@ fun SliderItem(
   min: Float = 0f,
   icon: @Composable () -> Unit = {},
 ) {
-  val haptic = LocalHapticFeedback.current
 
   Row(
     modifier = modifier
@@ -105,13 +100,12 @@ fun SliderItem(
       Text(valueText)
     }
 
-    Slider(
+    SlimPlayerSlider(
       value = value,
       onValueChange = {
         val newValue = it
         if (newValue != value) {
           onChange(newValue)
-          haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
       },
       modifier = Modifier.weight(1.5f),
@@ -132,7 +126,6 @@ fun VerticalSliderItem(
   min: Int = 0,
   icon: @Composable () -> Unit = {},
 ) {
-  val haptic = LocalHapticFeedback.current
 
   Column(
     modifier = modifier
@@ -150,7 +143,6 @@ fun VerticalSliderItem(
       min = min,
       max = max,
       onValueChange = {
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         onChange(it)
       },
       modifier = Modifier.weight(1f),
@@ -173,7 +165,7 @@ fun VerticalSlider(
   onValueChange: (Int) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  Slider(
+  SlimPlayerSlider(
     modifier = modifier
       .graphicsLayer {
         rotationZ = 270f
