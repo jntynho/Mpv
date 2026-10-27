@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="generic_reset">重置</string>
-    <string name="generic_share">分享</string>
     <string name="generic_confirm">确定</string>
     <string name="generic_cancel">取消</string>
     <string name="generic_ok">OK</string>
     <string name="generic_unit_ms">ms</string>
     <string name="generic_disabled">禁用</string>
-    <string name="home_pick_file">选择文件</string>
-    <string name="home_open_file_picker">打开文件选择器</string>
-    <string name="home_open_url">打开 URL</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">无效的协议</string>
     <string name="pref_preferences">设置</string>
     <string name="pref_appearance_title">外观</string>
     <string name="pref_appearance_summary">深色模式，Material You</string>
@@ -35,8 +29,6 @@
     <string name="pref_player_orientation_sensor_landscape">传感器横屏</string>
     <string name="pref_player_draw_over_cutout">在异形屏缺口上绘制</string>
     <string name="pref_player_save_position_on_quit">退出时保存播放进度</string>
-    <string name="pref_player_double_tap_to_pause">双击暂停</string>
-    <string name="pref_player_double_tap_to_seek">双击跳转</string>
     <string name="pref_player_double_tap_seek_duration">双击跳转时长</string>
     <string name="pref_player_show_seekbar_when_seeking">在跳转时显示进度条</string>
     <string name="pref_player_precise_seeking_summary">跳转到精确的位置而非关键帧（慢）</string>
@@ -47,7 +39,6 @@
     <string name="pref_player_gestures_seek">水平跳转手势</string>
     <string name="pref_player_gestures_brightness">亮度调整手势</string>
     <string name="pref_player_gestures_volume">音量调整手势</string>
-    <string name="pref_player_gestures_hold_for_double_speed">长按二倍速</string>
     <string name="pref_player_gestures_hold_for_multiple_speed">长按多倍速</string>
     <string name="pref_player_controls">控制</string>
     <string name="pref_player_controls_allow_gestures_in_panels">允许在面板中使用手势</string>
@@ -154,7 +145,6 @@
     <string name="player_sheets_stats_page_title">默认统计页</string>
     <string name="player_sheets_stats_page_chip">第 %d 页</string>
     <string name="player_sheets_custom_buttons_title">自定义按钮</string>
-    <string name="player_seek_n_seconds">%d 秒</string>
     <string name="player_aspect_fit">适应屏幕</string>
     <string name="player_aspect_crop">裁剪</string>
     <string name="player_aspect_stretch">拉伸</string>
@@ -165,7 +155,6 @@
     <string name="crash_screen_restart">重启应用</string>
     <string name="timer_picker_enter_timer">输入时间</string>
     <string name="timer_picker_pick_time">选择时间</string>
-    <string name="timer_remaining">剩余 %s</string>
     <string name="toast_sleep_timer_ended">睡眠定时器结束</string>
     <string name="pref_player_seeking_title">跳转</string>
     <string name="pref_player_precise_seeking_title">精确跳转</string>

@@ -18,7 +18,6 @@ import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidatePlacement
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
@@ -32,7 +31,7 @@ import kotlin.math.sign
 
 /**
  * Creates [MiuixOverscrollEffect] instances for Compose scrollables.
- * Provided by [top.yukonga.miuix.kmp.theme.MiuixTheme] through
+ * Adapted from the Miuix theme and provided through
  * [androidx.compose.foundation.LocalOverscrollFactory].
  */
 internal object LibraryOverscrollFactory : OverscrollFactory {
@@ -44,8 +43,7 @@ internal object LibraryOverscrollFactory : OverscrollFactory {
 }
 
 /**
- * Spring overscroll sharing damping and spring physics with [overScrollVertical] and
- * [overScrollHorizontal]. Axes settle independently and coordinate with pull-to-refresh.
+ * Axes settle independently and coordinate with the parent pull-to-refresh.
  */
 internal class MiuixOverscrollEffect : OverscrollEffect {
     private val offsetThreshold = 1f
@@ -95,11 +93,11 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
     internal var launchAnimation: ((suspend CoroutineScope.() -> Unit) -> Job)? = null
 
     override val isInProgress: Boolean
-        get() = abs(offsetX) > offsetThreshold || abs(offsetY) > offsetThreshold
+        get() = (abs(offsetX) > offsetThreshold && animationJobX?.isActive != true) ||
+            (abs(offsetY) > offsetThreshold && animationJobY?.isActive != true)
 
     override val node: DelegatableNode = MiuixOverscrollEffectNode(this)
 
-    private fun shouldBypassForPullToRefreshY(): Boolean = false
 
     internal fun resetAll() {
         offsetX = 0f
@@ -207,7 +205,6 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
         }
     }
 
-    private fun updateOverScrollState() = Unit
 
     override fun applyToScroll(
         delta: Offset,
@@ -219,14 +216,12 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
             // A running spring settles to zero on its own; only reclaim when it was interrupted.
             if (animationJobY?.isActive != true) unwindStaleOffsetY(consumed.y)
             if (animationJobX?.isActive != true) unwindStaleOffsetX(consumed.x)
-            updateOverScrollState()
             return consumed
         }
 
-        val bypassY = shouldBypassForPullToRefreshY()
 
         // Resync raw accumulation, then cancel running springs the drag is taking over.
-        if (!bypassY && delta.y != 0f) {
+        if (delta.y != 0f) {
             if (animationJobY?.isActive == true) syncRawAccumulationFromOffsetY()
             animationJobY?.cancel()
         }
@@ -238,7 +233,7 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
         // Reduce vertical overscroll before scrolling back into the content.
         var performScrollDeltaY = delta.y
         var extraConsumedY = 0f
-        if (!bypassY && abs(offsetY) > offsetThreshold && delta.y != 0f && sign(delta.y) != sign(rawTouchAccumulationY)) {
+        if (abs(offsetY) > offsetThreshold && delta.y != 0f && sign(delta.y) != sign(rawTouchAccumulationY)) {
             val canConsumeY = if (abs(rawTouchAccumulationY) <= abs(delta.y)) {
                 -rawTouchAccumulationY
             } else {
@@ -280,17 +275,16 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
         val scrollConsumed = performScroll(adjustedDelta)
         val scrollRemaining = adjustedDelta - scrollConsumed
 
-        if (!bypassY || animationJobY?.isActive != true) unwindStaleOffsetY(scrollConsumed.y)
+        unwindStaleOffsetY(scrollConsumed.y)
         unwindStaleOffsetX(scrollConsumed.x)
 
-        if (scrollRemaining.y != 0f && !bypassY) applyDragY(scrollRemaining.y)
+        if (scrollRemaining.y != 0f) applyDragY(scrollRemaining.y)
         if (scrollRemaining.x != 0f) applyDragX(scrollRemaining.x)
 
-        updateOverScrollState()
 
         return Offset(
             x = extraConsumedX + scrollConsumed.x + (if (scrollRemaining.x != 0f) scrollRemaining.x else 0f),
-            y = extraConsumedY + scrollConsumed.y + (if (scrollRemaining.y != 0f && !bypassY) scrollRemaining.y else 0f),
+            y = extraConsumedY + scrollConsumed.y + (if (scrollRemaining.y != 0f) scrollRemaining.y else 0f),
         )
     }
 
@@ -300,7 +294,6 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
     ) {
         val isActiveY = abs(offsetY) > offsetThreshold
         val isActiveX = abs(offsetX) > offsetThreshold
-        val bypassY = shouldBypassForPullToRefreshY() && !isActiveY
 
         animationJobY?.cancel()
         animationJobX?.cancel()
@@ -308,7 +301,7 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
         var performVelocity = velocity
 
         // Overscroll absorbs outward velocity and attenuates inward velocity.
-        if (!bypassY && isActiveY && velocity.y != 0f) {
+        if (isActiveY && velocity.y != 0f) {
             if (sign(velocity.y) == sign(offsetY)) {
                 startSpringAnimationY(velocity.y)
                 performVelocity = Velocity(performVelocity.x, 0f)
@@ -332,12 +325,9 @@ internal class MiuixOverscrollEffect : OverscrollEffect {
         val remaining = performVelocity - consumed
 
         // Match the modifier's post-fling velocity attenuation.
-        if (!bypassY) {
-            startSpringAnimationY(remaining.y / 1.53333f)
-        }
+        startSpringAnimationY(remaining.y / 1.53333f)
         startSpringAnimationX(remaining.x / 1.53333f)
 
-        updateOverScrollState()
     }
 }
 

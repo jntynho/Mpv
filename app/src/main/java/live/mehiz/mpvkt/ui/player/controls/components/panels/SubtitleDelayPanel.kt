@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
@@ -65,16 +66,16 @@ fun SubtitleDelayPanel(
       onDelayChange = {
         when (affectedSubtitle) {
           SubtitleDelayType.Both -> {
-            MPVLib.setPropertyFloat("sub-delay", it / 1000f)
-            MPVLib.setPropertyFloat("secondary-sub-delay", it / 1000f)
+            PanelProperties.setFloat("sub-delay", it / 1000f)
+            PanelProperties.setFloat("secondary-sub-delay", it / 1000f)
           }
 
-          SubtitleDelayType.Primary -> MPVLib.setPropertyFloat("sub-delay", it / 1000f)
-          else -> MPVLib.setPropertyFloat("secondary-sub-delay", it / 1000f)
+          SubtitleDelayType.Primary -> PanelProperties.setFloat("sub-delay", it / 1000f)
+          else -> PanelProperties.setFloat("secondary-sub-delay", it / 1000f)
         }
       },
       speed = speed ?: preferences.defaultSubSpeed.get(),
-      onSpeedChange = { MPVLib.setPropertyFloat("sub-speed", round(it * 1000) / 1000f) },
+      onSpeedChange = { PanelProperties.setFloat("sub-speed", round(it * 1000) / 1000f) },
       affectedSubtitle = affectedSubtitle,
       onTypeChange = { affectedSubtitle = it },
       onApply = {
@@ -83,9 +84,9 @@ fun SubtitleDelayPanel(
         speed?.takeIf { it in 0.1f..10f }?.let { preferences.defaultSubSpeed.set(it) }
       },
       onReset = {
-        MPVLib.setPropertyFloat("sub-delay", preferences.defaultSubDelay.get() / 1000f)
-        MPVLib.setPropertyFloat("secondary-sub-delay", preferences.defaultSecondarySubDelay.get() / 1000f)
-        MPVLib.setPropertyFloat("sub-speed", preferences.defaultSubSpeed.get())
+        PanelProperties.setFloat("sub-delay", preferences.defaultSubDelay.get() / 1000f)
+        PanelProperties.setFloat("secondary-sub-delay", preferences.defaultSecondarySubDelay.get() / 1000f)
+        PanelProperties.setFloat("sub-speed", preferences.defaultSubSpeed.get())
       },
       modifier = Modifier.fillMaxWidth().padding(12.dp),
     )

@@ -1,15 +1,12 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import `is`.xyz.mpv.MPVLib
@@ -66,7 +63,8 @@ private fun AudioVolumeControl() {
   val boost by preferences.volumeBoostCap.collectAsState()
   val native by MPVLib.propInt["volume"].collectAsState()
   var requested by remember { mutableStateOf<Float?>(null) }
-  var dragging by remember { mutableStateOf(false) }
+  val interaction = remember { MutableInteractionSource() }
+  val dragging by interaction.collectIsDraggedAsState()
   val max = (100 + boost).coerceAtLeast(100).toFloat()
   val value = (requested ?: (native ?: 100).toFloat()).coerceIn(0f, max)
   LaunchedEffect(native, requested, dragging) {
@@ -76,7 +74,6 @@ private fun AudioVolumeControl() {
     }
   }
   val color = MaterialTheme.colorScheme.primary
-  val inactive = MaterialTheme.colorScheme.onSurface.copy(alpha = .18f)
   Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
       Icon(Icons.VolumeUp, null, Modifier.size(23.dp), tint = color)
@@ -84,8 +81,8 @@ private fun AudioVolumeControl() {
       Text("${value.roundToInt()}%", color = color, style = MaterialTheme.typography.labelMedium)
     }
     SlimPlayerSlider(value, onValueChange = { v ->
-      requested = v; dragging = true
+      requested = v
       PlaybackControl.enqueue("volume") { MPVLib.setPropertyInt("volume", v.roundToInt()) }
-    }, valueRange = 0f..max, onValueChangeFinished = { dragging = false })
+    }, valueRange = 0f..max, interactionSource = interaction)
   }
 }

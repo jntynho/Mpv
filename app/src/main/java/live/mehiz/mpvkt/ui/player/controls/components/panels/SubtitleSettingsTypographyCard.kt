@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.github.k1rakishou.fsaf.FileManager
 import com.yubyf.truetypeparser.TTFFile
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ensureActive
@@ -149,7 +150,7 @@ fun SubtitleSettingsTypographyCard(
           checked = isBold == true,
           onCheckedChange = {
             preferences.bold.set(it)
-            MPVLib.setPropertyBoolean("sub-bold", it)
+            PanelProperties.setBoolean("sub-bold", it)
           },
         ) {
           Icon(
@@ -162,7 +163,7 @@ fun SubtitleSettingsTypographyCard(
           checked = isItalic == true,
           onCheckedChange = {
             preferences.italic.set(it)
-            MPVLib.setPropertyBoolean("sub-italic", it)
+            PanelProperties.setBoolean("sub-italic", it)
           },
         ) {
           Icon(
@@ -175,13 +176,13 @@ fun SubtitleSettingsTypographyCard(
           IconToggleButton(
             checked = justify == justification,
             onCheckedChange = {
-              MPVLib.setPropertyBoolean("sub-ass-justify", it)
+              PanelProperties.setBoolean("sub-ass-justify", it)
               if (it) {
                 preferences.justification.set(justification)
-                MPVLib.setPropertyString("sub-justify", justification.value)
+                PanelProperties.setString("sub-justify", justification.value)
               } else {
                 preferences.justification.set(SubtitleJustification.Auto)
-                MPVLib.setPropertyString("sub-justify", SubtitleJustification.Auto.value)
+                PanelProperties.setString("sub-justify", SubtitleJustification.Auto.value)
               }
             },
           ) {
@@ -216,7 +217,7 @@ fun SubtitleSettingsTypographyCard(
           label = stringResource(R.string.player_sheets_sub_typography_font),
           onValueChangedEvent = {
             preferences.font.set(it)
-            MPVLib.setPropertyString("sub-font", it)
+            PanelProperties.setString("sub-font", it)
           },
           leadingIcon = fontsLoadingIndicator,
         )
@@ -226,10 +227,10 @@ fun SubtitleSettingsTypographyCard(
         max = 100,
         min = 1,
         value = fontSize ?: preferences.fontSize.get(),
-        valueText = fontSize.toString(),
+        valueText = (fontSize ?: preferences.fontSize.get()).toString(),
         onChange = {
           preferences.fontSize.set(it)
-          MPVLib.setPropertyInt("sub-font-size", it)
+          PanelProperties.setInt("sub-font-size", it)
         },
       ) {
         Icon(Icons.FormatSize, null)
@@ -241,7 +242,7 @@ fun SubtitleSettingsTypographyCard(
           borderStyle,
           onValueChange = {
             preferences.borderStyle.set(it)
-            MPVLib.setPropertyString("sub-border-style", it.value)
+            PanelProperties.setString("sub-border-style", it.value)
           },
           title = { Text(stringResource(R.string.player_sheets_subtitles_border_style)) },
           valueToText = { AnnotatedString(context.getString(it.titleRes)) },
@@ -254,10 +255,10 @@ fun SubtitleSettingsTypographyCard(
       SliderItem(
         stringResource(R.string.player_sheets_sub_typography_border_size),
         value = borderSize ?: preferences.borderSize.get(),
-        valueText = borderSize.toString(),
+        valueText = (borderSize ?: preferences.borderSize.get()).toString(),
         onChange = {
           preferences.borderSize.set(it)
-          MPVLib.setPropertyInt("sub-outline-size", it)
+          PanelProperties.setInt("sub-outline-size", it)
         },
         max = 100,
         icon = { Icon(Icons.BorderColor, null) },
@@ -265,10 +266,10 @@ fun SubtitleSettingsTypographyCard(
       SliderItem(
         stringResource(R.string.player_sheets_subtitles_shadow_offset),
         value = shadowOffset ?: preferences.shadowOffset.get(),
-        valueText = shadowOffset.toString(),
+        valueText = (shadowOffset ?: preferences.shadowOffset.get()).toString(),
         onChange = {
           preferences.shadowOffset.set(it)
-          MPVLib.setPropertyInt("sub-shadow-offset", it)
+          PanelProperties.setInt("sub-shadow-offset", it)
         },
         max = 100,
         icon = { Icon(Icons.Shadow, null) },
@@ -278,15 +279,15 @@ fun SubtitleSettingsTypographyCard(
 }
 
 fun resetTypography(preferences: SubtitlesPreferences) {
-  MPVLib.setPropertyBoolean("sub-bold", preferences.bold.deleteAndGet())
-  MPVLib.setPropertyBoolean("sub-italic", preferences.italic.deleteAndGet())
-  MPVLib.setPropertyBoolean("sub-ass-justify", preferences.overrideAssSubs.deleteAndGet())
-  MPVLib.setPropertyString("sub-justify", preferences.justification.deleteAndGet().value)
-  MPVLib.setPropertyString("sub-font", preferences.font.deleteAndGet())
-  MPVLib.setPropertyInt("sub-font-size", preferences.fontSize.deleteAndGet())
-  MPVLib.setPropertyInt("sub-border-size", preferences.borderSize.deleteAndGet())
-  MPVLib.setPropertyInt("sub-shadow-offset", preferences.shadowOffset.deleteAndGet())
-  MPVLib.setPropertyString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
+  PanelProperties.setBoolean("sub-bold", preferences.bold.deleteAndGet())
+  PanelProperties.setBoolean("sub-italic", preferences.italic.deleteAndGet())
+  PanelProperties.setBoolean("sub-ass-justify", false)
+  PanelProperties.setString("sub-justify", preferences.justification.deleteAndGet().value)
+  PanelProperties.setString("sub-font", preferences.font.deleteAndGet())
+  PanelProperties.setInt("sub-font-size", preferences.fontSize.deleteAndGet())
+  PanelProperties.setInt("sub-outline-size", preferences.borderSize.deleteAndGet())
+  PanelProperties.setInt("sub-shadow-offset", preferences.shadowOffset.deleteAndGet())
+  PanelProperties.setString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
 }
 
 enum class SubtitlesBorderStyle(

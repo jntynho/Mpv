@@ -1,17 +1,11 @@
 <resources>
     <string name="generic_reset">Restablecer</string>
-    <string name="generic_share">Compartir</string>
     <string name="generic_confirm">Confirmar</string>
     <string name="generic_cancel">Cancelar</string>
     <string name="generic_ok">Aceptar</string>
     <string name="generic_unit_ms">ms</string>
     <string name="generic_disabled">Desactivado</string>
 
-    <string name="home_pick_file">Elegir un archivo</string>
-    <string name="home_open_file_picker">Abrir selector de archivos</string>
-    <string name="home_open_url">Abrir URL</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">Protocolo no válido</string>
 
     <string name="pref_preferences">Preferencias</string>
 
@@ -38,8 +32,6 @@
     <string name="pref_player_orientation_sensor_landscape">Sensor horizontal</string>
     <string name="pref_player_draw_over_cutout">Dibujar sobre el recorte de pantalla</string>
     <string name="pref_player_save_position_on_quit">Guardar posición al salir</string>
-    <string name="pref_player_double_tap_to_pause">Doble toque para pausar</string>
-    <string name="pref_player_double_tap_to_seek">Doble toque para buscar</string>
     <string name="pref_player_double_tap_seek_duration">Duración de la búsqueda con doble toque</string>
     <string name="pref_player_show_seekbar_when_seeking">Mostrar barra de búsqueda al buscar</string>
     <string name="pref_player_seeking_title">Búsqueda</string>
@@ -53,7 +45,6 @@
     <string name="pref_player_gestures_seek">Gestos de búsqueda horizontal</string>
     <string name="pref_player_gestures_brightness">Gestos de brillo</string>
     <string name="pref_player_gestures_volume">Gestos de volumen</string>
-    <string name="pref_player_gestures_hold_for_double_speed">Mantener para velocidad x2</string>
 
     <string name="pref_player_controls">Controles</string>
     <string name="pref_player_controls_allow_gestures_in_panels">Permitir gestos en paneles</string>
@@ -171,7 +162,6 @@
     <string name="player_sheets_more_title">Más</string>
     <string name="player_sheets_stats_page_title">Página de estadísticas por defecto</string>
     <string name="player_sheets_stats_page_chip">Página %d</string>
-    <string name="player_seek_n_seconds">%d segundos</string>
 
     <string name="player_aspect_fit">Ajustar a pantalla</string>
     <string name="player_aspect_crop">Recortar</string>
@@ -187,8 +177,4 @@
     <string name="timer_picker_pick_time">Elegir tiempo</string>
     <string name="toast_sleep_timer_ended">Temporizador finalizado</string>
 
-    <plurals name="plural_items">
-        <item quantity="one">%1$d elemento</item>
-        <item quantity="other">%1$d elementos</item>
-    </plurals>
 </resources>

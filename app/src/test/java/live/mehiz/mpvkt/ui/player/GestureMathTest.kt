@@ -1,11 +1,20 @@
 package live.mehiz.mpvkt.ui.player
 
 import live.mehiz.mpvkt.ui.player.controls.pinchZoom
+import live.mehiz.mpvkt.ui.player.controls.brightnessAfterDrag
 import live.mehiz.mpvkt.ui.player.controls.components.percentage
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class GestureMathTest {
+  @Test fun brightnessHasIdenticalTravelAtDifferentDensitiesAndDoesNotExceedBounds() {
+    assertEquals(.75f, brightnessAfterDrag(.5f, 500f, 250f, 1000f), .0001f)
+    assertEquals(.75f, brightnessAfterDrag(.5f, 1000f, 500f, 2000f), .0001f)
+    assertEquals(1f, brightnessAfterDrag(.5f, 1000f, 0f, 1000f), 0f)
+    assertEquals(0f, brightnessAfterDrag(.5f, 0f, 1000f, 1000f), 0f)
+    assertEquals(.5f, brightnessAfterDrag(.5f, 1f, 0f, 0f), 0f)
+  }
+
   @Test fun zoomIsMultiplicativeAndReversible() {
     assertEquals(1f, pinchZoom(0f, 2f), .0001f)
     assertEquals(0f, pinchZoom(1f, .5f), .0001f)

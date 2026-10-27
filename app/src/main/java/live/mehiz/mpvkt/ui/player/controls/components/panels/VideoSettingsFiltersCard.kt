@@ -17,7 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import `is`.xyz.mpv.MPVLib
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.DecoderPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
@@ -58,7 +58,7 @@ fun VideoSettingsFiltersCard(
         TextButton(
           onClick = {
             VideoFilters.entries.forEach {
-              MPVLib.setPropertyInt(it.mpvProperty, it.preference(decoderPreferences).deleteAndGet())
+              PanelProperties.setInt(it.mpvProperty, it.preference(decoderPreferences).deleteAndGet())
             }
           },
         ) {
@@ -73,7 +73,7 @@ fun VideoSettingsFiltersCard(
             valueText = value.toString(),
             onChange = {
               filter.preference(decoderPreferences).set(it)
-              MPVLib.setPropertyInt(filter.mpvProperty, it)
+              PanelProperties.setInt(filter.mpvProperty, it)
             },
             max = 100,
             min = -100,

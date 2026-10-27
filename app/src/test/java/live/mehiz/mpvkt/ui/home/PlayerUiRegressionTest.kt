@@ -2,7 +2,11 @@ package live.mehiz.mpvkt.ui.home
 
 import android.app.Application
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import live.mehiz.mpvkt.presentation.components.PlayerSheet
+import live.mehiz.mpvkt.ui.player.controls.components.AnimatedPlayPauseButton
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerPanelHeader
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,6 +29,54 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class PlayerUiRegressionTest {
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+
+  @Test fun panelKeepsEqualInsetsEvenWhenItsContentFillsTheWholeHeight() {
+    compose.setContent { MaterialTheme {
+      PlayerSheet({}, reduceMotion = true, modifier = Modifier.testTag("pane")) { close, drag ->
+        Column(Modifier.fillMaxSize()) {
+          PlayerPanelHeader("Long title ".repeat(20), null, close, modifier = drag)
+          Box(Modifier.weight(1f).fillMaxWidth())
+        }
+      }
+    } }
+    val pane = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot
+    val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
+    assertEquals(12f, pane.top - root.top, 1f)
+    assertEquals(12f, root.right - pane.right, 1f)
+    assertEquals(12f, root.bottom - pane.bottom, 1f)
+  }
+
+  @Test fun draggingAPanelSliderCannotDismissOrTranslateItsSurface() {
+    var value = .5f
+    var dismissals = 0
+    compose.setContent { MaterialTheme {
+      PlayerSheet({ dismissals++ }, reduceMotion = true, modifier = Modifier.testTag("pane")) { close, drag ->
+        Column(Modifier.fillMaxSize()) {
+          PlayerPanelHeader("Audio", null, close, modifier = drag)
+          SlimPlayerSlider(.5f, { value = it }, Modifier.fillMaxWidth().testTag("slider"))
+        }
+      }
+    } }
+    val before = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot
+    compose.onNodeWithTag("slider").performTouchInput { swipeLeft(durationMillis = 400) }
+    compose.waitForIdle()
+    val after = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot
+    assertEquals(before.left, after.left, 1f)
+    assertEquals(0, dismissals)
+    assertTrue(value < .1f)
+  }
+
+  @Test fun morphKeepsOneClickableTargetDuringFastPlaybackChanges() {
+    val paused = mutableStateOf(true)
+    var clicks = 0
+    compose.setContent { MaterialTheme {
+      AnimatedPlayPauseButton(paused.value, false, false, true, false, { paused.value = !paused.value; clicks++ })
+    } }
+    repeat(8) { compose.onNode(hasClickAction()).performClick() }
+    compose.onAllNodes(hasClickAction()).assertCountEquals(1)
+    assertEquals(8, clicks)
+    assertTrue(paused.value)
+  }
 
   @Test fun longTitleKeepsItsMeasuredWidthWhileBackButtonExpands() {
     val title = "A very long folder name ".repeat(20)

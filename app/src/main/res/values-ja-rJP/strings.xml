@@ -3,18 +3,12 @@
     <string name="app_name" translatable="false">MPV</string>
 
     <string name="generic_reset">リセット</string>
-    <string name="generic_share">共有</string>
     <string name="generic_confirm">確定</string>
     <string name="generic_cancel">取消</string>
     <string name="generic_ok">OK</string>
     <string name="generic_unit_ms">ms</string>
     <string name="generic_disabled">無効</string>
 
-    <string name="home_pick_file">ファイルを選択</string>
-    <string name="home_open_file_picker">ファイルピッカーを開く</string>
-    <string name="home_open_url">URL を開く</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">無効なプロトコル</string>
 
     <string name="pref_preferences">設定</string>
 
@@ -41,8 +35,6 @@
     <string name="pref_player_orientation_sensor_landscape">センサー横向き</string>
     <string name="pref_player_draw_over_cutout">画面ノッチに描画する</string>
     <string name="pref_player_save_position_on_quit">終了時に再生位置を保存する</string>
-    <string name="pref_player_double_tap_to_pause">ダブルタップでシーク</string>
-    <string name="pref_player_double_tap_to_seek">ダブルタップで一時停止</string>
     <string name="pref_player_double_tap_seek_duration">ダブルタップでのシーク時間</string>
     <string name="pref_player_show_seekbar_when_seeking">シーク中にシークバーを表示する</string>
     <string name="pref_player_seeking_title">シーク</string>
@@ -56,7 +48,6 @@
     <string name="pref_player_gestures_seek">水平シークジェスチャー</string>
     <string name="pref_player_gestures_brightness">明るさ調整のジェスチャー</string>
     <string name="pref_player_gestures_volume">音量調整のジェスチャー</string>
-    <string name="pref_player_gestures_hold_for_double_speed">長押しで 2 倍速にする</string>
     <string name="pref_player_gestures_hold_for_multiple_speed">長押しで x 倍速にする</string>
 
     <string name="pref_player_controls">コントロール</string>
@@ -164,9 +155,7 @@
     <string name="player_sheets_add_ext_sub">外部字幕を追加する</string>
     <string name="player_sheets_add_ext_audio">外部オーディオトラックを追加する</string>
     <string name="player_sheets_tracks_off">オフ</string>
-    <string name="player_sheets_track_title_w_lang" translatable="false">#%d: %s (%s)</string>
     <string name="player_sheets_track_title_wo_lang" translatable="false">#%d: %s</string>
-    <string name="player_sheets_track_lang_wo_title" translatable="false">#%d: %s</string>
     <string name="player_sheets_chapter_title_substitute_audio">オーディオ #%d</string>
     <string name="player_sheets_chapter_title_substitute_subtitle">字幕 #%d</string>
     <string name="player_sheets_subtitles_footer_secondary_sid_no_styles">サブ字幕には ASS/SSA スタイルは適用されません。</string>
@@ -206,7 +195,6 @@
     <string name="player_sheets_sub_delay_audio_sound_heard">音が聞こえた</string>
     <string name="player_sheets_sub_delay_sound_sound_spotted">音を確認した</string>
 
-    <string name="player_sheets_video_settings_title">動画設定</string>
     <string name="player_sheets_deband_title">デバンド</string>
     <string name="player_sheets_deband_none">無し</string>
     <string name="player_sheets_deband_cpu">CPU</string>
@@ -235,7 +223,6 @@
     <string name="player_sheets_stats_page_title">デフォルトの統計ページ</string>
     <string name="player_sheets_stats_page_chip">ページ %d</string>
     <string name="player_sheets_custom_buttons_title">カスタムボタン</string>
-    <string name="player_seek_n_seconds">%d 秒</string>
     <string name="player_speed" translatable="false">%.2fx</string>
     <string name="player_gesture_seek_indicator" translatable="false">%c%s\n[%s]</string>
 
@@ -252,7 +239,6 @@
     <string name="timer_picker_enter_timer">時間を入力</string>
     <string name="timer_picker_pick_time">時間を選択</string>
     <string name="timer_title">スリープタイマー</string>
-    <string name="timer_remaining">残り %s</string>
 
     <string name="toast_sleep_timer_ended">スリープタイマーが終了しました</string>
 
@@ -264,7 +250,6 @@
     <string name="volume_slider_steps_other" translatable="false">%d (%d)</string>
 
     <string name="value_percentage_int" translatable="false">%d%%</string>
-    <string name="value_percentage_float" translatable="false">%.2f\%%</string>
 
     <string name="github_repo_url" translatable="false">https://github.com/abdallahmehiz/mpvKt</string>
     <string name="privacy_policy_url" translatable="false">https://abdallahmehiz.github.io/mpvKt/privacy_policy.html</string>
@@ -286,10 +271,6 @@
     <string name="notification_forward">早送り</string>
     <string name="notification_rewind">巻き戻し</string>
 
-    <plurals name="plural_items">
-        <item quantity="one">%1$d 個の項目</item>
-        <item quantity="other">%1$d 個の項目</item>
-    </plurals>
 
     <plurals name="seconds">
         <item quantity="one">%1$d 秒</item>

@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import live.mehiz.mpvkt.ui.utils.navigationMotion
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -117,7 +118,7 @@ object HomeScreen : Screen {
               val listState = rememberLazyListState()
               var appliedSort by remember { mutableStateOf(listing.sort) }
               LaunchedEffect(listing.sort) {
-                if (appliedSort != listing.sort) { listState.requestScrollToItem(0); appliedSort = listing.sort }
+                if (appliedSort != listing.sort) { listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset); appliedSort = listing.sort }
               }
               LazyColumn(Modifier.fillMaxSize(), state = listState,
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
@@ -128,7 +129,7 @@ object HomeScreen : Screen {
                   items(listing.folders, key = { it.id }) { entry ->
                     Row(Modifier.animateItem(
                       fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                      placementSpec = tween(if (reduceMotion) 0 else 260),
+                      placementSpec = tween(if (reduceMotion) 0 else 320, easing = FastOutSlowInEasing),
                       fadeOutSpec = tween(if (reduceMotion) 0 else 120))
                       .fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { selectedFolder = entry.id }
                       .padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -144,14 +145,16 @@ object HomeScreen : Screen {
                   items(listing.videos, key = { it.uri }) { video ->
                     Row(Modifier.animateItem(
                       fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                      placementSpec = tween(if (reduceMotion) 0 else 260),
+                      placementSpec = tween(if (reduceMotion) 0 else 320, easing = FastOutSlowInEasing),
                       fadeOutSpec = tween(if (reduceMotion) 0 else 120))
                       .fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { playFile(video.uri, context) }
                       .padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                      Box(Modifier.width(136.dp).height(88.dp).clip(RoundedCornerShape(12.dp))) {
+                      val coverRadius = 12.dp
+                      val badgeInset = 4.dp
+                      Box(Modifier.width(136.dp).height(88.dp).clip(RoundedCornerShape(coverRadius))) {
                         VideoThumbnail(context, video.uri, Modifier.fillMaxSize(), video.revision)
-                        Text(formatDuration(video.duration), Modifier.align(Alignment.BottomEnd).padding(4.dp)
-                          .clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = .75f)).padding(horizontal = 4.dp, vertical = 2.dp),
+                        Text(formatDuration(video.duration), Modifier.align(Alignment.BottomEnd).padding(badgeInset)
+                          .clip(RoundedCornerShape(coverRadius - badgeInset)).background(Color.Black.copy(alpha = .75f)).padding(horizontal = 4.dp, vertical = 2.dp),
                           color = Color.White, style = MaterialTheme.typography.labelSmall)
                       }
                       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {

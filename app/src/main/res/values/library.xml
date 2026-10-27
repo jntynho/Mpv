@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="mpv_folders">Folders</string>
-  <string name="mpv_videos">Videos</string>
   <string name="mpv_search">Search videos and folders</string>
   <string name="mpv_back">Back</string>
-  <string name="mpv_refresh">Refresh library</string>
-  <string name="mpv_permission">Allow video access to display your library. You can also open a file with +.</string>
   <string name="mpv_allow">Allow video access</string>
   <string name="mpv_manage_access">Manage selected videos</string>
   <string name="mpv_empty">No videos found. Try another search or refresh your library.</string>
   <string name="mpv_library_error">Cannot read the library. Check video permission and try refreshing.</string>
-  <string name="mpv_video_count">%1$d videos</string>
   <string name="mpv_pinch_zoom">Pinch to zoom</string>
 <string name="mpv_sort">Sort by</string>
-<string name="mpv_recent">Recently added</string>
-<string name="mpv_name_asc">Name: A–Z</string>
-<string name="mpv_name_desc">Name: Z–A</string>
-<string name="mpv_duration">Duration: longest first</string>
-<string name="mpv_more">More options</string>
 <string name="mpv_library_permission">Allow video access to display your library.</string>
 </resources>

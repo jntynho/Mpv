@@ -56,6 +56,7 @@ class PlayerViewModel(
   fun attachActivity(current: PlayerActivity) {
     if (activity === current) return
     activity = current
+    changeBrightnessTo(currentBrightness.value)
     viewModelScope.launch(Dispatchers.IO) {
       val buttons = _customButtons.value.getButtons()
       if (!current.isDestroyed && buttons.isNotEmpty()) current.setupCustomButtons(buttons)
@@ -110,7 +111,7 @@ class PlayerViewModel(
     runCatching {
       Settings.System.getFloat(activity.contentResolver, Settings.System.SCREEN_BRIGHTNESS)
         .normalize(0f, 255f, 0f, 1f)
-    }.getOrElse { 0f },
+    }.getOrElse { .5f }.coerceIn(0f, 1f),
   )
 
   internal val panelNavigator = PlayerPanelNavigator()
@@ -226,13 +227,20 @@ class PlayerViewModel(
     changeBrightnessTo(currentBrightness.value + change)
   }
 
+  /** Read an explicit per-window override before starting a new swipe. */
+  fun gestureBrightness(): Float = activity.window.attributes.screenBrightness
+    .takeIf { it.isFinite() && it in 0f..1f } ?: currentBrightness.value
+
   fun changeBrightnessTo(
     brightness: Float,
   ) {
-    activity.window.attributes = activity.window.attributes.apply {
-      screenBrightness = brightness.coerceIn(0f, 1f).also {
-        currentBrightness.update { _ -> it }
-      }
+    if (!brightness.isFinite()) return
+    val value = brightness.coerceIn(0f, 1f)
+    val attributes = activity.window.attributes
+    currentBrightness.value = value
+    if (attributes.screenBrightness != value) {
+      attributes.screenBrightness = value
+      activity.window.attributes = attributes
     }
   }
 

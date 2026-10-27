@@ -6,6 +6,7 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -21,15 +22,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.res.stringResource
+import live.mehiz.mpvkt.R
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import live.mehiz.mpvkt.preferences.PlayerPreferences
-import live.mehiz.mpvkt.preferences.preference.collectAsState
-import org.koin.compose.koinInject
 
 private val paneEasing = CubicBezierEasing(.3f, 0f, .2f, 1f)
 
@@ -59,12 +63,12 @@ fun PlayerSheet(
   modifier: Modifier = Modifier,
   onNavigateBack: (() -> Unit)? = null,
   tonalElevation: Dp = 1.dp,
-  content: @Composable (onClose: () -> Unit) -> Unit,
+  reduceMotion: Boolean = false,
+  content: @Composable (onClose: () -> Unit, headerDrag: Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
   val latestDismiss by rememberUpdatedState(onDismissRequest)
   val latestBack by rememberUpdatedState(onNavigateBack)
-  val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   val motion = remember { PaneMotion() }
   val dismissVelocity = with(LocalDensity.current) { 550.dp.toPx() }
   var widthPx by remember { mutableFloatStateOf(1f) }
@@ -76,7 +80,7 @@ fun PlayerSheet(
       motion.animate(scope, 1f, if (reduceMotion) 0 else 240) { latestDismiss() }
     }
   }
-  LaunchedEffect(laidOut) {
+  LaunchedEffect(laidOut, reduceMotion) {
     if (laidOut && !closing) {
       // Finish the first layout before moving a newly composed, potentially expensive pane.
       if (!reduceMotion) withFrameNanos { }
@@ -85,29 +89,37 @@ fun PlayerSheet(
   }
   DisposableEffect(motion) { onDispose(motion::stop) }
   BackHandler { if (!closing) latestBack?.invoke() ?: close() }
+  val closeLabel = stringResource(R.string.generic_close)
+  val headerDrag = Modifier.draggable(
+    state = rememberDraggableState { dx -> motion.drag(dx / widthPx) },
+    orientation = Orientation.Horizontal, enabled = !closing && laidOut,
+    onDragStarted = { motion.stop() },
+    onDragStopped = { velocity ->
+      if ((motion.position > .3f && velocity > -dismissVelocity) || velocity > dismissVelocity) close()
+      else motion.animate(scope, 0f, if (reduceMotion) 0 else 220)
+    },
+  )
   Box(Modifier.fillMaxSize()) {
     Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = .23f * (1f - motion.position).coerceIn(0f, 1f))) }
+      .semantics { contentDescription = closeLabel }
       .clickable(remember { MutableInteractionSource() }, indication = null, onClick = close))
-    BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+    BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding().padding(12.dp)) {
       val width = if (maxWidth > maxHeight) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
         else maxWidth.coerceAtMost(504.dp)
       Surface(
         modifier = Modifier.align(AbsoluteAlignment.CenterRight).width(width).fillMaxHeight()
-          .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f); laidOut = true }.padding(12.dp)
+          .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f); laidOut = true }
           .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }
-          .draggable(
-            state = rememberDraggableState { dx -> motion.drag(dx / widthPx) },
-            orientation = Orientation.Horizontal, enabled = !closing && laidOut,
-            onDragStarted = { motion.stop() },
-            onDragStopped = { velocity ->
-              if (motion.position > .3f || velocity > dismissVelocity) close()
-              else motion.animate(scope, 0f, if (reduceMotion) 0 else 220)
-            },
-          ).then(modifier)
-          .clickable(remember { MutableInteractionSource() }, indication = null, onClick = {}),
+          .pointerInput(closing) {
+            // Once exit starts, a late tap cannot change tracks or push another page.
+            if (closing) awaitPointerEventScope {
+              while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+            }
+          }.then(modifier)
+          .pointerInput(Unit) { detectTapGestures(onTap = {}) },
         shape = RoundedCornerShape(24.dp), tonalElevation = tonalElevation,
         color = MaterialTheme.colorScheme.surfaceContainer,
-      ) { content(close) }
+      ) { content(close, headerDrag) }
     }
   }
 }
