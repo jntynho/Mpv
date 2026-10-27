@@ -1,5 +1,8 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.icons.Gpu
+import live.mehiz.mpvkt.ui.icons.RestartAlt
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,9 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Gradient
-import live.mehiz.mpvkt.ui.icons.filled.Memory
-import live.mehiz.mpvkt.ui.icons.filled.NotInterested
+import live.mehiz.mpvkt.ui.icons.Gradient
+import live.mehiz.mpvkt.ui.icons.Memory
+import live.mehiz.mpvkt.ui.icons.NotInterested
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
@@ -52,7 +54,7 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
     isExpanded,
     title = {
       Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
-        Icon(Icons.Default.Gradient, null)
+        Icon(Icons.Gradient, null)
         Text(stringResource(R.string.player_sheets_deband_title))
       }
     },
@@ -91,9 +93,9 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
               },
             ) {
               when (it) {
-                Debanding.None -> Icon(Icons.Default.NotInterested, null)
-                Debanding.CPU -> Icon(Icons.Default.Memory, null)
-                Debanding.GPU -> Icon(painterResource(R.drawable.expansion_card), null)
+                Debanding.None -> Icon(Icons.NotInterested, null)
+                Debanding.CPU -> Icon(Icons.Memory, null)
+                Debanding.GPU -> Icon(Icons.Gpu, null)
               }
             }
           }
@@ -115,7 +117,7 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
               horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
               verticalAlignment = Alignment.CenterVertically
             ) {
-              Icon(painterResource(R.drawable.reset_iso_24px), null)
+              Icon(Icons.RestartAlt, null)
               Text(stringResource(R.string.generic_reset))
             }
           }

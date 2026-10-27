@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.DoubleArrow
+import live.mehiz.mpvkt.ui.icons.DoubleArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -63,7 +63,7 @@ fun MultipleSpeedPlayerUpdate(
         style = MaterialTheme.typography.bodyLarge,
       )
       Icon(
-        Icons.Filled.DoubleArrow,
+        Icons.DoubleArrow,
         null,
       )
     }

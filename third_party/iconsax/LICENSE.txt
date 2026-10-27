@@ -1,0 +1,5 @@
+Iconsax — Lusaxweb
+Official source: https://github.com/lusaxweb/iconsax
+License text source: components/License.vue at commit e5dba15361f69d34d0f3f3f35408a28fe74c5727
+
+Iconsax are the official icons of the Vuesax framework, these icons can be used for personal and commercial use for free, but they cannot be sold and distributed under another name, they cannot be used to create templates or ui kits without permission, if desired to use the iconsax icon pack for these purposes, you should contact: https://lusaxweb.net/contact

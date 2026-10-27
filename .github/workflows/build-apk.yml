@@ -35,6 +35,8 @@ jobs:
           subprocess.run(command + ['--licenses'], input='y\n' * 100, text=True, check=True)
           subprocess.run(command + ['platforms;android-36', 'build-tools;35.0.0', 'ndk;27.0.12077973'], check=True)
           PYCODE
+      - name: Validate icon catalogue and unchanged home folder
+        run: python3 scripts/check-icon-assets.py
       - name: Build installable APKs and validate
         shell: bash
         run: |

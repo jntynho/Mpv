@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.icons.LocalIconStyle
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import org.koin.compose.koinInject
@@ -106,6 +107,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val dynamicColor by preferences.materialYou.collectAsState()
   val context = LocalContext.current
   val oledBlack by preferences.oledBlack.collectAsState()
+  val iconStyle by preferences.iconStyle.collectAsState()
 
   val colorScheme = when {
     dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -123,6 +125,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
 
   CompositionLocalProvider(
     LocalSpacing provides Spacing(),
+    LocalIconStyle provides iconStyle,
   ) {
     MaterialTheme(
       colorScheme = if (oledBlack && (darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme))) {

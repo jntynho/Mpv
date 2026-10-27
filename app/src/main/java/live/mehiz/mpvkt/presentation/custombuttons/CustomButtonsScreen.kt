@@ -14,9 +14,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
-import live.mehiz.mpvkt.ui.icons.automirrored.outlined.HelpOutline
-import live.mehiz.mpvkt.ui.icons.filled.Add
+import live.mehiz.mpvkt.ui.icons.ArrowBack
+import live.mehiz.mpvkt.ui.icons.HelpOutline
+import live.mehiz.mpvkt.ui.icons.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -61,12 +61,12 @@ fun CustomButtonsScreen(
         },
         navigationIcon = {
           IconButton(onClick = { onNavigateBack() }) {
-            Icon(Icons.AutoMirrored.Default.ArrowBack, null)
+            Icon(Icons.AutoMirrored.ArrowBack, null)
           }
         },
         actions = {
           IconButton(onClick = { onClickFaq() }) {
-            Icon(Icons.AutoMirrored.Outlined.HelpOutline, null)
+            Icon(Icons.AutoMirrored.HelpOutline, null)
           }
         }
       )
@@ -74,7 +74,7 @@ fun CustomButtonsScreen(
     floatingActionButton = {
       ExtendedFloatingActionButton(
         onClick = { onClickAdd() },
-        icon = { Icon(Icons.Filled.Add, null) },
+        icon = { Icon(Icons.Add, null) },
         text = { Text(text = stringResource(id = R.string.pref_custom_button_action_add)) },
       )
     }

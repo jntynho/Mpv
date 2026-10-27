@@ -40,6 +40,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
@@ -60,6 +62,7 @@ import live.mehiz.mpvkt.domain.playbackstate.repository.PlaybackStateRepository
 import live.mehiz.mpvkt.preferences.AdvancedPreferences
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.GesturePreferences
+import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.ui.player.controls.PlayerControls
@@ -78,6 +81,7 @@ class PlayerActivity : AppCompatActivity() {
   val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
   val audioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
   private var mediaSession: MediaSession? = null
+  private val appearancePreferences: AppearancePreferences by inject()
   private val playerPreferences: PlayerPreferences by inject()
   private val audioPreferences: AudioPreferences by inject()
   private val subtitlesPreferences: SubtitlesPreferences by inject()
@@ -149,6 +153,12 @@ class PlayerActivity : AppCompatActivity() {
     getPlayableUri(intent)?.let(player::playFile)
     setOrientation()
 
+    // Observe appearance without recreating the Activity or touching the video surface.
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.STARTED) {
+        appearancePreferences.iconStyle.changes().collect { updatePipParams() }
+      }
+    }
     binding.controls.setContent {
       MpvKtTheme {
         PlayerControls(
@@ -704,7 +714,7 @@ class PlayerActivity : AppCompatActivity() {
       builder.setAutoEnterEnabled(viewModel.paused == false && autoEnter)
       builder.setSeamlessResizeEnabled(viewModel.paused == false && autoEnter)
     }
-    builder.setActions(createPipActions(this, viewModel.paused == true))
+    builder.setActions(createPipActions(this, viewModel.paused == true, appearancePreferences.iconStyle.get()))
     builder.setSourceRectHint(pipRect)
     validPipAspect(player.getVideoOutAspect())?.let { aspect ->
       builder.setAspectRatio(Rational((aspect * 10000).toInt(), 10000))

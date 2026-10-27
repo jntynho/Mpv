@@ -12,16 +12,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.outlined.ArrowBack
-import live.mehiz.mpvkt.ui.icons.outlined.Audiotrack
-import live.mehiz.mpvkt.ui.icons.outlined.Code
-import live.mehiz.mpvkt.ui.icons.outlined.Gesture
-import live.mehiz.mpvkt.ui.icons.outlined.Info
-import live.mehiz.mpvkt.ui.icons.outlined.Memory
-import live.mehiz.mpvkt.ui.icons.outlined.Palette
-import live.mehiz.mpvkt.ui.icons.outlined.PlayCircle
-import live.mehiz.mpvkt.ui.icons.outlined.Subtitles
-import live.mehiz.mpvkt.ui.icons.outlined.Terminal
+import live.mehiz.mpvkt.ui.icons.ArrowBack
+import live.mehiz.mpvkt.ui.icons.Audiotrack
+import live.mehiz.mpvkt.ui.icons.Code
+import live.mehiz.mpvkt.ui.icons.Gesture
+import live.mehiz.mpvkt.ui.icons.Info
+import live.mehiz.mpvkt.ui.icons.Memory
+import live.mehiz.mpvkt.ui.icons.Palette
+import live.mehiz.mpvkt.ui.icons.PlayCircle
+import live.mehiz.mpvkt.ui.icons.Subtitles
+import live.mehiz.mpvkt.ui.icons.Terminal
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +53,7 @@ object PreferencesScreen : Screen {
           title = { Text(text = stringResource(R.string.pref_preferences)) },
           navigationIcon = {
             IconButton(onClick = LocalNavigateBack.current) {
-              Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
+              Icon(Icons.AutoMirrored.ArrowBack, contentDescription = null)
             }
           },
         )
@@ -73,7 +73,7 @@ object PreferencesScreen : Screen {
             key = "appearance",
             title = { Text(text = stringResource(id = R.string.pref_appearance_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_appearance_summary)) },
-            icon = { Icon(Icons.Outlined.Palette, null) },
+            icon = { Icon(Icons.Palette, null) },
             onClick = { backstack.add(AppearancePreferencesScreen) },
           )
           preference(
@@ -82,7 +82,7 @@ object PreferencesScreen : Screen {
             key = "player",
             title = { Text(text = stringResource(id = R.string.pref_player)) },
             summary = { Text(text = stringResource(id = R.string.pref_player_summary)) },
-            icon = { Icon(Icons.Outlined.PlayCircle, null) },
+            icon = { Icon(Icons.PlayCircle, null) },
             onClick = { backstack.add(PlayerPreferencesScreen) },
           )
           preference(
@@ -91,7 +91,7 @@ object PreferencesScreen : Screen {
             key = "gesture",
             title = { Text(text = stringResource(id = R.string.pref_gesture)) },
             summary = { Text(text = stringResource(id = R.string.pref_gesture_summary)) },
-            icon = { Icon(Icons.Outlined.Gesture, null) },
+            icon = { Icon(Icons.Gesture, null) },
             onClick = { backstack.add(GesturePreferencesScreen) },
           )
           preference(
@@ -100,7 +100,7 @@ object PreferencesScreen : Screen {
             key = "decoder",
             title = { Text(text = stringResource(id = R.string.pref_decoder)) },
             summary = { Text(text = stringResource(id = R.string.pref_decoder_summary)) },
-            icon = { Icon(Icons.Outlined.Memory, null) },
+            icon = { Icon(Icons.Memory, null) },
             onClick = { backstack.add(DecoderPreferencesScreen) },
           )
           preference(
@@ -109,7 +109,7 @@ object PreferencesScreen : Screen {
             key = "subtitles",
             title = { Text(text = stringResource(id = R.string.pref_subtitles)) },
             summary = { Text(text = stringResource(id = R.string.pref_subtitles_summary)) },
-            icon = { Icon(Icons.Outlined.Subtitles, null) },
+            icon = { Icon(Icons.Subtitles, null) },
             onClick = { backstack.add(SubtitlesPreferencesScreen) },
           )
           preference(
@@ -118,7 +118,7 @@ object PreferencesScreen : Screen {
             key = "audio",
             title = { Text(text = stringResource(id = R.string.pref_audio)) },
             summary = { Text(text = stringResource(id = R.string.pref_audio_summary)) },
-            icon = { Icon(Icons.Outlined.Audiotrack, null) },
+            icon = { Icon(Icons.Audiotrack, null) },
             onClick = { backstack.add(AudioPreferencesScreen) },
           )
           preference(
@@ -127,7 +127,7 @@ object PreferencesScreen : Screen {
             key = "customButtons",
             title = { Text(text = stringResource(id = R.string.pref_custom_buttons_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_custom_buttons_summary)) },
-            icon = { Icon(Icons.Outlined.Terminal, null) },
+            icon = { Icon(Icons.Terminal, null) },
             onClick = { backstack.add(CustomButtonsScreen) },
           )
           preference(
@@ -136,7 +136,7 @@ object PreferencesScreen : Screen {
             key = "advanced",
             title = { Text(text = stringResource(R.string.pref_advanced)) },
             summary = { Text(text = stringResource(id = R.string.pref_advanced_summary)) },
-            icon = { Icon(Icons.Outlined.Code, null) },
+            icon = { Icon(Icons.Code, null) },
             onClick = { backstack.add(AdvancedPreferencesScreen) }
           )
           preference(
@@ -145,7 +145,7 @@ object PreferencesScreen : Screen {
             key = "about",
             title = { Text(text = stringResource(id = R.string.pref_about_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_about_summary)) },
-            icon = { Icon(Icons.Outlined.Info, null) },
+            icon = { Icon(Icons.Info, null) },
             onClick = { backstack.add(AboutScreen) },
           )
         }

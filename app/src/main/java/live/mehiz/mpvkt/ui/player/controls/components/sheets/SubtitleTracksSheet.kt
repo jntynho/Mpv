@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.MoreTime
-import live.mehiz.mpvkt.ui.icons.filled.Palette
+import live.mehiz.mpvkt.ui.icons.MoreTime
+import live.mehiz.mpvkt.ui.icons.Palette
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,10 +45,10 @@ fun SubtitlesSheet(
         onAddSubtitle,
         actions = {
           IconButton(onClick = onOpenSubtitleSettings) {
-            Icon(Icons.Default.Palette, null)
+            Icon(Icons.Palette, null)
           }
           IconButton(onClick = onOpenSubtitleDelay) {
-            Icon(Icons.Default.MoreTime, null)
+            Icon(Icons.MoreTime, null)
           }
         },
       )

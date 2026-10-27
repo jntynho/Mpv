@@ -1,10 +1,10 @@
 package live.mehiz.mpvkt.preferences
 
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.FormatAlignLeft
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.FormatAlignRight
-import live.mehiz.mpvkt.ui.icons.filled.FormatAlignCenter
-import live.mehiz.mpvkt.ui.icons.filled.FormatAlignJustify
+import live.mehiz.mpvkt.ui.icons.FormatAlignLeft
+import live.mehiz.mpvkt.ui.icons.FormatAlignRight
+import live.mehiz.mpvkt.ui.icons.FormatAlignCenter
+import live.mehiz.mpvkt.ui.icons.FormatAlignJustify
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,12 +41,14 @@ class SubtitlesPreferences(preferenceStore: PreferenceStore) {
   val defaultSecondarySubDelay = preferenceStore.getInt("sub_default_secondary_delay")
 }
 
-enum class SubtitleJustification(
-  val value: String,
+enum class SubtitleJustification(val value: String) {
+  Left("left"), Center("center"), Right("right"), Auto("auto");
+
   val icon: ImageVector
-) {
-  Left("left", Icons.AutoMirrored.Default.FormatAlignLeft),
-  Center("center", Icons.Default.FormatAlignCenter),
-  Right("right", Icons.AutoMirrored.Default.FormatAlignRight),
-  Auto("auto", Icons.Default.FormatAlignJustify)
+    @androidx.compose.runtime.Composable get() = when (this) {
+      Left -> Icons.AutoMirrored.FormatAlignLeft
+      Center -> Icons.FormatAlignCenter
+      Right -> Icons.AutoMirrored.FormatAlignRight
+      Auto -> Icons.FormatAlignJustify
+    }
 }

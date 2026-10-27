@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.AlignVerticalCenter
-import live.mehiz.mpvkt.ui.icons.filled.EditOff
-import live.mehiz.mpvkt.ui.icons.filled.FormatSize
-import live.mehiz.mpvkt.ui.icons.filled.Tune
+import live.mehiz.mpvkt.ui.icons.AlignVerticalCenter
+import live.mehiz.mpvkt.ui.icons.EditOff
+import live.mehiz.mpvkt.ui.icons.FormatSize
+import live.mehiz.mpvkt.ui.icons.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,7 +45,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
     isExpanded,
     title = {
       Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
-        Icon(Icons.Default.Tune, null)
+        Icon(Icons.Tune, null)
         Text(stringResource(R.string.player_sheets_sub_misc_card_title))
       }
     },
@@ -80,7 +80,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
           max = 5f,
           icon = {
             Icon(
-              Icons.Default.FormatSize,
+              Icons.FormatSize,
               null,
             )
           },
@@ -96,7 +96,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
           max = 150,
           icon = {
             Icon(
-              Icons.Default.AlignVerticalCenter,
+              Icons.AlignVerticalCenter,
               null,
             )
           },
@@ -120,7 +120,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
             },
           ) {
             Row {
-              Icon(Icons.Default.EditOff, null)
+              Icon(Icons.EditOff, null)
               Text(stringResource(R.string.generic_reset))
             }
           }

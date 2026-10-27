@@ -19,8 +19,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.automirrored.filled.ArrowBack
-import live.mehiz.mpvkt.ui.icons.filled.Close
+import live.mehiz.mpvkt.ui.icons.ArrowBack
+import live.mehiz.mpvkt.ui.icons.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,7 +76,7 @@ fun MultiCardPanel(
           },
           navigationIcon = {
             IconButton(onClick = onDismissRequest) {
-              Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = null)
+              Icon(imageVector = Icons.AutoMirrored.ArrowBack, contentDescription = null)
             }
           },
           colors = TopAppBarDefaults.topAppBarColors().copy(containerColor = Color.Transparent),
@@ -116,7 +116,7 @@ fun MultiCardPanel(
             ),
           )
           IconButton(onDismissRequest) {
-            Icon(imageVector = Icons.Default.Close, contentDescription = null)
+            Icon(imageVector = Icons.Close, contentDescription = null)
           }
         }
         repeat(cardCount) { cards(it, Modifier) }

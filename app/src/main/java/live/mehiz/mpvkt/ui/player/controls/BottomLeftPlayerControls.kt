@@ -6,8 +6,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.LockOpen
-import live.mehiz.mpvkt.ui.icons.filled.ScreenRotation
+import live.mehiz.mpvkt.ui.icons.LockOpen
+import live.mehiz.mpvkt.ui.icons.ScreenRotation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,11 +34,11 @@ fun BottomLeftPlayerControls(
     verticalAlignment = Alignment.CenterVertically,
   ) {
     ControlsButton(
-      Icons.Default.LockOpen,
+      Icons.LockOpen,
       onClick = onLockControls,
     )
     ControlsButton(
-      icon = Icons.Default.ScreenRotation,
+      icon = Icons.ScreenRotation,
       onClick = onCycleRotation
     )
     ControlsButton(

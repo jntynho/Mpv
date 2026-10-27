@@ -8,41 +8,45 @@ import android.graphics.drawable.Icon
 import android.os.Build.VERSION_CODES.O
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.icons.IconStyle
 
 @RequiresApi(O)
 fun createPipActions(
   context: Context,
   isPaused: Boolean,
-): ArrayList<RemoteAction> = arrayListOf(
-  createPipAction(
-    context,
-    "fast rewind",
-    R.drawable.baseline_fast_rewind_24,
-    PIP_FR,
-  ),
-  if (isPaused) {
+  style: IconStyle = IconStyle.Outline,
+): ArrayList<RemoteAction> {
+  val icons = mediaControlIcons(style)
+  return arrayListOf(
     createPipAction(
       context,
-      "play",
-      R.drawable.baseline_play_arrow_24,
-      PIP_PLAY,
-    )
-  } else {
+      "fast rewind",
+      icons.rewind,
+      PIP_FR,
+    ),
+    if (isPaused) {
+      createPipAction(
+        context,
+        "play",
+        icons.play,
+        PIP_PLAY,
+      )
+    } else {
+      createPipAction(
+        context,
+        "pause",
+        icons.pause,
+        PIP_PAUSE,
+      )
+    },
     createPipAction(
       context,
-      "pause",
-      R.drawable.baseline_pause_24,
-      PIP_PAUSE,
+      "fast forward",
+      icons.forward,
+      PIP_FF
     )
-  },
-  createPipAction(
-    context,
-    "fast forward",
-    R.drawable.baseline_fast_forward_24,
-    PIP_FF
   )
-)
+}
 
 @RequiresApi(O)
 fun createPipAction(

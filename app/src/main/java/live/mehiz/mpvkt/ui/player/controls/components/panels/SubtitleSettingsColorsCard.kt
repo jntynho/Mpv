@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.BorderColor
-import live.mehiz.mpvkt.ui.icons.filled.FormatColorFill
-import live.mehiz.mpvkt.ui.icons.filled.FormatColorReset
-import live.mehiz.mpvkt.ui.icons.filled.FormatColorText
-import live.mehiz.mpvkt.ui.icons.filled.Palette
+import live.mehiz.mpvkt.ui.icons.BorderColor
+import live.mehiz.mpvkt.ui.icons.FormatColorFill
+import live.mehiz.mpvkt.ui.icons.FormatColorReset
+import live.mehiz.mpvkt.ui.icons.FormatColorText
+import live.mehiz.mpvkt.ui.icons.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +62,7 @@ fun SubtitleSettingsColorsCard(
       Row(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
       ) {
-        Icon(Icons.Default.Palette, null)
+        Icon(Icons.Palette, null)
         Text(stringResource(R.string.player_sheets_sub_colors_card_title))
       }
     },
@@ -90,9 +90,9 @@ fun SubtitleSettingsColorsCard(
           ) {
             Icon(
               when (type) {
-                SubColorType.Text -> Icons.Default.FormatColorText
-                SubColorType.Border -> Icons.Default.BorderColor
-                SubColorType.Background -> Icons.Default.FormatColorFill
+                SubColorType.Text -> Icons.FormatColorText
+                SubColorType.Border -> Icons.BorderColor
+                SubColorType.Background -> Icons.FormatColorFill
               },
               null,
             )
@@ -110,7 +110,7 @@ fun SubtitleSettingsColorsCard(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
             verticalAlignment = Alignment.CenterVertically,
           ) {
-            Icon(Icons.Default.FormatColorReset, null)
+            Icon(Icons.FormatColorReset, null)
             Text(stringResource(R.string.generic_reset))
           }
         }

@@ -1,19 +1,28 @@
 package live.mehiz.mpvkt.ui.icons
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.vector.*
-import androidx.compose.ui.unit.dp
-object Icons {
- object Filled
- object Outlined
- object Rounded
- val Default get() = Filled
- object AutoMirrored {
-  object Filled
-  object Outlined
-  val Default get() = Filled
- }
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+
+/** Persisted names are independent of icon resource IDs and legacy style scopes. */
+enum class IconStyle(@androidx.annotation.StringRes val titleRes: Int) {
+  Outline(live.mehiz.mpvkt.R.string.mpv_icons_style_outline),
+  Broken(live.mehiz.mpvkt.R.string.mpv_icons_style_broken),
 }
-internal fun fontAwesome(name: String, mirrored: Boolean, width: Int, height: Int, vararg paths: String): ImageVector =
- ImageVector.Builder(name, (24f * width / height).dp, 24.dp, width.toFloat(), height.toFloat(), autoMirror = mirrored).apply {
-  paths.forEach { addPath(PathParser().parsePathString(it).toNodes(), fill = SolidColor(Color.Black), pathFillType = PathFillType.NonZero) }
- }.build()
+
+internal val LocalIconStyle = staticCompositionLocalOf { IconStyle.Outline }
+
+interface IconScope {
+  val mirrored: Boolean get() = false
+}
+
+object Icons : IconScope {
+  object AutoMirrored : IconScope {
+    override val mirrored = true
+  }
+}
+
+@Composable
+internal fun appIcon(key: IconKey, mirrored: Boolean = false): ImageVector =
+  ImageVector.vectorResource(key.drawable(LocalIconStyle.current, mirrored))

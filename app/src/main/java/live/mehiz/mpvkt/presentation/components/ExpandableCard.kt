@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.ArrowDropDown
+import live.mehiz.mpvkt.ui.icons.ArrowDropDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -64,7 +64,7 @@ fun ExpandableCard(
         modifier = Modifier.rotate(rotationState),
         onClick = { onExpand(!isExpanded) },
       ) {
-        Icon(Icons.Default.ArrowDropDown, null)
+        Icon(Icons.ArrowDropDown, null)
       }
     }
     Box(Modifier.animateContentSize()) {

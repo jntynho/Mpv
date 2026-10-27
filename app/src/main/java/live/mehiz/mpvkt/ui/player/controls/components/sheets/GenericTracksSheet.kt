@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Add
+import live.mehiz.mpvkt.ui.icons.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -77,7 +77,7 @@ fun AddTrackRow(
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
-        Icons.Default.Add,
+        Icons.Add,
         null,
         modifier = Modifier.size(32.dp),
       )

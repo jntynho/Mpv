@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.outlined.ArrowDropDown
-import live.mehiz.mpvkt.ui.icons.outlined.ArrowDropUp
-import live.mehiz.mpvkt.ui.icons.outlined.Code
-import live.mehiz.mpvkt.ui.icons.outlined.Delete
-import live.mehiz.mpvkt.ui.icons.outlined.Edit
-import live.mehiz.mpvkt.ui.icons.outlined.Star
-import live.mehiz.mpvkt.ui.icons.outlined.StarOutline
+import live.mehiz.mpvkt.ui.icons.ArrowDropDown
+import live.mehiz.mpvkt.ui.icons.ArrowDropUp
+import live.mehiz.mpvkt.ui.icons.Code
+import live.mehiz.mpvkt.ui.icons.Delete
+import live.mehiz.mpvkt.ui.icons.Edit
+import live.mehiz.mpvkt.ui.icons.Star
+import live.mehiz.mpvkt.ui.icons.StarOutline
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
@@ -56,7 +56,7 @@ fun CustomButtonListItem(
         ),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Icon(imageVector = Icons.Outlined.Code, contentDescription = null)
+      Icon(imageVector = Icons.Code, contentDescription = null)
       Text(
         text = customButton.title,
         modifier = Modifier
@@ -80,18 +80,18 @@ fun CustomButtonListItem(
         onClick = { onMoveUp(customButton) },
         enabled = canMoveUp,
       ) {
-        Icon(imageVector = Icons.Outlined.ArrowDropUp, contentDescription = null)
+        Icon(imageVector = Icons.ArrowDropUp, contentDescription = null)
       }
       IconButton(
         onClick = { onMoveDown(customButton) },
         enabled = canMoveDown,
       ) {
-        Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null)
+        Icon(imageVector = Icons.ArrowDropDown, contentDescription = null)
       }
       Spacer(modifier = Modifier.weight(1f))
 
       val starColor = if (isPrimary) Color(0xFFFDD835) else MaterialTheme.colorScheme.onSurfaceVariant
-      val starImage = if (isPrimary) Icons.Outlined.Star else Icons.Outlined.StarOutline
+      val starImage = if (isPrimary) Icons.Star else Icons.StarOutline
       IconToggleButton(checked = isPrimary, onCheckedChange = { onTogglePrimary() }) {
         Icon(
           imageVector = starImage,
@@ -101,13 +101,13 @@ fun CustomButtonListItem(
       }
       IconButton(onClick = onRename) {
         Icon(
-          imageVector = Icons.Outlined.Edit,
+          imageVector = Icons.Edit,
           contentDescription = stringResource(id = R.string.pref_custom_button_edit_button),
         )
       }
       IconButton(onClick = onDelete) {
         Icon(
-          imageVector = Icons.Outlined.Delete,
+          imageVector = Icons.Delete,
           contentDescription = stringResource(id = R.string.pref_custom_button_delete_button),
         )
       }

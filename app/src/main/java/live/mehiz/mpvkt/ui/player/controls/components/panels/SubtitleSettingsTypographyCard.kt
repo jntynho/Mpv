@@ -1,5 +1,7 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.icons.Shadow
+
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.foundation.horizontalScroll
@@ -13,13 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.BorderColor
-import live.mehiz.mpvkt.ui.icons.filled.BorderStyle
-import live.mehiz.mpvkt.ui.icons.filled.FormatBold
-import live.mehiz.mpvkt.ui.icons.filled.FormatClear
-import live.mehiz.mpvkt.ui.icons.filled.FormatColorText
-import live.mehiz.mpvkt.ui.icons.filled.FormatItalic
-import live.mehiz.mpvkt.ui.icons.filled.FormatSize
+import live.mehiz.mpvkt.ui.icons.BorderColor
+import live.mehiz.mpvkt.ui.icons.BorderStyle
+import live.mehiz.mpvkt.ui.icons.FormatBold
+import live.mehiz.mpvkt.ui.icons.FormatClear
+import live.mehiz.mpvkt.ui.icons.FormatColorText
+import live.mehiz.mpvkt.ui.icons.FormatItalic
+import live.mehiz.mpvkt.ui.icons.FormatSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
@@ -37,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
@@ -106,7 +107,7 @@ fun SubtitleSettingsTypographyCard(
       Row(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
       ) {
-        Icon(Icons.Default.FormatColorText, null)
+        Icon(Icons.FormatColorText, null)
         Text(stringResource(R.string.player_sheets_sub_typography_card_title))
       }
     },
@@ -143,7 +144,7 @@ fun SubtitleSettingsTypographyCard(
           },
         ) {
           Icon(
-            Icons.Default.FormatBold,
+            Icons.FormatBold,
             null,
             modifier = Modifier.size(32.dp),
           )
@@ -156,7 +157,7 @@ fun SubtitleSettingsTypographyCard(
           },
         ) {
           Icon(
-            Icons.Default.FormatItalic,
+            Icons.FormatItalic,
             null,
             modifier = Modifier.size(32.dp),
           )
@@ -186,7 +187,7 @@ fun SubtitleSettingsTypographyCard(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
             verticalAlignment = Alignment.CenterVertically,
           ) {
-            Icon(Icons.Default.FormatClear, null)
+            Icon(Icons.FormatClear, null)
             Text(stringResource(R.string.generic_reset))
           }
         }
@@ -197,7 +198,7 @@ fun SubtitleSettingsTypographyCard(
         verticalAlignment = Alignment.CenterVertically,
       ) {
         Icon(
-          painterResource(R.drawable.outline_brand_family_24),
+          Icons.FormatColorText,
           null,
           modifier = Modifier.size(32.dp),
         )
@@ -223,7 +224,7 @@ fun SubtitleSettingsTypographyCard(
           MPVLib.setPropertyInt("sub-font-size", it)
         },
       ) {
-        Icon(Icons.Default.FormatSize, null)
+        Icon(Icons.FormatSize, null)
       }
       ProvidePreferenceLocals(
         theme = preferenceTheme(iconContainerMinWidth = 64.dp),
@@ -239,7 +240,7 @@ fun SubtitleSettingsTypographyCard(
           values = SubtitlesBorderStyle.entries,
           type = ListPreferenceType.DROPDOWN_MENU,
           summary = { Text(stringResource(borderStyle.titleRes)) },
-          icon = { Icon(Icons.Default.BorderStyle, null) },
+          icon = { Icon(Icons.BorderStyle, null) },
         )
       }
       SliderItem(
@@ -251,7 +252,7 @@ fun SubtitleSettingsTypographyCard(
           MPVLib.setPropertyInt("sub-outline-size", it)
         },
         max = 100,
-        icon = { Icon(Icons.Default.BorderColor, null) },
+        icon = { Icon(Icons.BorderColor, null) },
       )
       SliderItem(
         stringResource(R.string.player_sheets_subtitles_shadow_offset),
@@ -262,7 +263,7 @@ fun SubtitleSettingsTypographyCard(
           MPVLib.setPropertyInt("sub-shadow-offset", it)
         },
         max = 100,
-        icon = { Icon(painterResource(R.drawable.sharp_shadow_24), null) },
+        icon = { Icon(Icons.Shadow, null) },
       )
     }
   }

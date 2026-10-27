@@ -27,6 +27,12 @@ import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVNode
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.GesturePreferences
+import live.mehiz.mpvkt.preferences.AppearancePreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 @Suppress("TooManyFunctions")
@@ -43,6 +49,9 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   private val gesturePreferences by inject<GesturePreferences>()
+  private val appearancePreferences by inject<AppearancePreferences>()
+  private val appearanceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+  private var notificationActive = false
 
   private val binder = MediaPlaybackBinder()
   private var mediaTitle = ""
@@ -144,6 +153,11 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
 
     setupAudioFocus()
     createNotificationChannel()
+    appearanceScope.launch {
+      appearancePreferences.iconStyle.changes().collect {
+        if (notificationActive && !focusReleased) updateNotification()
+      }
+    }
   }
 
   override fun onBind(intent: Intent): IBinder {
@@ -153,6 +167,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     androidx.core.app.ServiceCompat.startForeground(this, NOTIFICATION_ID, createNotification(),
       if (Build.VERSION.SDK_INT >= 29) android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK else 0)
+    notificationActive = true
     if (paused == false && !requestAudioFocus()) pauseMedia()
     MediaButtonReceiver.handleIntent(mediaSession, intent)
     handleIntent(intent)
@@ -313,6 +328,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   private fun stopMedia() {
+    notificationActive = false
     try {
       pauseMedia()
       abandonAudioFocus()
@@ -395,6 +411,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   private fun createNotification(): Notification {
+    val icons = mediaControlIcons(appearancePreferences.iconStyle.get())
     val openAppIntent = Intent(this, PlayerActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_SINGLE_TOP }
     val pendingOpenAppIntent = PendingIntent.getActivity(
       this,
@@ -421,25 +438,25 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
     return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
       .setContentTitle(mediaTitle)
       .setContentText(mediaArtist.ifBlank { getString(R.string.notification_playing) })
-      .setSmallIcon(R.drawable.mpv_notification)
+      .setSmallIcon(icons.play)
       .setLargeIcon(mediaThumbnail)
       .setContentIntent(pendingOpenAppIntent)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
       .setOnlyAlertOnce(true)
       .setOngoing(paused == false)
-      .addAction(R.drawable.baseline_fast_rewind_24, getString(R.string.notification_rewind), pendingSkipBackwardIntent)
+      .addAction(icons.rewind, getString(R.string.notification_rewind), pendingSkipBackwardIntent)
       .addAction(
-        if (paused == false) R.drawable.baseline_pause_24 else R.drawable.baseline_play_arrow_24,
+        if (paused == false) icons.pause else icons.play,
         if (paused == false) getString(R.string.notification_pause) else getString(R.string.notification_play),
         if (paused == false) pendingPauseIntent else pendingPlayIntent,
       )
       .addAction(
-        R.drawable.baseline_fast_forward_24,
+        icons.forward,
         getString(R.string.notification_forward),
         pendingSkipForwardIntent,
       )
       .addAction(
-        R.drawable.fa_stop,
+        icons.stop,
         getString(R.string.notification_stop),
         pendingStopIntent,
       )
@@ -462,6 +479,8 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   override fun onDestroy() {
+    notificationActive = false
+    appearanceScope.cancel()
     try {
       releasePlaybackFocus()
       mediaSession.release()

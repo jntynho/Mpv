@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Bookmarks
+import live.mehiz.mpvkt.ui.icons.Bookmarks
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -65,7 +65,7 @@ fun CurrentChapter(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall)
       ) {
         Icon(
-          imageVector = Icons.Default.Bookmarks,
+          imageVector = Icons.Bookmarks,
           contentDescription = null,
           modifier = Modifier
             .padding(end = MaterialTheme.spacing.extraSmall)

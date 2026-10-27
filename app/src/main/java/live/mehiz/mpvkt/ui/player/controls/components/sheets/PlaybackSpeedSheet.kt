@@ -11,9 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Add
-import live.mehiz.mpvkt.ui.icons.filled.Close
-import live.mehiz.mpvkt.ui.icons.filled.RestartAlt
+import live.mehiz.mpvkt.ui.icons.Add
+import live.mehiz.mpvkt.ui.icons.Close
+import live.mehiz.mpvkt.ui.icons.RestartAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -75,7 +75,7 @@ fun PlaybackSpeedSheet(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
       ) {
         FilledTonalIconButton(onClick = onResetPresets) {
-          Icon(Icons.Default.RestartAlt, null)
+          Icon(Icons.RestartAlt, null)
         }
         LazyRow(
           modifier = Modifier
@@ -91,7 +91,7 @@ fun PlaybackSpeedSheet(
                 .animateItem(),
               trailingIcon = {
                 Icon(
-                  Icons.Default.Close,
+                  Icons.Close,
                   null,
                   modifier = Modifier.clickable { onRemoveSpeedPreset(it.toFixed(2)) },
                 )
@@ -100,7 +100,7 @@ fun PlaybackSpeedSheet(
           }
         }
         FilledTonalIconButton(onClick = { onAddSpeedPreset(speed.toFixed(2)) }) {
-          Icon(Icons.Default.Add, null)
+          Icon(Icons.Add, null)
         }
       }
       ProvidePreferenceLocals {
@@ -128,7 +128,7 @@ fun PlaybackSpeedSheet(
           Text(text = stringResource(id = R.string.player_sheets_speed_make_default))
         }
         FilledIconButton(onClick = onResetDefault) {
-          Icon(imageVector = Icons.Default.RestartAlt, contentDescription = null)
+          Icon(imageVector = Icons.RestartAlt, contentDescription = null)
         }
       }
     }

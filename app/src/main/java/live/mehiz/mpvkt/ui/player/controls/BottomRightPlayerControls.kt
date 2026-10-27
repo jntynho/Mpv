@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.AspectRatio
-import live.mehiz.mpvkt.ui.icons.filled.PictureInPictureAlt
+import live.mehiz.mpvkt.ui.icons.AspectRatio
+import live.mehiz.mpvkt.ui.icons.PictureInPictureAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,13 +54,13 @@ fun BottomRightPlayerControls(
 
     if (isPipAvailable) {
       ControlsButton(
-        Icons.Default.PictureInPictureAlt,
+        Icons.PictureInPictureAlt,
         onClick = onPipClick,
       )
     }
 
     ControlsButton(
-      Icons.Default.AspectRatio,
+      Icons.AspectRatio,
       onClick = onAspectClick,
     )
   }

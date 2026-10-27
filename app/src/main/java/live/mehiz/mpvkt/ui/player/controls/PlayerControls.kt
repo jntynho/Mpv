@@ -24,9 +24,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.Lock
-import live.mehiz.mpvkt.ui.icons.filled.Play
-import live.mehiz.mpvkt.ui.icons.filled.Pause
+import live.mehiz.mpvkt.ui.icons.Lock
+import live.mehiz.mpvkt.ui.icons.Play
+import live.mehiz.mpvkt.ui.icons.Pause
 import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -331,7 +331,7 @@ fun PlayerControls(
           },
         ) {
           ControlsButton(
-            Icons.Filled.Lock,
+            Icons.Lock,
             onClick = { viewModel.unlockControls() },
           )
         }
@@ -374,7 +374,7 @@ fun PlayerControls(
             }
 
             controlsShown && !areControlsLocked -> Icon(
-              imageVector = if (paused == false) Icons.Default.Pause else Icons.Default.Play,
+              imageVector = if (paused == false) Icons.Pause else Icons.Play,
               tint = Color.White,
               modifier = Modifier
                 .size(96.dp)

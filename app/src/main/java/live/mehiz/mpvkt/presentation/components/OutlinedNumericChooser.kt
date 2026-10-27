@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardOptions
 import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.filled.AddCircle
-import live.mehiz.mpvkt.ui.icons.filled.RemoveCircle
+import live.mehiz.mpvkt.ui.icons.AddCircle
+import live.mehiz.mpvkt.ui.icons.RemoveCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,7 +41,7 @@ fun OutlinedNumericChooser(
     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
   ) {
     RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.Filled.RemoveCircle, null)
+      Icon(Icons.RemoveCircle, null)
     }
     var valueString by remember { mutableStateOf("$value") }
     LaunchedEffect(value) {
@@ -72,7 +72,7 @@ fun OutlinedNumericChooser(
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
     RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.Filled.AddCircle, null)
+      Icon(Icons.AddCircle, null)
     }
   }
 }
@@ -95,7 +95,7 @@ fun OutlinedNumericChooser(
     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
   ) {
     RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.Filled.RemoveCircle, null)
+      Icon(Icons.RemoveCircle, null)
     }
     var valueString by remember { mutableStateOf("$value") }
     LaunchedEffect(value) {
@@ -128,7 +128,7 @@ fun OutlinedNumericChooser(
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
     RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.Filled.AddCircle, null)
+      Icon(Icons.AddCircle, null)
     }
   }
 }
