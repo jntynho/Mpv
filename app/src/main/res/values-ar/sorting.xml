@@ -5,7 +5,7 @@
   <string name="mpv_sort_size">الحجم</string>
   <string name="mpv_sort_count">العدد</string>
   <string name="mpv_sort_order">الترتيب</string>
-  <string name="mpv_sort_ascending">A–Z</string>
-  <string name="mpv_sort_descending">Z–A</string>
+  <string name="mpv_sort_ascending">A-Z</string>
+  <string name="mpv_sort_descending">Z-A</string>
   <string name="mpv_sort_count_folders">الفرز بالعدد متاح للمجلدات</string>
 </resources>
