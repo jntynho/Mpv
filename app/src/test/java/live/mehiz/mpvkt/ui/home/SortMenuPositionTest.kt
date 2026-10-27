@@ -26,4 +26,20 @@ class SortMenuPositionTest {
       assertTrue(offset.y + popup.height <= 308)
     }
   }
+  @Test fun unmeasuredWindowNeverProducesNegativePopupConstraints() {
+    val size = sortMenuMaxSize(IntSize.Zero, Density(3f), 0)
+    assertTrue(size.width.value > 0f)
+    assertTrue(size.height.value > 0f)
+    assertTrue(size.width <= 280.dp)
+  }
+
+  @Test fun popupBoundsAdaptToNarrowAndShortWindows() {
+    for (window in listOf(IntSize(180, 140), IntSize(400, 320), IntSize(1080, 1920))) {
+      val density = Density(1f)
+      val size = sortMenuMaxSize(window, density, window.height - 48)
+      assertTrue(size.width.value <= window.width - 24)
+      assertTrue(size.height.value <= window.height - 24)
+      assertTrue(size.width.value > 0f && size.height.value > 0f)
+    }
+  }
 }

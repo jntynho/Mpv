@@ -1,0 +1,10 @@
+<resources>
+  <string name="mpv_welcome">فيديوهاتك، ببساطة وأناقة</string>
+  <string name="mpv_welcome_body">مساحة هادئة لفيديوهاتك، مع خيارات تشغيل متقدمة حين تحتاجها.</string>
+  <string name="mpv_welcome_access">اسمح بالوصول إلى الفيديوهات لعرض المجلدات والصور المصغرة. تبقى ملفاتك على جهازك.</string>
+  <string name="mpv_permission_denied">الوصول إلى الفيديوهات غير مفعّل. يمكنك المحاولة مجددًا أو المتابعة وتفعيله لاحقًا من المكتبة.</string>
+  <string name="mpv_preparing">جارٍ التجهيز…</string>
+  <string name="mpv_get_started">ابدأ المشاهدة</string>
+  <string name="mpv_not_now">ليس الآن</string>
+  <string name="mpv_open_app_settings">فتح إعدادات التطبيق</string>
+</resources>

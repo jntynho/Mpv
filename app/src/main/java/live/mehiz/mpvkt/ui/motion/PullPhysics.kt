@@ -11,3 +11,9 @@ internal fun rawPull(offset: Float, limit: Float): Float {
   val fraction = (offset / limit).coerceIn(-.9999f, .9999f)
   return fraction * limit / (.65f * (1f - abs(fraction)))
 }
+
+/** A fling reaching the edge gets one bounded pulse, independent of list length. */
+internal fun edgePulse(velocity: Float, limit: Float): Float {
+  if (!velocity.isFinite() || !limit.isFinite() || limit <= 0f || velocity >= -100f) return 0f
+  return -minOf(abs(velocity) * .004f, limit * .18f)
+}

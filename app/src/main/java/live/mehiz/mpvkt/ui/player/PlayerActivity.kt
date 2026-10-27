@@ -68,6 +68,7 @@ import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.ui.player.controls.PlayerControls
 import live.mehiz.mpvkt.ui.theme.MpvKtTheme
+import live.mehiz.mpvkt.ui.icons.IconVectors
 import org.koin.android.ext.android.inject
 import java.io.File
 
@@ -140,6 +141,11 @@ class PlayerActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed()
         isEnabled = true
       }
+    }
+    lifecycleScope.launch {
+      try { IconVectors.prepare(applicationContext.resources, appearancePreferences.iconStyle.get()) }
+      catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+      catch (_: Exception) { /* On-demand resource loading remains available. */ }
     }
     setContentView(binding.root)
 

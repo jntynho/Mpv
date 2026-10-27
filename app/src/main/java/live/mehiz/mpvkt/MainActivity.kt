@@ -36,8 +36,11 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import live.mehiz.mpvkt.preferences.AppearancePreferences
+import live.mehiz.mpvkt.preferences.PlayerPreferences
+import org.koin.compose.koinInject
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
+import live.mehiz.mpvkt.ui.startup.StartupGate
 import live.mehiz.mpvkt.ui.home.HomeScreen
 import live.mehiz.mpvkt.ui.theme.DarkMode
 import live.mehiz.mpvkt.ui.theme.MpvKtTheme
@@ -58,13 +61,14 @@ class MainActivity : ComponentActivity() {
           darkScrim = Color.White.toArgb(),
         ) { dark == DarkMode.Dark || (dark == DarkMode.System && isSystemInDarkTheme) },
       )
-      MpvKtTheme { Surface { Navigator() } }
+      MpvKtTheme { Surface { StartupGate { Navigator() } } }
     }
   }
 
   @Composable
   fun Navigator() {
     val backstack = rememberNavBackStack<Screen>(HomeScreen)
+    val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
     val goBack: () -> Unit = {
       if (backstack.size > 1) backstack.removeLastOrNull() else finish()
     }
@@ -74,9 +78,9 @@ class MainActivity : ComponentActivity() {
         backStack = backstack,
         onBack = { goBack() },
         entryProvider = { route -> NavEntry(route) { (it as Screen).Content() } },
-        popTransitionSpec = { navigationMotion(back = true) },
-        transitionSpec = { navigationMotion(back = false) },
-        predictivePopTransitionSpec = { navigationMotion(back = true) },
+        popTransitionSpec = { navigationMotion(back = true, reduceMotion = reduceMotion) },
+        transitionSpec = { navigationMotion(back = false, reduceMotion = reduceMotion) },
+        predictivePopTransitionSpec = { navigationMotion(back = true, reduceMotion = reduceMotion) },
       )
         // Draw-only overlay: no click handler or semantics, touches reach the content.
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(64.dp).background(

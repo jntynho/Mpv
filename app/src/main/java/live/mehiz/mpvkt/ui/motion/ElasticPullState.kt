@@ -72,7 +72,7 @@ internal class ElasticPullState(
     }
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
       if (!enabled || refreshing || source != NestedScrollSource.UserInput || available.y == 0f) return Offset.Zero
-      if (onRefresh != null && (available.y < 0f || !canRefresh())) return Offset.Zero
+      if (onRefresh != null && available.y > 0f && !canRefresh()) return Offset.Zero
       interrupt()
       raw += available.y; offset = dampedPull(raw, limit)
       return Offset(0f, available.y)
@@ -82,6 +82,20 @@ internal class ElasticPullState(
       release()
       return Velocity(0f, available.y)
     }
-    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity { release(); return Velocity.Zero }
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+      if (enabled && !reduceMotion && !refreshing && abs(offset) < .1f && job?.isActive != true) {
+        val pulse = edgePulse(available.y, limit)
+        if (pulse != 0f) {
+          job = scope.launch {
+            AnimationState(offset).animateTo(pulse, tween(90)) { offset = value }
+            animate(0f)
+            raw = 0f
+          }
+          return Velocity(0f, available.y)
+        }
+      }
+      release()
+      return Velocity.Zero
+    }
   }
 }

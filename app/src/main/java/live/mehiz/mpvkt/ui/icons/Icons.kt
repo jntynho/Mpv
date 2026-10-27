@@ -3,7 +3,8 @@ package live.mehiz.mpvkt.ui.icons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalResources
 
 /** Persisted names are independent of icon resource IDs and legacy style scopes. */
 enum class IconStyle(@androidx.annotation.StringRes val titleRes: Int) {
@@ -24,5 +25,8 @@ object Icons : IconScope {
 }
 
 @Composable
-internal fun appIcon(key: IconKey, mirrored: Boolean = false): ImageVector =
-  ImageVector.vectorResource(key.drawable(LocalIconStyle.current, mirrored))
+internal fun appIcon(key: IconKey, mirrored: Boolean = false): ImageVector {
+  val resources = LocalResources.current
+  val id = key.drawable(LocalIconStyle.current, mirrored)
+  return remember(id, resources.configuration.densityDpi) { IconVectors.get(resources, id) }
+}

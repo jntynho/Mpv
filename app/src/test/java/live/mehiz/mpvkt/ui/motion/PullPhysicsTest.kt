@@ -27,4 +27,15 @@ class PullPhysicsTest {
     assertEquals(0f, rawPull(50f, 0f), 0f)
     assertTrue(abs(rawPull(144f, 144f)).isFinite())
   }
+  @Test fun bottomFlingPulseIsSmallAndCannotRefreshTheTop() {
+    assertEquals(0f, edgePulse(3000f, 144f), 0f)
+    assertEquals(0f, edgePulse(-50f, 144f), 0f)
+    assertEquals(-12f, edgePulse(-3000f, 144f), .001f)
+    assertEquals(-144f * .18f, edgePulse(-50000f, 144f), .001f)
+  }
+  @Test fun invalidFlingVelocityCannotDisturbAnEdge() {
+    for (velocity in listOf(Float.NaN, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY))
+      assertEquals(0f, edgePulse(velocity, 144f), 0f)
+    assertEquals(0f, edgePulse(-3000f, 0f), 0f)
+  }
 }
