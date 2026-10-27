@@ -15,7 +15,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import live.mehiz.mpvkt.R
-import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.player.TrackNode
 import live.mehiz.mpvkt.ui.player.controls.components.*
@@ -24,13 +23,12 @@ import live.mehiz.mpvkt.ui.player.controls.components.*
 fun SubtitlesSheet(
   tracks: ImmutableList<TrackNode>, onSelect: (Int, Int) -> Unit,
   onAddSubtitle: () -> Unit, onOpenSubtitleSettings: () -> Unit,
-  onOpenSubtitleDelay: () -> Unit, onDismissRequest: () -> Unit,
+  onOpenSubtitleDelay: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   var slot by rememberSaveable { mutableIntStateOf(0) }
   val labels = listOf(stringResource(R.string.player_sheets_sub_delay_subtitle_type_primary), stringResource(R.string.player_sheets_sub_delay_subtitle_type_secondary))
-  GenericTracksSheet(tracks, onDismissRequest, modifier,
-    title = stringResource(R.string.mpv_panel_subtitles), icon = Icons.Subtitles,
+  GenericTracksSheet(tracks, modifier,
     header = {
       Row(Modifier.fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
         labels.forEachIndexed { index, label ->
@@ -52,10 +50,9 @@ fun SubtitlesSheet(
         subtitle = trackDescription(track), badge = selected?.let { labels.getOrNull(it) })
     },
     footer = {
-      val close = LocalPlayerSheetClose.current
       PlayerPanelSection(stringResource(R.string.mpv_panel_adjustments))
-      PlayerActionRow(stringResource(R.string.player_sheets_sub_delay_card_title), Icons.MoreTime, { close { onOpenSubtitleDelay() } })
-      PlayerActionRow(stringResource(R.string.player_sheets_subtitles_settings_title), Icons.Palette, { close { onOpenSubtitleSettings() } })
+      PlayerActionRow(stringResource(R.string.player_sheets_sub_delay_card_title), Icons.MoreTime, onOpenSubtitleDelay)
+      PlayerActionRow(stringResource(R.string.player_sheets_subtitles_settings_title), Icons.Palette, onOpenSubtitleSettings)
     },
     bottomBar = { PlayerPanelFooter(stringResource(R.string.player_sheets_add_ext_sub), onAddSubtitle,
       stringResource(R.string.player_sheets_subtitles_footer_secondary_sid_no_styles)) },

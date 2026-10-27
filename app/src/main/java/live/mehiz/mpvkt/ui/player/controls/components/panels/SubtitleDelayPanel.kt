@@ -7,17 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.ArrowDropDown
-import live.mehiz.mpvkt.ui.icons.Close
 import live.mehiz.mpvkt.ui.icons.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -25,7 +20,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +49,6 @@ import kotlin.math.round
 
 @Composable
 fun SubtitleDelayPanel(
-  onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val preferences = koinInject<SubtitlesPreferences>()
@@ -94,7 +87,6 @@ fun SubtitleDelayPanel(
         MPVLib.setPropertyFloat("secondary-sub-delay", preferences.defaultSecondarySubDelay.get() / 1000f)
         MPVLib.setPropertyFloat("sub-speed", preferences.defaultSubSpeed.get())
       },
-      onClose = onDismissRequest,
       modifier = Modifier.fillMaxWidth().padding(12.dp),
     )
   }
@@ -110,7 +102,6 @@ fun SubtitleDelayCard(
   onTypeChange: (SubtitleDelayType) -> Unit,
   onApply: () -> Unit,
   onReset: () -> Unit,
-  onClose: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   DelayCard(
@@ -121,7 +112,6 @@ fun SubtitleDelayCard(
     title = {
       SubtitleDelayTitle(
         affectedSubtitle = affectedSubtitle,
-        onClose = onClose,
         onTypeChange = onTypeChange,
       )
     },
@@ -274,7 +264,6 @@ fun DelayCard(
 @Composable
 fun SubtitleDelayTitle(
   affectedSubtitle: SubtitleDelayType,
-  onClose: () -> Unit,
   onTypeChange: (SubtitleDelayType) -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -284,7 +273,7 @@ fun SubtitleDelayTitle(
     modifier = modifier.fillMaxWidth(),
   ) {
     Text(
-      stringResource(R.string.player_sheets_sub_delay_card_title),
+      stringResource(R.string.player_sheets_sub_delay_affected_subtitle),
       modifier = Modifier.weight(1f),
       style = MaterialTheme.typography.titleLarge,
     )
@@ -310,13 +299,6 @@ fun SubtitleDelayTitle(
           )
         }
       }
-    }
-    IconButton(onClose) {
-      Icon(
-        Icons.Close,
-        null,
-        modifier = Modifier.size(32.dp),
-      )
     }
   }
 }

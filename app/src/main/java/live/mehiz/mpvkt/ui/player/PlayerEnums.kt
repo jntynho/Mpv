@@ -79,6 +79,7 @@ enum class Panels {
   SubtitleDelay,
   AudioDelay,
   VideoFilters,
+  SleepTimer,
 }
 
 sealed class PlayerUpdates {

@@ -50,7 +50,6 @@ import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.components.LeftSideOvalShape
 import live.mehiz.mpvkt.presentation.components.RightSideOvalShape
-import live.mehiz.mpvkt.ui.player.Panels
 import live.mehiz.mpvkt.ui.player.PlayerUpdates
 import live.mehiz.mpvkt.ui.player.PlayerViewModel
 import live.mehiz.mpvkt.ui.player.controls.components.DoubleTapSeekTriangles
@@ -66,7 +65,7 @@ fun GestureHandler(
 ) {
   val playerPreferences = koinInject<PlayerPreferences>()
   val audioPreferences = koinInject<AudioPreferences>()
-  val panelShown by viewModel.panelShown.collectAsState()
+  val panelPages by viewModel.panelNavigator.state.collectAsState()
   val allowGesturesInPanels by playerPreferences.allowGesturesInPanels.collectAsState()
   val playback by viewModel.playback.collectAsState()
   val paused = playback.displayPaused
@@ -104,8 +103,8 @@ fun GestureHandler(
     modifier = modifier
       .fillMaxSize()
       .windowInsetsPadding(WindowInsets.safeGestures)
-      .pointerInput(areControlsLocked, panelShown, allowGesturesInPanels, pinchZoomGesture) {
-        if (!pinchZoomGesture || areControlsLocked || (panelShown != Panels.None && !allowGesturesInPanels)) return@pointerInput
+      .pointerInput(areControlsLocked, panelPages, allowGesturesInPanels, pinchZoomGesture) {
+        if (!pinchZoomGesture || areControlsLocked || (panelPages.isNotEmpty() && !allowGesturesInPanels)) return@pointerInput
         awaitPointerEventScope {
           var pinching = false
           do {
@@ -146,8 +145,8 @@ fun GestureHandler(
             }
           },
           onPress = {
-            if (panelShown != Panels.None && !allowGesturesInPanels) {
-              viewModel.panelShown.update { Panels.None }
+            if (panelPages.isNotEmpty() && !allowGesturesInPanels) {
+              viewModel.panelNavigator.dismiss()
             }
             if (!areControlsLocked && isDoubleTapSeeking && seekAmount != 0) {
               if (it.x > size.width * 3 / 5) {

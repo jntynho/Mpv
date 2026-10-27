@@ -11,32 +11,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import live.mehiz.mpvkt.R
-import live.mehiz.mpvkt.presentation.components.PlayerSheet
 import live.mehiz.mpvkt.ui.player.TrackNode
 import live.mehiz.mpvkt.ui.player.controls.components.*
 import java.util.Locale
 
 @Composable
 fun <T> GenericTracksSheet(
-  tracks: ImmutableList<T>, onDismissRequest: () -> Unit,
+  tracks: ImmutableList<T>,
   modifier: Modifier = Modifier,
-  title: String? = null, icon: ImageVector? = null,
   header: @Composable () -> Unit = {},
   beforeTracks: @Composable () -> Unit = {},
   track: @Composable (T) -> Unit = {},
   footer: @Composable () -> Unit = {},
   bottomBar: @Composable () -> Unit = {},
 ) {
-  PlayerSheet(onDismissRequest) {
-    Column(modifier.fillMaxSize()) {
-      PlayerPanelHeader(title ?: stringResource(R.string.mpv_panel_tracks), icon)
+  Column(modifier.fillMaxSize()) {
       header()
       PlayerLazyScrollArea(Modifier.weight(1f)) {
         item { beforeTracks() }
@@ -44,7 +39,6 @@ fun <T> GenericTracksSheet(
         item { footer() }
       }
       bottomBar()
-    }
   }
 }
 

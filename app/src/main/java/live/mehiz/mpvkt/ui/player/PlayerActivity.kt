@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.AudioManager
@@ -126,15 +125,14 @@ class PlayerActivity : AppCompatActivity() {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     onBackPressedDispatcher.addCallback(this) {
-      if (viewModel.sheetShown.value != Sheets.None) {
-        viewModel.sheetShown.value = Sheets.None; viewModel.showControls(); return@addCallback
-      }
-      if (viewModel.panelShown.value != Panels.None) {
-        viewModel.panelShown.value = Panels.None; viewModel.showControls(); return@addCallback
+      if (viewModel.panelNavigator.isOpen) {
+        viewModel.panelNavigator.back()
+        if (!viewModel.panelNavigator.isOpen) viewModel.showControls()
+        return@addCallback
       }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isPipSupported &&
         viewModel.paused == false && playerPreferences.automaticallyEnterPip.get() &&
-        viewModel.sheetShown.value == Sheets.None && viewModel.panelShown.value == Panels.None) {
+        !viewModel.panelNavigator.isOpen) {
         if (tryEnterPip()) return@addCallback
       }
       run {
@@ -749,8 +747,7 @@ class PlayerActivity : AppCompatActivity() {
     viewModel.hideSeekBar()
     viewModel.isBrightnessSliderShown.update { false }
     viewModel.isVolumeSliderShown.update { false }
-    viewModel.sheetShown.update { Sheets.None }
-    viewModel.panelShown.update { Panels.None }
+    viewModel.panelNavigator.dismiss()
     pipReceiver?.let { unregisterReceiver(it) }
     pipReceiver = object : BroadcastReceiver() {
       override fun onReceive(context: Context?, intent: Intent?) {

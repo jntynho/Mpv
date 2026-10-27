@@ -1,6 +1,7 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
@@ -16,7 +17,7 @@ import org.koin.compose.koinInject
 fun AudioChannelsControl() {
   val preferences = koinInject<AudioPreferences>()
   val selected by preferences.audioChannels.collectAsState()
-  var expanded by remember { mutableStateOf(false) }
+  var expanded by rememberSaveable { mutableStateOf(false) }
   PlayerActionRow(stringResource(R.string.pref_audio_channels), Icons.Audiotrack, { expanded = !expanded },
     value = stringResource(selected.title))
   if (expanded) AudioChannels.entries.forEach { choice ->

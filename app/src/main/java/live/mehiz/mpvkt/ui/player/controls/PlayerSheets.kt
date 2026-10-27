@@ -49,11 +49,9 @@ fun PlayerSheets(
   onResetDefaultSpeed: () -> Unit,
   // More sheet
   sleepTimerTimeRemaining: Int,
-  onStartSleepTimer: (Int) -> Unit,
   buttons: ImmutableList<CustomButtonEntity>,
 
   onOpenPanel: (Panels) -> Unit,
-  onDismissRequest: () -> Unit,
 ) {
   when (sheetShown) {
     Sheets.None -> {}
@@ -70,7 +68,6 @@ fun PlayerSheets(
         onAddSubtitle = { subtitlesPicker.launch(arrayOf("*/*")) },
         onOpenSubtitleSettings = { onOpenPanel(Panels.SubtitleSettings) },
         onOpenSubtitleDelay = { onOpenPanel(Panels.SubtitleDelay) },
-        onDismissRequest = onDismissRequest,
       )
     }
 
@@ -86,7 +83,6 @@ fun PlayerSheets(
         onSelect = onSelectAudio,
         onAddAudioTrack = { audioPicker.launch(arrayOf("*/*")) },
         onOpenDelayPanel = { onOpenPanel(Panels.AudioDelay) },
-        onDismissRequest,
       )
     }
 
@@ -96,7 +92,6 @@ fun PlayerSheets(
         chapters,
         currentChapter = chapter,
         onClick = { onSeekToChapter(chapters.indexOf(it)) },
-        onDismissRequest,
       )
     }
 
@@ -104,15 +99,13 @@ fun PlayerSheets(
       DecodersSheet(
         selectedDecoder = decoder,
         onSelect = onUpdateDecoder,
-        onDismissRequest,
       )
     }
 
     Sheets.More -> {
       MoreSheet(
         remainingTime = sleepTimerTimeRemaining,
-        onStartTimer = onStartSleepTimer,
-        onDismissRequest = onDismissRequest,
+        onOpenTimer = { onOpenPanel(Panels.SleepTimer) },
         onEnterFiltersPanel = { onOpenPanel(Panels.VideoFilters) },
         customButtons = buttons,
       )
@@ -128,7 +121,6 @@ fun PlayerSheets(
         onResetPresets = onResetSpeedPresets,
         onMakeDefault = onMakeDefaultSpeed,
         onResetDefault = onResetDefaultSpeed,
-        onDismissRequest = onDismissRequest,
       )
     }
   }

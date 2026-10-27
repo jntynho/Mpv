@@ -18,7 +18,6 @@ import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.player.PlaybackControl
 import live.mehiz.mpvkt.ui.player.TrackNode
@@ -31,22 +30,20 @@ import kotlin.math.roundToInt
 fun AudioTracksSheet(
   tracks: ImmutableList<TrackNode>, onSelect: (TrackNode?) -> Unit,
   onAddAudioTrack: () -> Unit, onOpenDelayPanel: () -> Unit,
-  onDismissRequest: () -> Unit, modifier: Modifier = Modifier,
+  modifier: Modifier = Modifier,
 ) {
-  GenericTracksSheet(tracks, onDismissRequest, modifier,
-    title = stringResource(R.string.mpv_panel_audio), icon = Icons.Audiotrack,
+  GenericTracksSheet(tracks, modifier,
     beforeTracks = {
       PlayerPanelSection(stringResource(R.string.mpv_panel_tracks))
       AudioTrackRow(stringResource(R.string.player_sheets_tracks_off), tracks.none { it.isSelected }, { onSelect(null) })
     },
     track = { AudioTrackRow(getTrackTitle(it), it.isSelected, { onSelect(it) }, subtitle = trackDescription(it)) },
     footer = {
-      val close = LocalPlayerSheetClose.current
       PlayerPanelSection(stringResource(R.string.mpv_panel_output))
       AudioVolumeControl()
       val delay by MPVLib.propDouble["audio-delay"].collectAsState()
       PlayerActionRow(stringResource(R.string.player_sheets_audio_delay_card_title), Icons.MoreTime,
-        { close { onOpenDelayPanel() } }, value = "${((delay ?: 0.0) * 1000).roundToInt()} ms")
+        onOpenDelayPanel, value = "${((delay ?: 0.0) * 1000).roundToInt()} ms")
       AudioChannelsControl()
       val preferences = koinInject<AudioPreferences>()
       val correction by preferences.audioPitchCorrection.collectAsState()

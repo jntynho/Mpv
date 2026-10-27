@@ -1,12 +1,9 @@
 package live.mehiz.mpvkt.ui.player.controls
 
-import live.mehiz.mpvkt.presentation.components.PlayerSheet
-import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.ui.player.Panels
@@ -19,24 +16,23 @@ import org.koin.compose.koinInject
 @Composable
 fun PlayerPanels(
   panelShown: Panels,
-  onDismissRequest: () -> Unit,
-  modifier: Modifier = Modifier,
+  sleepTimerTimeRemaining: Int,
+  onStartSleepTimer: (Int) -> Unit,
+  onNavigateBack: () -> Unit,
 ) {
-  if (panelShown == Panels.None) return
-  PlayerSheet(onDismissRequest, modifier) {
-    val close = LocalPlayerSheetClose.current
-    val dismiss = { close {} }
-    when (panelShown) {
-      Panels.None -> Unit
-      Panels.SubtitleSettings -> SubtitleSettingsPanel(dismiss)
-      Panels.SubtitleDelay -> SubtitleDelayPanel(dismiss)
-      Panels.AudioDelay -> AudioDelayPanel(dismiss)
-      Panels.VideoFilters -> VideoSettingsPanel(dismiss)
-    }
+  when (panelShown) {
+    Panels.None -> Unit
+    Panels.SubtitleSettings -> SubtitleSettingsPanel()
+    Panels.SubtitleDelay -> SubtitleDelayPanel()
+    Panels.AudioDelay -> AudioDelayPanel()
+    Panels.VideoFilters -> VideoSettingsPanel()
+    Panels.SleepTimer -> live.mehiz.mpvkt.ui.player.controls.components.sheets.SleepTimerPanel(
+      sleepTimerTimeRemaining, onStartSleepTimer, onNavigateBack,
+    )
   }
 }
 
-val CARDS_MAX_WIDTH = 420.dp
+val CARDS_MAX_WIDTH = 480.dp
 val panelCardsColors: @Composable () -> CardColors = {
   val playerPreferences = koinInject<PlayerPreferences>()
 

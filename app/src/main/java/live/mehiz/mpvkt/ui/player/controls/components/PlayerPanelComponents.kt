@@ -1,5 +1,7 @@
 package live.mehiz.mpvkt.ui.player.controls.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -29,19 +31,24 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import live.mehiz.mpvkt.R
-import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
 import live.mehiz.mpvkt.ui.icons.*
 import kotlin.math.roundToInt
 
 @Composable
-fun PlayerPanelHeader(title: String, icon: ImageVector? = null) {
-  val close = LocalPlayerSheetClose.current
+fun PlayerPanelHeader(title: String, icon: ImageVector?, onClose: () -> Unit, onBack: (() -> Unit)? = null, animateTitle: Boolean = true) {
   Column {
-    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-      verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-      if (icon != null) Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-      Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 2)
-      IconButton(onClick = { close {} }) { Icon(Icons.Close, stringResource(R.string.generic_close)) }
+    Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+      verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+        if (onBack != null) IconButton(onClick = onBack) {
+          Icon(Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
+        } else if (icon != null) Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+      }
+      Crossfade(title, Modifier.weight(1f), animationSpec = tween(if (animateTitle) 180 else 0), label = "pane_title") { text ->
+        Text(text, style = MaterialTheme.typography.titleLarge, maxLines = 1,
+          overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+      }
+      IconButton(onClick = onClose) { Icon(Icons.Close, stringResource(R.string.generic_close)) }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .35f))
   }

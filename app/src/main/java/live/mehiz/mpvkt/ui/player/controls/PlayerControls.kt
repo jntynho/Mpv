@@ -15,26 +15,19 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Lock
-import live.mehiz.mpvkt.ui.icons.Play
-import live.mehiz.mpvkt.ui.icons.Pause
-import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -69,9 +61,9 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.preferences.preference.minusAssign
 import live.mehiz.mpvkt.preferences.preference.plusAssign
+import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.ui.custombuttons.getButtons
 import live.mehiz.mpvkt.ui.player.Decoder.Companion.getDecoderFromValue
 import live.mehiz.mpvkt.ui.player.Panels
@@ -131,22 +123,12 @@ fun PlayerControls(
   val playerTimeToDisappear by playerPreferences.playerTimeToDisappear.collectAsState()
   val chapters by viewModel.chapters.collectAsState(persistentListOf())
   val onOpenSheet: (Sheets) -> Unit = {
-    viewModel.sheetShown.update { _ -> it }
-    if (it == Sheets.None) {
-      viewModel.showControls()
-    } else {
-      viewModel.hideControls()
-      viewModel.panelShown.update { Panels.None }
-    }
+    viewModel.panelNavigator.openSheet(it)
+    if (it == Sheets.None) viewModel.showControls() else viewModel.hideControls()
   }
   val onOpenPanel: (Panels) -> Unit = {
-    viewModel.panelShown.update { _ -> it }
-    if (it == Panels.None) {
-      viewModel.showControls()
-    } else {
-      viewModel.hideControls()
-      viewModel.sheetShown.update { Sheets.None }
-    }
+    viewModel.panelNavigator.openPanel(it)
+    if (it == Panels.None) viewModel.showControls() else viewModel.hideControls()
   }
   val customButtons by viewModel.customButtons.collectAsState()
   val customButton by viewModel.primaryButton.collectAsState()
@@ -560,53 +542,58 @@ fun PlayerControls(
         }
       }
     }
-    val sheetShown by viewModel.sheetShown.collectAsState()
+    val panelPages by viewModel.panelNavigator.state.collectAsState()
     val subtitles by viewModel.subtitleTracks.collectAsState(persistentListOf())
     val audioTracks by viewModel.audioTracks.collectAsState(persistentListOf())
     val sleepTimerTimeRemaining by viewModel.remainingTime.collectAsState()
     val speedPresets by playerPreferences.speedPresets.collectAsState()
-    PlayerSheets(
-      sheetShown = sheetShown,
-      subtitles = subtitles,
-      onAddSubtitle = viewModel::addSubtitle,
-      onSelectSubtitle = viewModel::selectSub,
-      audioTracks = audioTracks,
-      onAddAudio = viewModel::addAudio,
-      onSelectAudio = { track ->
-        live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
-          if (track == null) MPVLib.setPropertyBoolean("aid", false) else MPVLib.setPropertyInt("aid", track.id)
-        }
-      },
-      chapter = chapters.getOrNull(currentChapter ?: 0),
-      chapters = chapters,
-      onSeekToChapter = {
-        MPVLib.setPropertyInt("chapter", it)
-        viewModel.unpause()
-      },
-      decoder = decoder,
-      onUpdateDecoder = { MPVLib.setPropertyString("hwdec", it.value) },
-      speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
-      onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
-      onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },
-      onAddSpeedPreset = { playerPreferences.speedPresets += it.toFixed(2).toString() },
-      onRemoveSpeedPreset = { playerPreferences.speedPresets -= it.toFixed(2).toString() },
-      onResetSpeedPresets = playerPreferences.speedPresets::delete,
-      speedPresets = speedPresets.map { it.toFloat() }.sorted(),
-      onResetDefaultSpeed = {
-        MPVLib.setPropertyFloat("speed", playerPreferences.defaultSpeed.deleteAndGet().toFixed(2))
-      },
+    PlayerPane(
+      pages = panelPages,
+      onDismiss = { viewModel.panelNavigator.dismiss(); viewModel.showControls() },
+      onBack = { viewModel.panelNavigator.back() },
+    ) { page ->
+      if (page.sheet != Sheets.None) PlayerSheets(
+        sheetShown = page.sheet,
+        subtitles = subtitles,
+        onAddSubtitle = viewModel::addSubtitle,
+        onSelectSubtitle = viewModel::selectSub,
+        audioTracks = audioTracks,
+        onAddAudio = viewModel::addAudio,
+        onSelectAudio = { track ->
+          live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
+            if (track == null) MPVLib.setPropertyBoolean("aid", false) else MPVLib.setPropertyInt("aid", track.id)
+          }
+        },
+        chapter = chapters.getOrNull(currentChapter ?: 0),
+        chapters = chapters,
+        onSeekToChapter = {
+          MPVLib.setPropertyInt("chapter", it)
+          viewModel.unpause()
+        },
+        decoder = decoder,
+        onUpdateDecoder = { MPVLib.setPropertyString("hwdec", it.value) },
+        speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
+        onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
+        onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },
+        onAddSpeedPreset = { playerPreferences.speedPresets += it.toFixed(2).toString() },
+        onRemoveSpeedPreset = { playerPreferences.speedPresets -= it.toFixed(2).toString() },
+        onResetSpeedPresets = playerPreferences.speedPresets::delete,
+        speedPresets = speedPresets.map { it.toFloat() }.sorted(),
+        onResetDefaultSpeed = {
+          MPVLib.setPropertyFloat("speed", playerPreferences.defaultSpeed.deleteAndGet().toFixed(2))
+        },
 
-      sleepTimerTimeRemaining = sleepTimerTimeRemaining,
-      onStartSleepTimer = viewModel::startTimer,
-      buttons = customButtons.getButtons().toImmutableList(),
-      onOpenPanel = onOpenPanel,
-      onDismissRequest = { onOpenSheet(Sheets.None) },
-    )
-    val panel by viewModel.panelShown.collectAsState()
-    PlayerPanels(
-      panelShown = panel,
-      onDismissRequest = { onOpenPanel(Panels.None) },
-    )
+        sleepTimerTimeRemaining = sleepTimerTimeRemaining,
+        buttons = customButtons.getButtons().toImmutableList(),
+        onOpenPanel = onOpenPanel,
+      )
+      else PlayerPanels(
+        panelShown = page.panel,
+        sleepTimerTimeRemaining = sleepTimerTimeRemaining,
+        onStartSleepTimer = viewModel::startTimer,
+        onNavigateBack = viewModel.panelNavigator::back,
+      )
+    }
   }
 }
 

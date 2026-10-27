@@ -24,12 +24,10 @@ fun ChaptersSheet(
   chapters: ImmutableList<Segment>,
   currentChapter: Segment,
   onClick: (Segment) -> Unit,
-  onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   GenericTracksSheet(
     chapters,
-    title = stringResource(R.string.mpv_panel_chapters),
     track = {
       ChapterTrack(
         it,
@@ -38,7 +36,6 @@ fun ChaptersSheet(
         onClick = { onClick(it) },
       )
     },
-    onDismissRequest = onDismissRequest,
     modifier = modifier
       .padding(vertical = MaterialTheme.spacing.medium)
   )
