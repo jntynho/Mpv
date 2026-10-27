@@ -18,6 +18,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import live.mehiz.mpvkt.ui.motion.ElasticRefreshBox
@@ -68,9 +71,14 @@ object HomeScreen : Screen {
     var selectedFolder by rememberSaveable { mutableStateOf<String?>(null) }
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
-    var sortMenu by remember { mutableStateOf(false) }
     val savedSort = remember { context.getSharedPreferences("library_ui", Context.MODE_PRIVATE) }
-    var sort by rememberSaveable { mutableStateOf(savedSort.getInt("sort", 0).coerceIn(0, 3)) }
+    val initialSort = remember(savedSort) {
+      LibrarySort.restore(savedSort.getString("sort_key", null), savedSort.getBoolean("sort_ascending", true),
+        if (savedSort.contains("sort")) savedSort.getInt("sort", 0) else null)
+    }
+    var sortKey by rememberSaveable { mutableStateOf(initialSort.key) }
+    var sortAscending by rememberSaveable { mutableStateOf(initialSort.ascending) }
+    val sorting = LibrarySort(sortKey, sortAscending)
     val permissions = if (Build.VERSION.SDK_INT >= 34) arrayOf(Manifest.permission.READ_MEDIA_VIDEO,
       Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) else if (Build.VERSION.SDK_INT >= 33)
       arrayOf(Manifest.permission.READ_MEDIA_VIDEO) else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -122,16 +130,12 @@ object HomeScreen : Screen {
         }, actions = {
           if (!searching) {
             IconButton(onClick = { searching = true }) { Icon(Icons.Search, stringResource(R.string.mpv_search)) }
-            Box {
-              IconButton(onClick = { sortMenu = true }) { Icon(Icons.Sort, stringResource(R.string.mpv_sort)) }
-              DropdownMenu(sortMenu, { sortMenu = false }) {
-                listOf(R.string.mpv_recent, R.string.mpv_name_asc, R.string.mpv_name_desc, R.string.mpv_duration).forEachIndexed { index, label ->
-                  DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = {
-                    sort = index; savedSort.edit().putInt("sort", index).apply(); sortMenu = false
-                  }, trailingIcon = { if (sort == index) Icon(Icons.Star, null, Modifier.size(16.dp)) })
-                }
-              }
-            }
+            LibrarySortButton(if (selectedFolder == null) sorting else sorting.forFiles(),
+              countEnabled = selectedFolder == null, reduceMotion = reduceMotion, onSelect = { choice ->
+                sortKey = choice.key; sortAscending = choice.ascending
+                savedSort.edit().putString("sort_key", choice.key.storedName)
+                  .putBoolean("sort_ascending", choice.ascending).apply()
+              })
             IconButton(onClick = { backstack.add(PreferencesScreen) }) { Icon(Icons.Settings, stringResource(R.string.luma_settings)) }
           }
         })
@@ -152,39 +156,35 @@ object HomeScreen : Screen {
           AnimatedContent(targetState = selectedFolder, modifier = Modifier.fillMaxSize(), transitionSpec = {
             navigationMotion(back = targetState == null)
           }, label = "library_navigation") { folder ->
-            val videos = state.videos.filter { (folder == null || it.folderId == folder) &&
-              (it.name.contains(query, true) || it.path.contains(query, true) || it.folder.contains(query, true)) }
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
+            val sourceVideos = state.videos
+            val searchQuery = query
+            val listing by produceState(LibraryListing(sort = sorting), sourceVideos, folder, searchQuery, sorting) {
+              value = withContext(Dispatchers.Default) { buildLibraryListing(sourceVideos, folder, searchQuery, sorting) }
+            }
+            val listState = rememberLazyListState()
+            var appliedSort by remember { mutableStateOf(listing.sort) }
+            LaunchedEffect(listing.sort) {
+              if (appliedSort != listing.sort) { listState.scrollToItem(0); appliedSort = listing.sort }
+            }
+            LazyColumn(Modifier.fillMaxSize(), state = listState,
+              contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
               if (state.failed) item { Text(stringResource(R.string.mpv_library_error)) }
-              else if (access && !state.loading && videos.isEmpty()) item { Text(stringResource(R.string.mpv_empty)) }
+              else if (access && !state.loading && listing.ready && listing.folders.isEmpty() && listing.videos.isEmpty()) item { Text(stringResource(R.string.mpv_empty)) }
               if (folder == null) {
-                val groups = videos.groupBy { it.folderId }.entries.let { groups -> when (sort) {
-                  1 -> groups.sortedBy { it.value.first().folder.lowercase() }
-                  2 -> groups.sortedByDescending { it.value.first().folder.lowercase() }
-                  3 -> groups.sortedByDescending { it.value.sumOf { video -> video.duration } }
-                  else -> groups.toList()
-                } }
-                items(groups, key = { it.key }) { group ->
-                  val entry = group.value.first()
-                  Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { selectedFolder = group.key }
+                items(listing.folders, key = { it.id }) { entry ->
+                  Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { selectedFolder = entry.id }
                     .padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.library_folder), null, Modifier.size(width = 88.dp, height = 76.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                      Text(entry.folder, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
-                      if (entry.folderPath.isNotBlank()) Text(entry.folderPath, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                      Text(entry.name, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                      if (entry.path.isNotBlank()) Text(entry.path, maxLines = 2, overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     }
                   }
                 }
               } else {
-                val sorted = when (sort) {
-                  1 -> videos.sortedBy { it.name.lowercase() }
-                  2 -> videos.sortedByDescending { it.name.lowercase() }
-                  3 -> videos.sortedByDescending { it.duration }
-                  else -> videos
-                }
-                items(sorted, key = { it.uri }) { video ->
+                items(listing.videos, key = { it.uri }) { video ->
                   Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { playFile(video.uri, context) }
                     .padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.width(136.dp).height(88.dp).clip(RoundedCornerShape(12.dp))) {

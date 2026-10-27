@@ -5,7 +5,7 @@ import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -18,6 +18,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
@@ -31,7 +32,7 @@ import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import org.koin.compose.koinInject
 
-private val paneEasing = CubicBezierEasing(.2f, .8f, .2f, 1f)
+private val paneEasing = CubicBezierEasing(.3f, 0f, .2f, 1f)
 
 /** Drag and animation write one position, so interruption cannot double-apply an offset. */
 @Stable
@@ -39,16 +40,18 @@ private class PaneMotion {
   var position by mutableFloatStateOf(1f); private set
   private var job: Job? = null
 
-  fun animate(scope: CoroutineScope, target: Float, duration: Int, finished: () -> Unit = {}) {
+  fun animate(scope: CoroutineScope, target: Float, duration: Int, entrance: Boolean = false, finished: () -> Unit = {}) {
     stop()
     job = scope.launch {
-      AnimationState(position).animateTo(target, tween(duration, easing = paneEasing)) { position = value }
+      AnimationState(position).animateTo(target,
+        if (entrance) spring(dampingRatio = .86f, stiffness = 230f, visibilityThreshold = .001f)
+        else tween(duration, easing = paneEasing)) { position = value }
       position = target
       finished()
     }
   }
   fun stop() { job?.cancel() }
-  fun drag(delta: Float) { position = (position + delta).coerceIn(0f, 1f) }
+  fun drag(delta: Float) { position = (position + delta).coerceIn(-.01f, 1f) }
 }
 
 /** One surface for the lifetime of the player pane; only its inner page changes. */
@@ -74,11 +77,11 @@ fun PlayerSheet(
       motion.animate(scope, 1f, if (reduceMotion) 0 else 240) { latestDismiss() }
     }
   }
-  LaunchedEffect(Unit) { motion.animate(scope, 0f, if (reduceMotion) 0 else 360) }
+  LaunchedEffect(Unit) { motion.animate(scope, 0f, if (reduceMotion) 0 else 360, entrance = !reduceMotion) }
   DisposableEffect(motion) { onDispose(motion::stop) }
   BackHandler { if (!closing) latestBack?.invoke() ?: close() }
   Box(Modifier.fillMaxSize()) {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .23f * (1f - motion.position)))
+    Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = .23f * (1f - motion.position).coerceIn(0f, 1f))) }
       .clickable(remember { MutableInteractionSource() }, indication = null, onClick = close))
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
       val width = if (maxWidth > maxHeight) (maxWidth * .45f).coerceIn(320.dp, 480.dp).coerceAtMost(maxWidth)
