@@ -5,6 +5,10 @@ import android.content.ContentUris
 import android.provider.MediaStore
 import android.os.Build
 import kotlinx.coroutines.ensureActive
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -16,12 +20,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class LibraryVideo(val uri: String, val name: String, val folderId: String, val folder: String, val duration: Long, val path: String, val folderPath: String, val revision: Long, val dateAdded: Long = 0, val sizeBytes: Long = 0)
-data class LibraryState(val videos: List<LibraryVideo> = emptyList(), val loading: Boolean = false, val failed: Boolean = false)
+data class LibraryState(val videos: List<LibraryVideo> = emptyList(), val loading: Boolean = false, val failed: Boolean = false, val loaded: Boolean = false)
+
+internal val LocalMediaLibrary = staticCompositionLocalOf<MediaLibrary> { error("Library session is missing") }
 
 class MediaLibrary(application: Application) : AndroidViewModel(application) {
   private val mutableState = MutableStateFlow(LibraryState())
   val state = mutableState.asStateFlow()
+  internal var enteredHome by mutableStateOf(false)
   private var job: Job? = null
+  private var rootSource: List<LibraryVideo>? = null
+  private var rootListing: LibraryListing? = null
+
+  internal fun preparedRoot(source: List<LibraryVideo>, sort: LibrarySort): LibraryListing? =
+    rootListing?.takeIf { rootSource === source && it.sort == sort }
+
+  fun clearAccess() {
+    job?.cancel()
+    job = null
+    rootSource = null
+    rootListing = null
+    mutableState.value = LibraryState()
+  }
 
   fun reload(): Job {
     job?.takeIf { it.isActive }?.let { return it }
@@ -53,11 +73,19 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
             }
           }
         }
-        mutableState.value = LibraryState(videos)
+        val prepared = withContext(Dispatchers.Default) {
+          val saved = getApplication<Application>().getSharedPreferences("library_ui", android.content.Context.MODE_PRIVATE)
+          val sort = LibrarySort.restore(saved.getString("sort_key", null), saved.getBoolean("sort_ascending", true),
+            if (saved.contains("sort")) saved.getInt("sort", 0) else null)
+          buildLibraryListing(videos, null, "", sort)
+        }
+        rootSource = videos
+        rootListing = prepared
+        mutableState.value = LibraryState(videos, loaded = true)
       } catch (cancelled: CancellationException) {
         throw cancelled
       } catch (_: Exception) {
-        mutableState.value = mutableState.value.copy(loading = false, failed = true)
+        mutableState.value = mutableState.value.copy(loading = false, failed = true, loaded = true)
       }
     }
     job = scan

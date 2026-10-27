@@ -70,6 +70,7 @@ fun PlayerSheet(
   val motion = remember { PaneMotion() }
   val dismissVelocity = with(LocalDensity.current) { 550.dp.toPx() }
   var widthPx by remember { mutableFloatStateOf(1f) }
+  var laidOut by remember { mutableStateOf(false) }
   var closing by remember { mutableStateOf(false) }
   val close: () -> Unit = {
     if (!closing) {
@@ -77,22 +78,28 @@ fun PlayerSheet(
       motion.animate(scope, 1f, if (reduceMotion) 0 else 240) { latestDismiss() }
     }
   }
-  LaunchedEffect(Unit) { motion.animate(scope, 0f, if (reduceMotion) 0 else 360, entrance = !reduceMotion) }
+  LaunchedEffect(laidOut) {
+    if (laidOut && !closing) {
+      // Finish the first layout before moving a newly composed, potentially expensive pane.
+      if (!reduceMotion) withFrameNanos { }
+      if (!closing) motion.animate(scope, 0f, if (reduceMotion) 0 else 360, entrance = !reduceMotion)
+    }
+  }
   DisposableEffect(motion) { onDispose(motion::stop) }
   BackHandler { if (!closing) latestBack?.invoke() ?: close() }
   Box(Modifier.fillMaxSize()) {
     Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = .23f * (1f - motion.position).coerceIn(0f, 1f))) }
       .clickable(remember { MutableInteractionSource() }, indication = null, onClick = close))
     BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-      val width = if (maxWidth > maxHeight) (maxWidth * .45f).coerceIn(320.dp, 480.dp).coerceAtMost(maxWidth)
-        else maxWidth.coerceAtMost(480.dp)
+      val width = if (maxWidth > maxHeight) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
+        else maxWidth.coerceAtMost(504.dp)
       Surface(
         modifier = Modifier.align(AbsoluteAlignment.CenterRight).width(width).fillMaxHeight()
-          .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f) }.padding(12.dp)
+          .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f); laidOut = true }.padding(12.dp)
           .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }
           .draggable(
             state = rememberDraggableState { dx -> motion.drag(dx / widthPx) },
-            orientation = Orientation.Horizontal, enabled = !closing,
+            orientation = Orientation.Horizontal, enabled = !closing && laidOut,
             onDragStarted = { motion.stop() },
             onDragStopped = { velocity ->
               if (motion.position > .3f || velocity > dismissVelocity) close()

@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
+import kotlin.math.abs
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -33,15 +35,22 @@ fun ElasticRefreshBox(
   DisposableEffect(pull) { onDispose(pull::cancel) }
   CompositionLocalProvider(LocalOverscrollFactory provides null) {
     Box(modifier.nestedScroll(pull.connection)) {
-      val progress = (pull.offset / pull.threshold).coerceIn(0f, 1f)
       Box(Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(40.dp).graphicsLayer {
+        val progress = (pull.offset / pull.threshold).coerceIn(0f, 1f)
         alpha = if (pull.refreshing) 1f else progress
         translationY = (pull.offset / 2 - 20.dp.toPx()).coerceAtLeast(0f)
       }, contentAlignment = Alignment.Center) {
         if (pull.refreshing) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-        else Icon(Icons.Refresh, null, Modifier.size(24.dp).graphicsLayer { rotationZ = if (reduceMotion) 0f else progress * 180 })
+        else Icon(Icons.Refresh, null, Modifier.size(24.dp).graphicsLayer { rotationZ = if (reduceMotion) 0f else (pull.offset / pull.threshold).coerceIn(0f, 1f) * 180 })
       }
-      Box(Modifier.fillMaxSize().graphicsLayer { translationY = pull.offset }, content = content)
+      Box(Modifier.fillMaxSize().graphicsLayer {
+        val offset = pull.offset
+        translationY = if (offset >= 0f) offset else offset * .3f
+        if (!reduceMotion) {
+          scaleY = 1f + abs(offset) / size.height.coerceAtLeast(1f) * .25f
+          transformOrigin = TransformOrigin(.5f, if (offset >= 0f) 0f else 1f)
+        }
+      }, content = content)
     }
   }
 }

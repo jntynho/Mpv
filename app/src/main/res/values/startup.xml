@@ -1,0 +1,10 @@
+<resources>
+  <string name="mpv_welcome">Your videos, beautifully simple</string>
+  <string name="mpv_welcome_body">A quiet space for your videos, with powerful playback when you need it.</string>
+  <string name="mpv_welcome_access">Allow video access to find your folders and show video previews. Your files stay on your device.</string>
+  <string name="mpv_permission_denied">Video access is off. You can try again or continue and enable it later from the library.</string>
+  <string name="mpv_preparing">Getting things ready…</string>
+  <string name="mpv_get_started">Get started</string>
+  <string name="mpv_not_now">Not now</string>
+  <string name="mpv_open_app_settings">Open app settings</string>
+</resources>
