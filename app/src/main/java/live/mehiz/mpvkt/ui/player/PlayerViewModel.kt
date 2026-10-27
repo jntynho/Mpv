@@ -1,7 +1,6 @@
 package live.mehiz.mpvkt.ui.player
 
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.net.Uri
 import android.provider.Settings
@@ -114,8 +113,7 @@ class PlayerViewModel(
     }.getOrElse { 0f },
   )
 
-  val sheetShown = MutableStateFlow(Sheets.None)
-  val panelShown = MutableStateFlow(Panels.None)
+  internal val panelNavigator = PlayerPanelNavigator()
 
   // Pair(startingPosition, seekAmount)
   val gestureSeekAmount = MutableStateFlow<Pair<Int, Int>?>(null)
@@ -188,7 +186,7 @@ class PlayerViewModel(
 
   private val showStatusBar = playerPreferences.showSystemStatusBar.get()
   fun showControls() {
-    if (sheetShown.value != Sheets.None || panelShown.value != Panels.None) return
+    if (panelNavigator.isOpen) return
     if (showStatusBar) activity.windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
     _controlsShown.update { true }
   }
@@ -203,7 +201,7 @@ class PlayerViewModel(
   }
 
   fun showSeekBar() {
-    if (sheetShown.value != Sheets.None) return
+    if (panelNavigator.isOpen) return
     _seekBarShown.update { true }
   }
 
@@ -329,8 +327,7 @@ class PlayerViewModel(
           }
 
           "hide" -> {
-            sheetShown.update { Sheets.None }
-            panelShown.update { Panels.None }
+            panelNavigator.dismiss()
             hideControls()
           }
         }
@@ -338,10 +335,10 @@ class PlayerViewModel(
 
       "show_panel" -> {
         when (data) {
-          "subtitle_settings" -> panelShown.update { Panels.SubtitleSettings }
-          "subtitle_delay" -> panelShown.update { Panels.SubtitleDelay }
-          "audio_delay" -> panelShown.update { Panels.AudioDelay }
-          "video_filters" -> panelShown.update { Panels.VideoFilters }
+          "subtitle_settings" -> panelNavigator.openPanel(Panels.SubtitleSettings)
+          "subtitle_delay" -> panelNavigator.openPanel(Panels.SubtitleDelay)
+          "audio_delay" -> panelNavigator.openPanel(Panels.AudioDelay)
+          "video_filters" -> panelNavigator.openPanel(Panels.VideoFilters)
         }
       }
 

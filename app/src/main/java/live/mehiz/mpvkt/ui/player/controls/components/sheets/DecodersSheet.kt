@@ -10,11 +10,9 @@ import live.mehiz.mpvkt.ui.player.Decoder
 fun DecodersSheet(
   selectedDecoder: Decoder,
   onSelect: (Decoder) -> Unit,
-  onDismissRequest: () -> Unit,
 ) {
   GenericTracksSheet(
     Decoder.entries.minusElement(Decoder.Auto).toImmutableList(),
-    title = stringResource(R.string.pref_decoder),
     track = {
       AudioTrackRow(
         title = stringResource(R.string.player_sheets_decoder_formatted, it.title, it.value),
@@ -22,6 +20,5 @@ fun DecodersSheet(
         onClick = { onSelect(it) }
       )
     },
-    onDismissRequest = onDismissRequest
   )
 }

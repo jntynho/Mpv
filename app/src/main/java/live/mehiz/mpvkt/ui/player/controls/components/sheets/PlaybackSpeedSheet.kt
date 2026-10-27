@@ -2,11 +2,9 @@ package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import live.mehiz.mpvkt.ui.player.controls.components.PlayerPanelHeader
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 import live.mehiz.mpvkt.ui.player.PlaybackControl
 import androidx.compose.foundation.layout.padding
@@ -33,7 +31,6 @@ import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.presentation.components.PlayerSheet
 import live.mehiz.mpvkt.presentation.components.SliderItem
 import live.mehiz.mpvkt.ui.theme.spacing
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -52,13 +49,9 @@ fun PlaybackSpeedSheet(
   onResetPresets: () -> Unit,
   onMakeDefault: (Float) -> Unit,
   onResetDefault: () -> Unit,
-  onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  PlayerSheet(onDismissRequest = onDismissRequest) {
-    Column(modifier.fillMaxSize()) {
-      PlayerPanelHeader(stringResource(R.string.player_sheets_speed_slider_label))
-      PlayerScrollArea(Modifier.weight(1f).padding(vertical = MaterialTheme.spacing.medium)) {
+  PlayerScrollArea(modifier.fillMaxSize().padding(vertical = MaterialTheme.spacing.medium)) {
       SliderItem(
         label = stringResource(id = R.string.player_sheets_speed_slider_label),
         value = speed,
@@ -131,8 +124,6 @@ fun PlaybackSpeedSheet(
           Icon(imageVector = Icons.RestartAlt, contentDescription = null)
         }
       }
-      }
-    }
   }
 }
 
