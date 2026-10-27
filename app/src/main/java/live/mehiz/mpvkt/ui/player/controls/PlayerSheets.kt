@@ -26,11 +26,11 @@ fun PlayerSheets(
   // subtitles sheet
   subtitles: ImmutableList<TrackNode>,
   onAddSubtitle: (Uri) -> Unit,
-  onSelectSubtitle: (Int) -> Unit,
+  onSelectSubtitle: (Int, Int) -> Unit,
   // audio sheet
   audioTracks: ImmutableList<TrackNode>,
   onAddAudio: (Uri) -> Unit,
-  onSelectAudio: (TrackNode) -> Unit,
+  onSelectAudio: (TrackNode?) -> Unit,
   // chapters sheet
   chapter: Segment?,
   chapters: ImmutableList<Segment>,

@@ -23,9 +23,9 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
   val state = mutableState.asStateFlow()
   private var job: Job? = null
 
-  fun reload() {
-    job?.cancel()
-    job = viewModelScope.launch {
+  fun reload(): Job {
+    job?.takeIf { it.isActive }?.let { return it }
+    val scan = viewModelScope.launch {
       mutableState.value = mutableState.value.copy(loading = true, failed = false)
       try {
         val videos = withContext(Dispatchers.IO) {
@@ -53,8 +53,10 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
       } catch (cancelled: CancellationException) {
         throw cancelled
       } catch (_: Exception) {
-        mutableState.value = LibraryState(failed = true)
+        mutableState.value = mutableState.value.copy(loading = false, failed = true)
       }
     }
+    job = scan
+    return scan
   }
 }

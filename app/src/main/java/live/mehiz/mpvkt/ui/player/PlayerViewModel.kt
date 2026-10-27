@@ -79,9 +79,10 @@ class PlayerViewModel(
   private val _primaryButtonTitle = MutableStateFlow("")
   val primaryButtonTitle = _primaryButtonTitle.asStateFlow()
 
-  val paused by MPVLib.propBoolean["pause"].collectAsState(viewModelScope)
-  val pos by MPVLib.propInt["time-pos"].collectAsState(viewModelScope)
-  val duration by MPVLib.propInt["duration"].collectAsState(viewModelScope)
+  internal val playback = PlaybackControl.state
+  val paused get() = playback.value.displayPaused
+  val pos by MPVLib.propDouble["time-pos"].map { it?.toInt() }.collectAsState(viewModelScope)
+  val duration by MPVLib.propDouble["duration"].map { it?.toInt() }.collectAsState(viewModelScope)
   private val currentMPVVolume by MPVLib.propInt["volume"].collectAsState(viewModelScope)
 
   val currentVolume = MutableStateFlow(activity.audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
@@ -135,11 +136,12 @@ class PlayerViewModel(
     _remainingTime.value = seconds
     if (seconds < 1) return
     timerJob = viewModelScope.launch {
-      for (time in seconds downTo 0) {
+      for (time in seconds downTo 1) {
         _remainingTime.value = time
         delay(1000)
       }
-      MPVLib.setPropertyBoolean("pause", true)
+      _remainingTime.value = 0
+      pause()
       Toast.makeText(activity, activity.getString(R.string.toast_sleep_timer_ended), Toast.LENGTH_SHORT).show()
     }
   }
@@ -169,21 +171,20 @@ class PlayerViewModel(
     MPVLib.command("sub-add", path ?: return, "cached")
   }
 
-  fun selectSub(id: Int) {
-    val selectedSubs = Pair(MPVLib.getPropertyInt("sid"), MPVLib.getPropertyInt("secondary-sid"))
-    when (id) {
-      selectedSubs.first -> Pair(selectedSubs.second, null)
-      selectedSubs.second -> Pair(selectedSubs.first, null)
-      else -> if (selectedSubs.first != null) Pair(selectedSubs.first, id) else Pair(id, null)
-    }.let {
-      it.second?.let { MPVLib.setPropertyInt("secondary-sid", it) } ?: MPVLib.setPropertyBoolean("secondary-sid", false)
-      it.first?.let { MPVLib.setPropertyInt("sid", it) } ?: MPVLib.setPropertyBoolean("sid", false)
+  fun selectSub(id: Int, slot: Int) {
+    PlaybackControl.enqueue("subtitle-$slot") {
+      val property = if (slot == 1) "secondary-sid" else "sid"
+      val other = if (slot == 1) "sid" else "secondary-sid"
+      if (id >= 0 && MPVLib.getPropertyInt(other) == id) MPVLib.setPropertyBoolean(other, false)
+      if (id < 0) MPVLib.setPropertyBoolean(property, false) else MPVLib.setPropertyInt(property, id)
     }
   }
 
-  fun pauseUnpause() = MPVLib.command("cycle", "pause")
-  fun pause() = MPVLib.setPropertyBoolean("pause", true)
-  fun unpause() = MPVLib.setPropertyBoolean("pause", false)
+  fun pauseUnpause() = PlaybackControl.toggle()
+  fun pause() = PlaybackControl.pause()
+  fun unpause() = PlaybackControl.play()
+  fun beginSeek() = PlaybackControl.beginSeek()
+  fun endSeek() = PlaybackControl.endSeek()
 
   private val showStatusBar = playerPreferences.showSystemStatusBar.get()
   fun showControls() {
@@ -215,12 +216,12 @@ class PlayerViewModel(
   }
 
   fun seekBy(offset: Int, precise: Boolean = false) {
-    MPVLib.command("seek", offset.toString(), if (precise) "relative+exact" else "relative")
+    PlaybackControl.enqueue { MPVLib.command("seek", offset.toString(), if (precise) "relative+exact" else "relative") }
   }
 
   fun seekTo(position: Int, precise: Boolean = true) {
-    if (position !in 0..(MPVLib.getPropertyInt("duration") ?: 0)) return
-    MPVLib.command("seek", position.toString(), if (precise) "absolute" else "absolute+keyframes")
+    if (position < 0 || (duration != null && position > duration!!)) return
+    PlaybackControl.enqueue("seek") { MPVLib.command("seek", position.toString(), if (precise) "absolute" else "absolute+keyframes") }
   }
 
   fun changeBrightnessBy(change: Float) {
@@ -266,7 +267,7 @@ class PlayerViewModel(
   }
 
   fun changeMPVVolumeTo(volume: Int) {
-    MPVLib.setPropertyInt("volume", volume)
+    PlaybackControl.enqueue("volume") { MPVLib.setPropertyInt("volume", volume) }
   }
 
   fun setMPVVolume(volume: Int) {

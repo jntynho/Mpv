@@ -62,6 +62,7 @@ import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import live.mehiz.mpvkt.R
@@ -79,6 +80,7 @@ import live.mehiz.mpvkt.ui.player.PlayerUpdates
 import live.mehiz.mpvkt.ui.player.PlayerViewModel
 import live.mehiz.mpvkt.ui.player.Sheets
 import live.mehiz.mpvkt.ui.player.VideoAspect
+import live.mehiz.mpvkt.ui.player.controls.components.AnimatedPlayPauseButton
 import live.mehiz.mpvkt.ui.player.controls.components.BrightnessSlider
 import live.mehiz.mpvkt.ui.player.controls.components.ControlsButton
 import live.mehiz.mpvkt.ui.player.controls.components.MultipleSpeedPlayerUpdate
@@ -109,10 +111,11 @@ fun PlayerControls(
   val controlsShown by viewModel.controlsShown.collectAsState()
   val areControlsLocked by viewModel.areControlsLocked.collectAsState()
   val seekBarShown by viewModel.seekBarShown.collectAsState()
-  val pausedForCache by MPVLib.propBoolean["paused-for-cache"].collectAsState()
-  val paused by MPVLib.propBoolean["pause"].collectAsState()
-  val duration by MPVLib.propInt["duration"].collectAsState()
-  val position by MPVLib.propInt["time-pos"].collectAsState()
+  val playback by viewModel.playback.collectAsState()
+  val paused = playback.displayPaused
+  val pausedForCache = playback.isBuffering
+  val duration by remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
+  val position by remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
   val playbackSpeed by MPVLib.propFloat["speed"].collectAsState()
   val gestureSeekAmount by viewModel.gestureSeekAmount.collectAsState()
   val doubleTapSeekAmount by viewModel.doubleTapSeekAmount.collectAsState()
@@ -366,27 +369,13 @@ fun PlayerControls(
               )
             }
 
-            pausedForCache == true && showLoadingCircle -> {
-              CircularProgressIndicator(
-                Modifier.size(96.dp),
-                strokeWidth = 6.dp,
-              )
-            }
-
-            controlsShown && !areControlsLocked -> Icon(
-              imageVector = if (paused == false) Icons.Pause else Icons.Play,
-              tint = Color.White,
-              modifier = Modifier
-                .size(96.dp)
-                .clip(CircleShape)
-                .clickable(
-                  interaction,
-                  ripple(),
-                  onClick = viewModel::pauseUnpause,
-                )
-                .padding(MaterialTheme.spacing.medium),
-              contentDescription = null,
+            (controlsShown || pausedForCache) && !areControlsLocked -> AnimatedPlayPauseButton(
+              paused = paused, loading = pausedForCache && showLoadingCircle,
+              pending = playback.pending, enabled = playback.attached, reduceMotion = reduceMotion,
+              onClick = { resetControls = !resetControls; viewModel.pauseUnpause() },
             )
+            pausedForCache && showLoadingCircle -> CircularProgressIndicator(Modifier.size(88.dp), strokeWidth = 2.dp)
+
           }
         }
         AnimatedVisibility(
@@ -583,11 +572,9 @@ fun PlayerControls(
       onSelectSubtitle = viewModel::selectSub,
       audioTracks = audioTracks,
       onAddAudio = viewModel::addAudio,
-      onSelectAudio = {
-        if (MPVLib.getPropertyInt("aid") == it.id) {
-          MPVLib.setPropertyBoolean("aid", false)
-        } else {
-          MPVLib.setPropertyInt("aid", it.id)
+      onSelectAudio = { track ->
+        live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
+          if (track == null) MPVLib.setPropertyBoolean("aid", false) else MPVLib.setPropertyInt("aid", track.id)
         }
       },
       chapter = chapters.getOrNull(currentChapter ?: 0),

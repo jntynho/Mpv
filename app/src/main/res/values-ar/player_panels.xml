@@ -1,0 +1,13 @@
+<resources>
+    <string name="generic_close">إغلاق</string>
+    <string name="mpv_panel_tracks">المسارات</string>
+    <string name="mpv_panel_audio">الصوت</string>
+    <string name="mpv_panel_subtitles">الترجمة</string>
+    <string name="mpv_panel_output">إخراج الصوت</string>
+    <string name="mpv_panel_volume">مستوى الصوت</string>
+    <string name="mpv_panel_adjustments">الضبط</string>
+    <string name="mpv_track_id">المسار %d</string>
+    <string name="mpv_panel_quick">أدوات سريعة</string>
+    <string name="mpv_panel_tools">أدوات التشغيل</string>
+  <string name="mpv_panel_chapters">الفصول</string>
+</resources>

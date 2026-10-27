@@ -1,103 +1,78 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.PlayerSheet
 import live.mehiz.mpvkt.ui.player.TrackNode
-import live.mehiz.mpvkt.ui.theme.spacing
+import live.mehiz.mpvkt.ui.player.controls.components.*
+import java.util.Locale
 
 @Composable
 fun <T> GenericTracksSheet(
-  tracks: ImmutableList<T>,
-  onDismissRequest: () -> Unit,
+  tracks: ImmutableList<T>, onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
+  title: String? = null, icon: ImageVector? = null,
   header: @Composable () -> Unit = {},
+  beforeTracks: @Composable () -> Unit = {},
   track: @Composable (T) -> Unit = {},
   footer: @Composable () -> Unit = {},
+  bottomBar: @Composable () -> Unit = {},
 ) {
   PlayerSheet(onDismissRequest) {
-    Column(modifier) {
+    Column(modifier.fillMaxSize()) {
+      PlayerPanelHeader(title ?: stringResource(R.string.mpv_panel_tracks), icon)
       header()
-      LazyColumn {
-        items(tracks) {
-          track(it)
-        }
-        item {
-          footer()
-        }
+      PlayerLazyScrollArea(Modifier.weight(1f)) {
+        item { beforeTracks() }
+        items(tracks) { track(it) }
+        item { footer() }
       }
+      bottomBar()
     }
   }
 }
 
 @Composable
-fun AddTrackRow(
-  title: String,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier,
-  actions: @Composable RowScope.() -> Unit = {},
+fun AudioTrackRow(title: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
+  subtitle: String? = null, badge: String? = null,
 ) {
-  Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .clickable(onClick = onClick)
-      .height(48.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-  ) {
-    Row(
-      modifier = Modifier
-        .clickable(onClick = onClick)
-        .fillMaxHeight()
-        .weight(1f)
-        .padding(start = MaterialTheme.spacing.medium),
-      horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Icon(
-        Icons.Add,
-        null,
-        modifier = Modifier.size(32.dp),
-      )
-      Text(title)
+  Row(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp).clip(RoundedCornerShape(14.dp))
+    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .55f) else Color.Transparent)
+    .selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
+    .padding(horizontal = 10.dp, vertical = 10.dp),
+    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    RadioButton(selected = isSelected, onClick = null, modifier = Modifier.size(24.dp))
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+      Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
+      if (!subtitle.isNullOrBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    actions()
+    if (badge != null) Text(badge, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
   }
 }
 
 @Composable
-fun getTrackTitle(track: TrackNode): String {
-  val hasTitle = !track.title.isNullOrBlank()
-  val hasLang = !track.lang.isNullOrBlank()
+fun getTrackTitle(track: TrackNode): String = track.title?.takeIf { it.isNotBlank() }
+  ?: track.lang?.takeIf { it.isNotBlank() }
+  ?: stringResource(if (track.isAudio) R.string.player_sheets_chapter_title_substitute_audio else R.string.player_sheets_chapter_title_substitute_subtitle, track.id)
 
-  return when {
-    hasTitle && hasLang -> stringResource(R.string.player_sheets_track_title_w_lang, track.id, track.title, track.lang)
-    hasTitle && !hasLang -> stringResource(R.string.player_sheets_track_title_wo_lang, track.id, track.title)
-    !hasTitle && hasLang -> stringResource(R.string.player_sheets_track_lang_wo_title, track.id, track.lang)
-    track.isSubtitle -> stringResource(R.string.player_sheets_chapter_title_substitute_subtitle, track.id)
-    track.isAudio -> stringResource(R.string.player_sheets_chapter_title_substitute_subtitle, track.id)
-    else -> "" // idk what to show tbh
-  }
-}
+@Composable
+fun trackDescription(track: TrackNode): String = listOfNotNull(
+  stringResource(R.string.mpv_track_id, track.id), track.lang?.takeIf { it.isNotBlank() },
+  track.codec?.uppercase(Locale.ROOT), track.demuxChannels,
+).distinct().joinToString(" · ")
