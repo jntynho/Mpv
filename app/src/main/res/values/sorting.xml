@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_sort_title">Title</string>
+  <string name="mpv_sort_date">Date</string>
+  <string name="mpv_sort_size">Size</string>
+  <string name="mpv_sort_count">Count</string>
+  <string name="mpv_sort_order">Order</string>
+  <string name="mpv_sort_ascending">A–Z</string>
+  <string name="mpv_sort_descending">Z–A</string>
+  <string name="mpv_sort_count_folders">Count is available for folders</string>
+</resources>
