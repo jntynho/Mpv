@@ -67,6 +67,19 @@ android {
       versionNameSuffix = "-${getCommitCount()}"
     }
   }
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+    unitTests.all { test ->
+      // Limit Robolectric's SDK download/cache writes to this project's test workspace.
+      val testHome = layout.buildDirectory.dir("test-home").get().asFile
+      test.systemProperty("user.home", testHome.absolutePath)
+      test.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+      listOf("http.proxyHost", "http.proxyPort", "https.proxyHost", "https.proxyPort", "http.nonProxyHosts").forEach { key ->
+        System.getProperty(key)?.let { test.systemProperty(key, it) }
+      }
+      test.doFirst { testHome.mkdirs() }
+    }
+  }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -118,6 +131,10 @@ room {
 
 dependencies {
   testImplementation("junit:junit:4.13.2")
+  // Host-only rendering of the actual Compose menu; none of these enter a preview/release APK.
+  testImplementation("org.robolectric:robolectric:4.16.1")
+  testImplementation("androidx.compose.ui:ui-test-junit4")
+  debugImplementation("androidx.compose.ui:ui-test-manifest")
   implementation(libs.androidx.activity.compose)
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.ui)
