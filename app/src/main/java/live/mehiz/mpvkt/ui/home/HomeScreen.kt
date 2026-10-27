@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import live.mehiz.mpvkt.ui.motion.ElasticRefreshBox
+import live.mehiz.mpvkt.preferences.PlayerPreferences
+import org.koin.compose.koinInject
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -62,6 +64,7 @@ object HomeScreen : Screen {
     val backstack = LocalBackStack.current
     val library: MediaLibrary = viewModel()
     val state by library.state.collectAsState()
+    val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.changes().collectAsState(initial = false)
     var selectedFolder by rememberSaveable { mutableStateOf<String?>(null) }
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -144,7 +147,8 @@ object HomeScreen : Screen {
             Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED) {
           TextButton(onClick = { permissionRequest.launch(permissions) }) { Text(stringResource(R.string.mpv_manage_access)) }
         }
-        PullToRefreshBox(isRefreshing = state.loading, onRefresh = { if (!state.loading) library.reload() }, modifier = Modifier.weight(1f)) {
+        ElasticRefreshBox(loading = state.loading, onRefresh = { library.reload().join() }, reduceMotion = reduceMotion, modifier = Modifier.weight(1f)) {
+          if (state.loading && state.videos.isEmpty()) CircularProgressIndicator(Modifier.align(Alignment.Center), strokeWidth = 2.dp)
           AnimatedContent(targetState = selectedFolder, modifier = Modifier.fillMaxSize(), transitionSpec = {
             navigationMotion(back = targetState == null)
           }, label = "library_navigation") { folder ->

@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
@@ -34,25 +34,16 @@ fun AudioDelayPanel(
 ) {
   val preferences = koinInject<AudioPreferences>()
 
-  ConstraintLayout(
-    modifier = modifier
-      .fillMaxSize()
-      .padding(MaterialTheme.spacing.medium),
-  ) {
-    val delayControlCard = createRef()
-
+  PlayerScrollArea(modifier.fillMaxSize()) {
     val delay by MPVLib.propDouble["audio-delay"].collectAsState()
     DelayCard(
       delayMs = ((delay ?: 0.0) * 1000).toInt(),
-      onDelayChange = { MPVLib.setPropertyDouble("audio-delay", it / 1000.0) },
+      onDelayChange = { value -> live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-delay") { MPVLib.setPropertyDouble("audio-delay", value / 1000.0) } },
       onApply = { preferences.defaultAudioDelay.set(((delay ?: 0.0) * 1000).toInt()) },
       onReset = { MPVLib.setPropertyDouble("audio-delay", (preferences.defaultAudioDelay.get() / 1000.0)) },
       title = { AudioDelayCardTitle(onClose = onDismissRequest) },
       delayType = DelayType.Audio,
-      modifier = Modifier.constrainAs(delayControlCard) {
-        linkTo(parent.top, parent.bottom, bias = 0.8f)
-        end.linkTo(parent.end)
-      },
+      modifier = Modifier.fillMaxWidth().padding(12.dp),
     )
   }
 }
@@ -69,7 +60,8 @@ fun AudioDelayCardTitle(
   ) {
     Text(
       stringResource(R.string.player_sheets_audio_delay_card_title),
-      style = MaterialTheme.typography.headlineMedium,
+      modifier = Modifier.weight(1f),
+      style = MaterialTheme.typography.titleLarge,
     )
     IconButton(onClose) {
       Icon(

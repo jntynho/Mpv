@@ -29,6 +29,7 @@ fun ChaptersSheet(
 ) {
   GenericTracksSheet(
     chapters,
+    title = stringResource(R.string.mpv_panel_chapters),
     track = {
       ChapterTrack(
         it,

@@ -4,12 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerPanelHeader
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
+import live.mehiz.mpvkt.ui.player.PlaybackControl
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Add
 import live.mehiz.mpvkt.ui.icons.Close
@@ -54,11 +56,9 @@ fun PlaybackSpeedSheet(
   modifier: Modifier = Modifier,
 ) {
   PlayerSheet(onDismissRequest = onDismissRequest) {
-    Column(
-      modifier
-        .verticalScroll(rememberScrollState())
-        .padding(vertical = MaterialTheme.spacing.medium),
-    ) {
+    Column(modifier.fillMaxSize()) {
+      PlayerPanelHeader(stringResource(R.string.player_sheets_speed_slider_label))
+      PlayerScrollArea(Modifier.weight(1f).padding(vertical = MaterialTheme.spacing.medium)) {
       SliderItem(
         label = stringResource(id = R.string.player_sheets_speed_slider_label),
         value = speed,
@@ -110,7 +110,7 @@ fun PlaybackSpeedSheet(
           value = pitchCorrection,
           onValueChange = {
             audioPreferences.audioPitchCorrection.set(it)
-            MPVLib.setPropertyBoolean("audio-pitch-correction", it)
+            PlaybackControl.enqueue("pitch") { MPVLib.setPropertyBoolean("audio-pitch-correction", it) }
           },
           title = { Text(text = stringResource(id = R.string.pref_audio_pitch_correction_title)) },
           summary = { Text(text = stringResource(id = R.string.pref_audio_pitch_correction_summary)) },
@@ -130,6 +130,7 @@ fun PlaybackSpeedSheet(
         FilledIconButton(onClick = onResetDefault) {
           Icon(imageVector = Icons.RestartAlt, contentDescription = null)
         }
+      }
       }
     }
   }

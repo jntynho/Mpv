@@ -2,6 +2,8 @@ package live.mehiz.mpvkt.ui.player.controls.components.panels
 
 import live.mehiz.mpvkt.ui.icons.Shadow
 
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.foundation.horizontalScroll
@@ -65,6 +67,7 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.preferenceTheme
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MutableCollectionMutableState")
 @Composable
 fun SubtitleSettingsTypographyCard(
@@ -129,12 +132,11 @@ fun SubtitleSettingsTypographyCard(
       }
       val borderSize by MPVLib.propInt["sub-outline-size"].collectAsState()
       val shadowOffset by MPVLib.propInt["sub-shadow-offset"].collectAsState()
-      Row(
+      FlowRow(
         Modifier
           .fillMaxWidth()
-          .horizontalScroll(rememberScrollState())
           .padding(start = MaterialTheme.spacing.extraSmall, end = MaterialTheme.spacing.medium),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.Center,
       ) {
         IconToggleButton(
           checked = isBold == true,
@@ -179,7 +181,6 @@ fun SubtitleSettingsTypographyCard(
             Icon(justification.icon, null)
           }
         }
-        Spacer(Modifier.weight(1f))
         TextButton(
           onClick = { resetTypography(preferences) },
         ) {

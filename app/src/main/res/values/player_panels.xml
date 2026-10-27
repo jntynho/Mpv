@@ -1,0 +1,13 @@
+<resources>
+    <string name="generic_close">Close</string>
+    <string name="mpv_panel_tracks">Tracks</string>
+    <string name="mpv_panel_audio">Audio</string>
+    <string name="mpv_panel_subtitles">Subtitles</string>
+    <string name="mpv_panel_output">Output</string>
+    <string name="mpv_panel_volume">Volume</string>
+    <string name="mpv_panel_adjustments">Adjustments</string>
+    <string name="mpv_track_id">Track %d</string>
+    <string name="mpv_panel_quick">Quick controls</string>
+    <string name="mpv_panel_tools">Playback tools</string>
+  <string name="mpv_panel_chapters">Chapters</string>
+</resources>

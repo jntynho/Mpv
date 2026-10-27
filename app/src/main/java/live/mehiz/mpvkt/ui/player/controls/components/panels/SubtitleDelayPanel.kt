@@ -41,7 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
@@ -60,13 +60,7 @@ fun SubtitleDelayPanel(
 ) {
   val preferences = koinInject<SubtitlesPreferences>()
 
-  ConstraintLayout(
-    modifier = modifier
-      .fillMaxSize()
-      .padding(MaterialTheme.spacing.medium),
-  ) {
-    val delayControlCard = createRef()
-
+  PlayerScrollArea(modifier.fillMaxSize()) {
     var affectedSubtitle by remember { mutableStateOf(SubtitleDelayType.Primary) }
     val delay by MPVLib.propDouble["sub-delay"].collectAsState()
     val delayInt by remember { derivedStateOf { ((delay ?: 0.0) * 1000).toInt() } }
@@ -101,10 +95,7 @@ fun SubtitleDelayPanel(
         MPVLib.setPropertyFloat("sub-speed", preferences.defaultSubSpeed.get())
       },
       onClose = onDismissRequest,
-      modifier = Modifier.constrainAs(delayControlCard) {
-        linkTo(parent.top, parent.bottom, bias = 0.8f)
-        end.linkTo(parent.end)
-      },
+      modifier = Modifier.fillMaxWidth().padding(12.dp),
     )
   }
 }
@@ -183,7 +174,6 @@ fun DelayCard(
   ) {
     Column(
       Modifier
-        .verticalScroll(rememberScrollState())
         .padding(
           horizontal = MaterialTheme.spacing.medium,
           vertical = MaterialTheme.spacing.smaller,
@@ -295,7 +285,8 @@ fun SubtitleDelayTitle(
   ) {
     Text(
       stringResource(R.string.player_sheets_sub_delay_card_title),
-      style = MaterialTheme.typography.headlineMedium,
+      modifier = Modifier.weight(1f),
+      style = MaterialTheme.typography.titleLarge,
     )
     var showDropDownMenu by remember { mutableStateOf(false) }
     Row(modifier = Modifier.clickable { showDropDownMenu = true }) {
@@ -320,7 +311,6 @@ fun SubtitleDelayTitle(
         }
       }
     }
-    Spacer(Modifier.weight(1f))
     IconButton(onClose) {
       Icon(
         Icons.Close,

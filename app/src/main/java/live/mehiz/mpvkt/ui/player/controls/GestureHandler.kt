@@ -41,6 +41,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import `is`.xyz.mpv.MPVLib
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import live.mehiz.mpvkt.R
@@ -67,9 +68,10 @@ fun GestureHandler(
   val audioPreferences = koinInject<AudioPreferences>()
   val panelShown by viewModel.panelShown.collectAsState()
   val allowGesturesInPanels by playerPreferences.allowGesturesInPanels.collectAsState()
-  val paused by MPVLib.propBoolean["pause"].collectAsState()
-  val duration by MPVLib.propInt["duration"].collectAsState()
-  val position by MPVLib.propInt["time-pos"].collectAsState()
+  val playback by viewModel.playback.collectAsState()
+  val paused = playback.displayPaused
+  val duration by remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
+  val position by remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
   val playbackSpeed by MPVLib.propFloat["speed"].collectAsState()
   val controlsShown by viewModel.controlsShown.collectAsState()
   val areControlsLocked by viewModel.areControlsLocked.collectAsState()
@@ -188,23 +190,21 @@ fun GestureHandler(
         if (!seekGesture || areControlsLocked) return@pointerInput
         var startingPosition = position ?: 0
         var startingX = 0f
-        var wasPlayerAlreadyPause = false
         detectHorizontalDragGestures(
           onDragStart = {
             startingPosition = position ?: 0
             startingX = it.x
-            wasPlayerAlreadyPause = paused ?: false
-            viewModel.pause()
+            viewModel.beginSeek()
           },
           onDragCancel = {
             viewModel.gestureSeekAmount.update { null }
             viewModel.hideSeekBar()
-            if (!wasPlayerAlreadyPause) viewModel.unpause()
+            viewModel.endSeek()
           },
           onDragEnd = {
             viewModel.gestureSeekAmount.update { null }
             viewModel.hideSeekBar()
-            if (!wasPlayerAlreadyPause) viewModel.unpause()
+            viewModel.endSeek()
           },
         ) { change, dragAmount ->
           if ((position ?: 0) <= 0f && dragAmount < 0) return@detectHorizontalDragGestures

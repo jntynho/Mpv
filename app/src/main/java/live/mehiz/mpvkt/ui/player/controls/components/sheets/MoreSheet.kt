@@ -1,37 +1,32 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Switch
+import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
+import live.mehiz.mpvkt.ui.player.PlaybackControl
+import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.player.controls.components.*
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.Headset
-import live.mehiz.mpvkt.ui.icons.HeadsetOff
-import live.mehiz.mpvkt.ui.icons.KeyboardAlt
-import live.mehiz.mpvkt.ui.icons.Tune
-import live.mehiz.mpvkt.ui.icons.Schedule
-import live.mehiz.mpvkt.ui.icons.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,8 +52,6 @@ import kotlinx.collections.immutable.ImmutableList
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.database.entities.CustomButtonEntity
 import live.mehiz.mpvkt.preferences.AdvancedPreferences
-import live.mehiz.mpvkt.preferences.AudioChannels
-import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.components.PlayerSheet
@@ -67,170 +60,62 @@ import live.mehiz.mpvkt.ui.player.executeLongClick
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MoreSheet(
-  remainingTime: Int,
-  onStartTimer: (Int) -> Unit,
-  onDismissRequest: () -> Unit,
-  onEnterFiltersPanel: () -> Unit,
-  customButtons: ImmutableList<CustomButtonEntity>,
-  modifier: Modifier = Modifier,
+  remainingTime: Int, onStartTimer: (Int) -> Unit, onDismissRequest: () -> Unit,
+  onEnterFiltersPanel: () -> Unit, customButtons: ImmutableList<CustomButtonEntity>, modifier: Modifier = Modifier,
 ) {
   val advancedPreferences = koinInject<AdvancedPreferences>()
-  val audioPreferences = koinInject<AudioPreferences>()
   val playerPreferences = koinInject<PlayerPreferences>()
   val statisticsPage by advancedPreferences.enabledStatisticsPage.collectAsState()
-
-  PlayerSheet(
-    onDismissRequest,
-    modifier,
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(MaterialTheme.spacing.medium)
-        .verticalScroll(rememberScrollState()),
-      verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Text(
-          text = stringResource(id = R.string.player_sheets_more_title),
-          style = MaterialTheme.typography.headlineMedium,
-        )
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-        ) {
-          val backgroundPlayback by playerPreferences.automaticBackgroundPlayback.collectAsState()
-          IconToggleButton(
-            checked = backgroundPlayback,
-            onCheckedChange = { playerPreferences.automaticBackgroundPlayback.set(it) }
-          ) {
-            Icon(
-              if (backgroundPlayback) Icons.Headset else Icons.HeadsetOff,
-              null
-            )
-          }
-          var isSleepTimerDialogShown by remember { mutableStateOf(false) }
-          TextButton(onClick = { isSleepTimerDialogShown = true }) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-            ) {
-              Icon(imageVector = Icons.Timer, contentDescription = null)
-              Text(
-                text =
-                if (remainingTime == 0) {
-                  stringResource(R.string.timer_title)
-                } else {
-                  stringResource(
-                    R.string.timer_remaining,
-                    DateUtils.formatElapsedTime(remainingTime.toLong()),
-                  )
-                },
-              )
-              if (isSleepTimerDialogShown) {
-                TimePickerDialog(
-                  remainingTime = remainingTime,
-                  onDismissRequest = { isSleepTimerDialogShown = false },
-                  onTimeSelect = onStartTimer,
-                )
-              }
-            }
-          }
-          TextButton(onClick = onEnterFiltersPanel) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-            ) {
-              Icon(imageVector = Icons.Tune, contentDescription = null)
-              Text(text = stringResource(id = R.string.player_sheets_filters_title))
-            }
-          }
-        }
-      }
-      Text(stringResource(R.string.player_sheets_stats_page_title))
-      LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-      ) {
-        items(6) { page ->
-          FilterChip(
-            label = {
-              Text(
-                stringResource(
-                  if (page == 0) R.string.player_sheets_tracks_off else R.string.player_sheets_stats_page_chip,
-                  page,
-                ),
-              )
-            },
-            onClick = {
+  var statsExpanded by remember { mutableStateOf(false) }
+  var timerShown by remember { mutableStateOf(false) }
+  PlayerSheet(onDismissRequest, modifier) {
+    val close = LocalPlayerSheetClose.current
+    Column(Modifier.fillMaxSize()) {
+      PlayerPanelHeader(stringResource(R.string.player_sheets_more_title), Icons.MoreVert)
+      PlayerScrollArea(Modifier.weight(1f)) {
+        PlayerPanelSection(stringResource(R.string.mpv_panel_quick))
+        val background by playerPreferences.automaticBackgroundPlayback.collectAsState()
+        PlayerActionRow(stringResource(R.string.pref_enable_background_playback), Icons.Headset,
+          { playerPreferences.automaticBackgroundPlayback.set(!background) },
+          subtitle = stringResource(R.string.pref_enable_background_playback_summary),
+          trailing = { Switch(background, onCheckedChange = playerPreferences.automaticBackgroundPlayback::set) })
+        PlayerActionRow(stringResource(R.string.timer_title), Icons.Timer, { timerShown = true },
+          value = if (remainingTime > 0) DateUtils.formatElapsedTime(remainingTime.toLong()) else stringResource(R.string.player_sheets_tracks_off))
+        PlayerActionRow(stringResource(R.string.player_sheets_filters_title), Icons.Tune, { close { onEnterFiltersPanel() } })
+        PlayerPanelSection(stringResource(R.string.mpv_panel_tools))
+        PlayerActionRow(stringResource(R.string.player_sheets_stats_page_title), Icons.Code, { statsExpanded = !statsExpanded },
+          value = if (statisticsPage == 0) stringResource(R.string.player_sheets_tracks_off) else statisticsPage.toString())
+        if (statsExpanded) repeat(6) { page ->
+          AudioTrackRow(if (page == 0) stringResource(R.string.player_sheets_tracks_off) else stringResource(R.string.player_sheets_stats_page_chip, page), statisticsPage == page, {
+            PlaybackControl.enqueue {
               if ((page == 0) xor (statisticsPage == 0)) MPVLib.command("script-binding", "stats/display-stats-toggle")
               if (page != 0) MPVLib.command("script-binding", "stats/display-page-$page")
-              advancedPreferences.enabledStatisticsPage.set(page)
-            },
-            selected = statisticsPage == page,
-          )
+            }
+            advancedPreferences.enabledStatisticsPage.set(page)
+            statsExpanded = false
+          })
         }
-      }
-
-      if (customButtons.isNotEmpty()) {
-        Text(text = stringResource(id = R.string.player_sheets_custom_buttons_title))
-        FlowRow(
-          verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-          horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-          maxItemsInEachRow = Int.MAX_VALUE,
-        ) {
+        AudioChannelsControl()
+        if (customButtons.isNotEmpty()) {
+          PlayerPanelSection(stringResource(R.string.player_sheets_custom_buttons_title))
           customButtons.forEach { button ->
-
-            val inputChipInteractionSource = remember { MutableInteractionSource() }
-
-            Box {
-              FilterChip(
-                onClick = {},
-                label = { Text(text = button.title) },
-                selected = false,
-                interactionSource = inputChipInteractionSource,
-              )
-              Box(
-                modifier = Modifier
-                  .matchParentSize()
-                  .combinedClickable(
-                    onClick = button::execute,
-                    onLongClick = button::executeLongClick,
-                    interactionSource = inputChipInteractionSource,
-                    indication = null,
-                  )
-              )
+            Row(Modifier.fillMaxWidth().combinedClickable(
+              onClick = { PlaybackControl.enqueue { button.execute() } },
+              onLongClick = { PlaybackControl.enqueue { button.executeLongClick() } },
+            ).padding(horizontal = 20.dp, vertical = 14.dp),
+              verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+              Icon(Icons.Terminal, null, Modifier.size(23.dp), tint = MaterialTheme.colorScheme.primary)
+              Text(button.title, style = MaterialTheme.typography.bodyLarge)
             }
           }
         }
-      }
-      Text(text = stringResource(id = R.string.pref_audio_channels))
-      val audioChannels by audioPreferences.audioChannels.collectAsState()
-      LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-      ) {
-        items(AudioChannels.entries) {
-          FilterChip(
-            selected = audioChannels == it,
-            onClick = {
-              audioPreferences.audioChannels.set(it)
-              if (it == AudioChannels.ReverseStereo) {
-                MPVLib.setPropertyString(AudioChannels.AutoSafe.property, AudioChannels.AutoSafe.value)
-              } else {
-                MPVLib.setPropertyString(AudioChannels.ReverseStereo.property, "")
-              }
-              MPVLib.setPropertyString(it.property, it.value)
-            },
-            label = { Text(text = stringResource(id = it.title)) },
-          )
-        }
+        Spacer(Modifier.height(16.dp))
       }
     }
+    if (timerShown) TimePickerDialog(remainingTime = remainingTime, onDismissRequest = { timerShown = false }, onTimeSelect = onStartTimer)
   }
 }
 

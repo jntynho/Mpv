@@ -1,85 +1,98 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.MoreTime
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.preferences.AudioPreferences
+import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.presentation.components.LocalPlayerSheetClose
+import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.player.PlaybackControl
 import live.mehiz.mpvkt.ui.player.TrackNode
-import live.mehiz.mpvkt.ui.theme.spacing
+import live.mehiz.mpvkt.ui.player.controls.components.*
+import org.koin.compose.koinInject
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @Composable
 fun AudioTracksSheet(
-  tracks: ImmutableList<TrackNode>,
-  onSelect: (TrackNode) -> Unit,
-  onAddAudioTrack: () -> Unit,
-  onOpenDelayPanel: () -> Unit,
-  onDismissRequest: () -> Unit,
-  modifier: Modifier = Modifier
+  tracks: ImmutableList<TrackNode>, onSelect: (TrackNode?) -> Unit,
+  onAddAudioTrack: () -> Unit, onOpenDelayPanel: () -> Unit,
+  onDismissRequest: () -> Unit, modifier: Modifier = Modifier,
 ) {
-  GenericTracksSheet(
-    tracks,
-    onDismissRequest = onDismissRequest,
-    header = {
-      AddTrackRow(
-        stringResource(R.string.player_sheets_add_ext_audio),
-        onAddAudioTrack,
-        actions = {
-          IconButton(onClick = onOpenDelayPanel) {
-            Icon(Icons.MoreTime, null)
-          }
-        }
-      )
+  GenericTracksSheet(tracks, onDismissRequest, modifier,
+    title = stringResource(R.string.mpv_panel_audio), icon = Icons.Audiotrack,
+    beforeTracks = {
+      PlayerPanelSection(stringResource(R.string.mpv_panel_tracks))
+      AudioTrackRow(stringResource(R.string.player_sheets_tracks_off), tracks.none { it.isSelected }, { onSelect(null) })
     },
-    track = {
-      AudioTrackRow(
-        title = getTrackTitle(it),
-        isSelected = it.isSelected,
-        onClick = { onSelect(it) },
-      )
+    track = { AudioTrackRow(getTrackTitle(it), it.isSelected, { onSelect(it) }, subtitle = trackDescription(it)) },
+    footer = {
+      val close = LocalPlayerSheetClose.current
+      PlayerPanelSection(stringResource(R.string.mpv_panel_output))
+      AudioVolumeControl()
+      val delay by MPVLib.propDouble["audio-delay"].collectAsState()
+      PlayerActionRow(stringResource(R.string.player_sheets_audio_delay_card_title), Icons.MoreTime,
+        { close { onOpenDelayPanel() } }, value = "${((delay ?: 0.0) * 1000).roundToInt()} ms")
+      AudioChannelsControl()
+      val preferences = koinInject<AudioPreferences>()
+      val correction by preferences.audioPitchCorrection.collectAsState()
+      PlayerActionRow(stringResource(R.string.pref_audio_pitch_correction_title), Icons.Tune,
+        { preferences.audioPitchCorrection.set(!correction); PlaybackControl.enqueue("pitch") { MPVLib.setPropertyBoolean("audio-pitch-correction", !correction) } },
+        trailing = { Switch(correction, onCheckedChange = { checked ->
+          preferences.audioPitchCorrection.set(checked)
+          PlaybackControl.enqueue("pitch") { MPVLib.setPropertyBoolean("audio-pitch-correction", checked) }
+        }) })
     },
-    modifier = modifier
+    bottomBar = { PlayerPanelFooter(stringResource(R.string.player_sheets_add_ext_audio), onAddAudioTrack) },
   )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AudioTrackRow(
-  title: String,
-  isSelected: Boolean,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier
-) {
-  Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .clickable(onClick = onClick)
-      .padding(start = MaterialTheme.spacing.smaller, end = MaterialTheme.spacing.medium),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-  ) {
-    RadioButton(
-      isSelected,
-      onClick,
-    )
-    Text(
-      title,
-      fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal,
-      fontStyle = if (isSelected) FontStyle.Italic else FontStyle.Normal,
-    )
+private fun AudioVolumeControl() {
+  val preferences = koinInject<AudioPreferences>()
+  val boost by preferences.volumeBoostCap.collectAsState()
+  val native by MPVLib.propInt["volume"].collectAsState()
+  var requested by remember { mutableStateOf<Float?>(null) }
+  var dragging by remember { mutableStateOf(false) }
+  val max = (100 + boost).coerceAtLeast(100).toFloat()
+  val value = (requested ?: (native ?: 100).toFloat()).coerceIn(0f, max)
+  LaunchedEffect(native, requested, dragging) {
+    if (!dragging && requested != null) {
+      if (abs((native ?: 100) - requested!!) > 1f) delay(800)
+      requested = null
+    }
+  }
+  val color = MaterialTheme.colorScheme.primary
+  val inactive = MaterialTheme.colorScheme.onSurface.copy(alpha = .18f)
+  Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+      Icon(Icons.VolumeUp, null, Modifier.size(23.dp), tint = color)
+      Text(stringResource(R.string.mpv_panel_volume), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+      Text("${value.roundToInt()}%", color = color, style = MaterialTheme.typography.labelMedium)
+    }
+    Slider(value, onValueChange = { v ->
+      requested = v; dragging = true
+      PlaybackControl.enqueue("volume") { MPVLib.setPropertyInt("volume", v.roundToInt()) }
+    }, valueRange = 0f..max, onValueChangeFinished = { dragging = false },
+      thumb = { Box(Modifier.size(10.dp).background(color, CircleShape)) },
+      track = { slider -> Canvas(Modifier.fillMaxWidth().height(3.dp)) {
+        drawRoundRect(inactive, size = size, cornerRadius = CornerRadius(size.height))
+        drawRoundRect(color, size = Size(size.width * (slider.value / max), size.height), cornerRadius = CornerRadius(size.height))
+      } })
   }
 }
