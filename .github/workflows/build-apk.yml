@@ -43,7 +43,7 @@ jobs:
           mkdir -p ci-reports
           set +e
           set -o pipefail
-          bash ./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview 2>&1 | tee ci-reports/build.log
+          bash ./gradlew --no-daemon --max-workers=1 testDebugUnitTest lintDebug assemblePreview 2>&1 | tee ci-reports/build.log
           result=$?
           if [ "$result" -ne 0 ]; then
             python3 - <<'PYCODE'
@@ -77,24 +77,24 @@ jobs:
             unzip -Z1 "$apk" | grep "^lib/${abi}/.*\.so$" > /dev/null
             "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
           done
-          cd app/build/outputs/apk/preview
-          sha256sum *.apk > SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify app/build/outputs/apk/preview/app-universal-preview.apk
+          for apk in app/build/outputs/apk/preview/*.apk; do
+            "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 4 "$apk"
+          done
       - uses: actions/upload-artifact@v4
         with:
-          name: MPV-arm64-64bit
+          name: MPV-APK-arm64
           path: app/build/outputs/apk/preview/app-arm64-v8a-preview.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: MPV-armv7-32bit
+          name: MPV-APK-arm32
           path: app/build/outputs/apk/preview/app-armeabi-v7a-preview.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: MPV-universal-and-checksums
-          path: |
-            app/build/outputs/apk/preview/app-universal-preview.apk
-            app/build/outputs/apk/preview/SHA256SUMS.txt
+          name: MPV-APK-universal
+          path: app/build/outputs/apk/preview/app-universal-preview.apk
           if-no-files-found: error
 
   release:
@@ -106,7 +106,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: MPV-*
+          pattern: MPV-APK-*
           path: artifacts
       - name: Publish direct APK downloads
         env:
@@ -117,10 +117,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir release-assets
-          cp artifacts/MPV-arm64-64bit/app-arm64-v8a-preview.apk release-assets/MPV-arm64-v8a.apk
-          cp artifacts/MPV-armv7-32bit/app-armeabi-v7a-preview.apk release-assets/MPV-armeabi-v7a.apk
-          cp artifacts/MPV-universal-and-checksums/app-universal-preview.apk release-assets/MPV-universal.apk
-          (cd release-assets && sha256sum *.apk > SHA256SUMS.txt)
+          cp artifacts/MPV-APK-arm64/app-arm64-v8a-preview.apk release-assets/arm64-v8a.apk
+          cp artifacts/MPV-APK-arm32/app-armeabi-v7a-preview.apk release-assets/armeabi-v7a.apk
+          cp artifacts/MPV-APK-universal/app-universal-preview.apk release-assets/universal.apk
           cat > release-notes.md <<'NOTES'
           Download an APK below directly; no ZIP extraction is needed.
 
@@ -132,5 +131,16 @@ jobs:
           Updates across builds may require uninstalling the previous version.
           No user-configured Secrets are required; publication uses GitHub's automatic workflow token.
           NOTES
-          gh release create "$RELEASE_TAG" release-assets/*.apk release-assets/SHA256SUMS.txt \
-            --verify-tag --title "MPV $RELEASE_TAG" --notes-file release-notes.md
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/*.apk --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/*.apk \
+              --verify-tag --title "MPV $RELEASE_TAG" --notes-file release-notes.md
+          fi
+          # Fail if publication is incomplete or an unexpected asset is attached.
+          gh release view "$RELEASE_TAG" --json assets --jq '[.assets[].name] | sort' > published-assets.json
+          python3 - <<'PYCODE'
+          import json
+          with open('published-assets.json') as source:
+              assert json.load(source) == ['arm64-v8a.apk', 'armeabi-v7a.apk', 'universal.apk']
+          PYCODE

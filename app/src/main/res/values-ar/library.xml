@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="mpv_folders">المجلدات</string>
-  <string name="mpv_videos">الفيديوهات</string>
   <string name="mpv_search">ابحث عن فيديو أو مجلد</string>
   <string name="mpv_back">رجوع</string>
-  <string name="mpv_refresh">تحديث المكتبة</string>
-  <string name="mpv_permission">اسمح بالوصول للفيديوهات لعرض مكتبتك. يمكنك أيضًا فتح ملف من زر +.</string>
   <string name="mpv_allow">السماح بالوصول للفيديوهات</string>
   <string name="mpv_manage_access">إدارة الفيديوهات المسموح بها</string>
   <string name="mpv_empty">لا توجد فيديوهات. جرّب بحثًا آخر أو حدّث المكتبة.</string>
   <string name="mpv_library_error">تعذر قراءة المكتبة. تحقق من الإذن ثم حدّث المكتبة.</string>
-  <string name="mpv_video_count">%1$d فيديو</string>
   <string name="mpv_pinch_zoom">التكبير بإصبعين</string>
 <string name="mpv_sort">الفرز حسب</string>
-<string name="mpv_recent">الأحدث إضافة</string>
-<string name="mpv_name_asc">الاسم: تصاعدي</string>
-<string name="mpv_name_desc">الاسم: تنازلي</string>
-<string name="mpv_duration">المدة: الأطول أولًا</string>
-<string name="mpv_more">المزيد من الخيارات</string>
 <string name="mpv_library_permission">اسمح بالوصول للفيديوهات لعرض مكتبتك.</string>
 </resources>

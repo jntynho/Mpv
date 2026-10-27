@@ -199,7 +199,7 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
     MPVLib.setOptionString("sub-color", subtitlesPreferences.textColor.get().toColorHexString())
     MPVLib.setOptionString("sub-back-color", subtitlesPreferences.backgroundColor.get().toColorHexString())
     MPVLib.setOptionString("sub-border-color", subtitlesPreferences.borderColor.get().toColorHexString())
-    MPVLib.setOptionString("sub-border-size", subtitlesPreferences.borderSize.get().toString())
+    MPVLib.setOptionString("sub-outline-size", subtitlesPreferences.borderSize.get().toString())
     MPVLib.setOptionString("sub-border-style", subtitlesPreferences.borderStyle.get().value)
     MPVLib.setOptionString("sub-shadow-offset", subtitlesPreferences.shadowOffset.get().toString())
     MPVLib.setOptionString("sub-pos", subtitlesPreferences.subPos.get().toString())

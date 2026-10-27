@@ -36,10 +36,10 @@ internal fun PlayerPane(
   val page = pages.lastOrNull() ?: return
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   val savedPages = rememberSaveableStateHolder()
-  PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }) { close ->
+  PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }, reduceMotion = reduceMotion) { close, headerDrag ->
     CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory) {
     Column(Modifier.fillMaxSize()) {
-      PlayerPanelHeader(title = page.title(), icon = page.icon(), onClose = close, onBack = onBack.takeIf { pages.size > 1 }, animateTitle = !reduceMotion)
+      PlayerPanelHeader(title = page.title(), icon = page.icon(), onClose = close, onBack = onBack.takeIf { pages.size > 1 }, animateTitle = !reduceMotion, modifier = headerDrag)
       AnimatedContent(
         targetState = pages,
         contentKey = { it.last().key },

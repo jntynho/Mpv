@@ -3,18 +3,12 @@
     <string name="app_name" translatable="false">MPV</string>
 
     <string name="generic_reset">Redefinir</string>
-    <string name="generic_share">Compartilhar</string>
     <string name="generic_confirm">Confirmar</string>
     <string name="generic_cancel">Cancelar</string>
     <string name="generic_ok">OK</string>
     <string name="generic_unit_ms">ms</string>
     <string name="generic_disabled">Desativado</string>
 
-    <string name="home_pick_file">Selecionar um arquivo</string>
-    <string name="home_open_file_picker">Abrir seletor de arquivos</string>
-    <string name="home_open_url">Abrir URL</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">Protocolo inválido</string>
 
     <string name="pref_preferences">Preferências</string>
 
@@ -41,8 +35,6 @@
     <string name="pref_player_orientation_sensor_landscape">Paisagem por sensor</string>
     <string name="pref_player_draw_over_cutout">Desenhar sobre o recorte da tela</string>
     <string name="pref_player_save_position_on_quit">Salvar posição ao sair</string>
-    <string name="pref_player_double_tap_to_pause">Toque duplo para pausar</string>
-    <string name="pref_player_double_tap_to_seek">Toque duplo para buscar</string>
     <string name="pref_player_double_tap_seek_duration">Duração da busca por toque duplo</string>
     <string name="pref_player_show_seekbar_when_seeking">Mostrar barra de progresso ao buscar</string>
     <string name="pref_player_seeking_title">Busca</string>
@@ -56,7 +48,6 @@
     <string name="pref_player_gestures_seek">Gestos de busca horizontal</string>
     <string name="pref_player_gestures_brightness">Gestos de brilho</string>
     <string name="pref_player_gestures_volume">Gestos de volume</string>
-    <string name="pref_player_gestures_hold_for_double_speed">Segure para velocidade em 2x</string>
 
     <string name="pref_player_controls">Controles</string>
     <string name="pref_player_controls_allow_gestures_in_panels">Permitir gestos em painéis</string>
@@ -120,9 +111,7 @@
     <string name="player_sheets_add_ext_sub">Adicionar legendas externas</string>
     <string name="player_sheets_add_ext_audio">Adicionar faixas de áudio externas</string>
     <string name="player_sheets_tracks_off">Desligado</string>
-    <string name="player_sheets_track_title_w_lang" translatable="false">#%d: %s (%s)</string>
     <string name="player_sheets_track_title_wo_lang" translatable="false">#%d: %s</string>
-    <string name="player_sheets_track_lang_wo_title" translatable="false">#%d: %s</string>
     <string name="player_sheets_subtitles_footer_secondary_sid_no_styles">Legendas secundárias não terão formatação ASS/SSA.</string>
     <string name="player_sheets_subtitles_settings_title">Configurações de legendas</string>
     <string name="player_sheets_subtitles_color_text">Texto</string>
@@ -179,7 +168,6 @@
     <string name="player_sheets_more_title">Mais</string>
     <string name="player_sheets_stats_page_title">Página de estatísticas padrão</string>
     <string name="player_sheets_stats_page_chip">Página %d</string>
-    <string name="player_seek_n_seconds">%d segundos</string>
     <string name="player_speed" translatable="false">%.2fx</string>
     <string name="player_gesture_seek_indicator" translatable="false">%c%s\n[%s]</string>
 
@@ -206,12 +194,7 @@
     <string name="volume_slider_steps_other" translatable="false">%d (%d)</string>
 
     <string name="value_percentage_int" translatable="false">%d%%</string>
-    <string name="value_percentage_float" translatable="false">%.2f\%%</string>
 
     <string name="github_repo_url" translatable="false">https://github.com/abdallahmehiz/mpvKt</string>
 
-    <plurals name="plural_items">
-        <item quantity="one">%1$d item</item>
-        <item quantity="other">%1$d items</item>
-    </plurals>
 </resources>

@@ -86,7 +86,7 @@ fun GestureHandler(
     viewModel.hideSeekBar()
   }
   val multipleSpeedGesture by playerPreferences.holdForMultipleSpeed.collectAsState()
-  val brightnessGesture = playerPreferences.brightnessGesture.get()
+  val brightnessGesture by playerPreferences.brightnessGesture.collectAsState()
   val volumeGesture by playerPreferences.volumeGesture.collectAsState()
   val swapVolumeAndBrightness by playerPreferences.swapVolumeAndBrightness.collectAsState()
   val pinchZoomGesture by playerPreferences.pinchZoomGesture.collectAsState()
@@ -185,8 +185,8 @@ fun GestureHandler(
           },
         )
       }
-      .pointerInput(areControlsLocked) {
-        if (!seekGesture || areControlsLocked) return@pointerInput
+      .pointerInput(areControlsLocked, seekGesture, panelPages.isNotEmpty(), allowGesturesInPanels) {
+        if (!seekGesture || areControlsLocked || (panelPages.isNotEmpty() && !allowGesturesInPanels)) return@pointerInput
         var startingPosition = position ?: 0
         var startingX = 0f
         detectHorizontalDragGestures(
@@ -227,14 +227,15 @@ fun GestureHandler(
           if (showSeekbarWhenSeeking) viewModel.showSeekBar()
         }
       }
-      .pointerInput(areControlsLocked) {
-        if ((!brightnessGesture && !volumeGesture) || areControlsLocked) return@pointerInput
+      .pointerInput(areControlsLocked, brightnessGesture, volumeGesture, swapVolumeAndBrightness, panelPages.isNotEmpty(), allowGesturesInPanels) {
+        if ((!brightnessGesture && !volumeGesture) || areControlsLocked || (panelPages.isNotEmpty() && !allowGesturesInPanels)) return@pointerInput
         var startingY = 0f
         var mpvVolumeStartingY = 0f
         var originalVolume = currentVolume
         var originalMPVVolume = currentMPVVolume
         var originalBrightness = currentBrightness
-        val brightnessGestureSens = 0.001f
+        var adjustingBrightness = false
+        var brightnessStartY = 0f
         val volumeGestureSens = 0.03f
         val mpvVolumeGestureSens = 0.02f
         val isIncreasingVolumeBoost: (Float) -> Boolean = {
@@ -252,7 +253,10 @@ fun GestureHandler(
             mpvVolumeStartingY = 0f
             originalVolume = currentVolume
             originalMPVVolume = currentMPVVolume
-            originalBrightness = currentBrightness
+            originalBrightness = viewModel.gestureBrightness()
+            brightnessStartY = it.y
+            adjustingBrightness = brightnessGesture && (!volumeGesture ||
+              if (swapVolumeAndBrightness) it.x > size.width / 2f else it.x < size.width / 2f)
           },
         ) { change, amount ->
           val changeVolume: () -> Unit = {
@@ -284,26 +288,12 @@ fun GestureHandler(
             viewModel.displayVolumeSlider()
           }
           val changeBrightness: () -> Unit = {
-            if (startingY == 0f) startingY = change.position.y
             viewModel.changeBrightnessTo(
-              calculateNewVerticalGestureValue(originalBrightness, startingY, change.position.y, brightnessGestureSens),
+              brightnessAfterDrag(originalBrightness, brightnessStartY, change.position.y, size.height.toFloat()),
             )
             viewModel.displayBrightnessSlider()
           }
-          when {
-            volumeGesture && brightnessGesture -> {
-              if (swapVolumeAndBrightness) {
-                if (change.position.x > size.width / 2) changeBrightness() else changeVolume()
-              } else {
-                if (change.position.x < size.width / 2) changeBrightness() else changeVolume()
-              }
-            }
-
-            brightnessGesture -> changeBrightness()
-            // it's not always true, AS is drunk
-            volumeGesture -> changeVolume()
-            else -> {}
-          }
+          if (adjustingBrightness) changeBrightness() else if (volumeGesture) changeVolume()
         }
       },
   )
@@ -375,4 +365,10 @@ fun calculateNewHorizontalGestureValue(originalValue: Int, startingX: Float, new
 
 fun calculateNewHorizontalGestureValue(originalValue: Float, startingX: Float, newX: Float, sensitivity: Float): Float {
   return originalValue + ((newX - startingX) * sensitivity)
+}
+
+/** Full brightness range occupies one usable-height swipe, independent of density or rotation. */
+internal fun brightnessAfterDrag(original: Float, startY: Float, currentY: Float, height: Float): Float {
+  if (!original.isFinite() || !startY.isFinite() || !currentY.isFinite() || !height.isFinite() || height <= 0f) return .5f
+  return (original + (startY - currentY) / height).coerceIn(0f, 1f)
 }

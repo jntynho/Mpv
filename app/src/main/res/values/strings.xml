@@ -3,18 +3,12 @@
     <string name="app_name" translatable="false">MPV</string>
 
     <string name="generic_reset">Reset</string>
-    <string name="generic_share">Share</string>
     <string name="generic_confirm">Confirm</string>
     <string name="generic_cancel">Cancel</string>
     <string name="generic_ok">OK</string>
     <string name="generic_unit_ms">ms</string>
     <string name="generic_disabled">Disabled</string>
 
-    <string name="home_pick_file">Pick a file</string>
-    <string name="home_open_file_picker">Open file picker</string>
-    <string name="home_open_url">Open url</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">Invalid protocol</string>
 
     <string name="pref_preferences">Preferences</string>
 
@@ -41,8 +35,6 @@
     <string name="pref_player_orientation_sensor_landscape">Sensor landscape</string>
     <string name="pref_player_draw_over_cutout">Draw over display cutout</string>
     <string name="pref_player_save_position_on_quit">Save position on quit</string>
-    <string name="pref_player_double_tap_to_pause">Double tap to pause</string>
-    <string name="pref_player_double_tap_to_seek">Double tap to seek</string>
     <string name="pref_player_double_tap_seek_duration">Double tap seek duration</string>
     <string name="pref_player_show_seekbar_when_seeking">Show seekbar when seeking</string>
     <string name="pref_player_seeking_title">Seeking</string>
@@ -56,7 +48,6 @@
     <string name="pref_player_gestures_seek">Horizontal seek gestures</string>
     <string name="pref_player_gestures_brightness">Brightness gestures</string>
     <string name="pref_player_gestures_volume">Volume gestures</string>
-    <string name="pref_player_gestures_hold_for_double_speed">Hold for 2x speed</string>
     <string name="pref_player_gestures_hold_for_multiple_speed">Hold for multi - x speed</string>
 
     <string name="pref_player_controls">Controls</string>
@@ -164,9 +155,7 @@
     <string name="player_sheets_add_ext_sub">Add external subtitles</string>
     <string name="player_sheets_add_ext_audio">Add external audio tracks</string>
     <string name="player_sheets_tracks_off">Off</string>
-    <string name="player_sheets_track_title_w_lang" translatable="false">#%d: %s (%s)</string>
     <string name="player_sheets_track_title_wo_lang" translatable="false">#%d: %s</string>
-    <string name="player_sheets_track_lang_wo_title" translatable="false">#%d: %s</string>
     <string name="player_sheets_chapter_title_substitute_audio">Audio #%d</string>
     <string name="player_sheets_chapter_title_substitute_subtitle">Subtitle #%d</string>
     <string name="player_sheets_subtitles_footer_secondary_sid_no_styles">Secondary subtitles will have no ASS/SSA Styling.</string>
@@ -206,7 +195,6 @@
     <string name="player_sheets_sub_delay_audio_sound_heard">Sound heard</string>
     <string name="player_sheets_sub_delay_sound_sound_spotted">Sound spotted</string>
 
-    <string name="player_sheets_video_settings_title">Video settings</string>
     <string name="player_sheets_deband_title">Deband</string>
     <string name="player_sheets_deband_none">None</string>
     <string name="player_sheets_deband_cpu">CPU</string>
@@ -235,7 +223,6 @@
     <string name="player_sheets_stats_page_title">Default statistics page</string>
     <string name="player_sheets_stats_page_chip">Page %d</string>
     <string name="player_sheets_custom_buttons_title">Custom buttons</string>
-    <string name="player_seek_n_seconds">%d seconds</string>
     <string name="player_speed" translatable="false">%.2fx</string>
     <string name="player_gesture_seek_indicator" translatable="false">%c%s\n[%s]</string>
 
@@ -252,7 +239,6 @@
     <string name="timer_picker_enter_timer">Enter time</string>
     <string name="timer_picker_pick_time">Pick time</string>
     <string name="timer_title">Sleep timer</string>
-    <string name="timer_remaining">%s remaining</string>
 
     <string name="toast_sleep_timer_ended">Sleep timer ended</string>
 
@@ -264,7 +250,6 @@
     <string name="volume_slider_steps_other" translatable="false">%d (%d)</string>
 
     <string name="value_percentage_int" translatable="false">%d%%</string>
-    <string name="value_percentage_float" translatable="false">%.2f\%%</string>
 
     <string name="github_repo_url" translatable="false">https://github.com/jntynho/Mpv</string>
     <string name="privacy_policy_url" translatable="false">https://abdallahmehiz.github.io/mpvKt/privacy_policy.html</string>
@@ -286,10 +271,6 @@
     <string name="notification_forward">Forward</string>
     <string name="notification_rewind">Rewind</string>
 
-    <plurals name="plural_items">
-        <item quantity="one">%1$d item</item>
-        <item quantity="other">%1$d items</item>
-    </plurals>
 
     <plurals name="seconds">
         <item quantity="one">%1$d second</item>

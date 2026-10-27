@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import live.mehiz.mpvkt.preferences.preference.collectAsState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
@@ -55,15 +57,12 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
   ) {
     ProvidePreferenceLocals {
       Column {
-        var overrideAssSubs by remember {
-          mutableStateOf(MPVLib.getPropertyString("sub-ass-override").also { println(it) } == "force")
-        }
+        val overrideAssSubs by preferences.overrideAssSubs.collectAsState()
         SwitchPreference(
           overrideAssSubs,
           onValueChange = {
-            overrideAssSubs = it
             preferences.overrideAssSubs.set(it)
-            MPVLib.setPropertyString("sub-ass-override", if (it) "force" else "scale")
+            PanelProperties.setString("sub-ass-override", if (it) "force" else "scale")
           },
           { Text(stringResource(R.string.player_sheets_sub_override_ass)) },
         )
@@ -75,7 +74,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
           valueText = (subScale ?: preferences.subScale.get()).toFixed(2).toString(),
           onChange = {
             preferences.subScale.set(it)
-            MPVLib.setPropertyFloat("sub-scale", it)
+            PanelProperties.setFloat("sub-scale", it)
           },
           max = 5f,
           icon = {
@@ -88,10 +87,10 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
         SliderItem(
           label = stringResource(R.string.player_sheets_sub_position),
           value = subPos ?: preferences.subPos.get(),
-          valueText = subPos.toString(),
+          valueText = (subPos ?: preferences.subPos.get()).toString(),
           onChange = {
             preferences.subPos.set(it)
-            MPVLib.setPropertyInt("sub-pos", it)
+            PanelProperties.setInt("sub-pos", it)
           },
           max = 150,
           icon = {
@@ -110,13 +109,13 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
           TextButton(
             onClick = {
               preferences.subPos.deleteAndGet().let {
-                MPVLib.setPropertyInt("sub-pos", it)
+                PanelProperties.setInt("sub-pos", it)
               }
               preferences.subScale.deleteAndGet().let {
-                MPVLib.setPropertyFloat("sub-scale", it)
+                PanelProperties.setFloat("sub-scale", it)
               }
-              preferences.overrideAssSubs.deleteAndGet().let { overrideAssSubs = it }
-              MPVLib.setPropertyString("sub-ass-override", "scale") // mpv's default is 'scale'
+              preferences.overrideAssSubs.deleteAndGet()
+              PanelProperties.setString("sub-ass-override", "scale") // mpv's default is 'scale'
             },
           ) {
             Row {

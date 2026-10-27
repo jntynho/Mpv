@@ -29,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import live.mehiz.mpvkt.ui.player.PlaybackControl
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.DecoderPreferences
@@ -76,20 +78,7 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
               checked = deband == it,
               onCheckedChange = { _ ->
                 decoderPreferences.debanding.set(it)
-                when (it) {
-                  Debanding.None -> {
-                    MPVLib.setOptionString("deband", "no")
-                    MPVLib.command("vf", "remove", "@deband")
-                  }
-                  Debanding.CPU -> {
-                    MPVLib.setOptionString("deband", "no")
-                    MPVLib.command("vf", "add", "@deband:gradfun=radius=12")
-                  }
-                  Debanding.GPU -> {
-                    MPVLib.setOptionString("deband", "yes")
-                    MPVLib.command("vf", "remove", "@deband")
-                  }
-                }
+                applyDebanding(it)
               },
             ) {
               when (it) {
@@ -106,10 +95,9 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
           TextButton(
             onClick = {
               decoderPreferences.debanding.set(Debanding.None)
-              MPVLib.setOptionString("deband", "no")
-              MPVLib.command("vf", "remove", "@deband")
+              applyDebanding(Debanding.None)
               DebandSettings.entries.forEach {
-                MPVLib.setPropertyInt(it.mpvProperty, it.preference(decoderPreferences).deleteAndGet())
+                PanelProperties.setInt(it.mpvProperty, it.preference(decoderPreferences).deleteAndGet())
               }
             },
           ) {
@@ -131,7 +119,7 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
             valueText = value.toString(),
             onChange = {
               debandSettings.preference(decoderPreferences).set(it)
-              MPVLib.setPropertyInt(debandSettings.mpvProperty, it)
+              PanelProperties.setInt(debandSettings.mpvProperty, it)
             },
             min = debandSettings.start,
             max = debandSettings.end,
@@ -139,5 +127,13 @@ fun VideoSettingsDebandCard(modifier: Modifier = Modifier) {
         }
       }
     }
+  }
+}
+
+private fun applyDebanding(mode: Debanding) {
+  PlaybackControl.enqueue("deband-mode") {
+    MPVLib.setOptionString("deband", if (mode == Debanding.GPU) "yes" else "no")
+    MPVLib.command("vf", "remove", "@deband")
+    if (mode == Debanding.CPU) MPVLib.command("vf", "add", "@deband:gradfun=radius=12")
   }
 }

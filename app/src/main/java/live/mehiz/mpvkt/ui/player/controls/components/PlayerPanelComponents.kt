@@ -37,8 +37,8 @@ import live.mehiz.mpvkt.ui.icons.*
 import kotlin.math.roundToInt
 
 @Composable
-fun PlayerPanelHeader(title: String, icon: ImageVector?, onClose: () -> Unit, onBack: (() -> Unit)? = null, animateTitle: Boolean = true) {
-  Column {
+fun PlayerPanelHeader(title: String, icon: ImageVector?, onClose: () -> Unit, modifier: Modifier = Modifier, onBack: (() -> Unit)? = null, animateTitle: Boolean = true) {
+  Column(modifier) {
     Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
       verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -73,7 +73,8 @@ fun PlayerActionRow(
       if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     if (trailing != null) trailing() else {
-      if (value != null) Text(value, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+      if (value != null) Text(value, modifier = Modifier.widthIn(max = 120.dp), maxLines = 1,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
       Icon(Icons.ArrowDropDown, null, Modifier.size(18.dp).graphicsLayer { rotationZ = -90f }, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
   }

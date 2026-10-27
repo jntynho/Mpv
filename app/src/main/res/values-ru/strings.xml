@@ -1,17 +1,11 @@
 <resources>
     <string name="generic_reset">Сброс</string>
-    <string name="generic_share">Поделиться</string>
     <string name="generic_confirm">Подтвердить</string>
     <string name="generic_cancel">Отмена</string>
     <string name="generic_ok">ОК</string>
     <string name="generic_unit_ms">мс</string>
     <string name="generic_disabled">Отключено</string>
 
-    <string name="home_pick_file">Выбрать файл</string>
-    <string name="home_open_file_picker">Открыть выбор файлов</string>
-    <string name="home_open_url">Открыть url</string>
-    <string name="home_url_input_label">URL</string>
-    <string name="home_invalid_protocol">Недопустимый протокол</string>
 
     <string name="pref_preferences">Предпочтения</string>
 
@@ -38,8 +32,6 @@
     <string name="pref_player_orientation_sensor_landscape">Альбомная сенсор</string>
     <string name="pref_player_draw_over_cutout">Отрисовка под вырезом дисплея</string>
     <string name="pref_player_save_position_on_quit">Сохранить позицию при выходе</string>
-    <string name="pref_player_double_tap_to_pause">Двойное нажатие для паузы</string>
-    <string name="pref_player_double_tap_to_seek">Двойное нажатие для перемотки</string>
     <string name="pref_player_double_tap_seek_duration">Время перемотки двойного нажатия</string>
     <string name="pref_player_show_seekbar_when_seeking">Показывать прогресс воспроизведения при перемотке</string>
     <string name="pref_player_seeking_title">Перемотка</string>
@@ -53,7 +45,6 @@
     <string name="pref_player_gestures_seek">Жесты горизонтальной перемотки</string>
     <string name="pref_player_gestures_brightness">Жесты яркости</string>
     <string name="pref_player_gestures_volume">Жесты громкости</string>
-    <string name="pref_player_gestures_hold_for_double_speed">Удерживать для 2x скорости</string>
 
     <string name="pref_player_controls">Элементы управления</string>
     <string name="pref_player_controls_allow_gestures_in_panels">Разрешить жесты на панелях</string>
@@ -212,7 +203,6 @@
     <string name="player_sheets_stats_page_title">Страница статистики по умолчанию</string>
     <string name="player_sheets_stats_page_chip">Стр %d</string>
     <string name="player_sheets_custom_buttons_title">Пользовательские кнопки</string>
-    <string name="player_seek_n_seconds">%d секунды</string>
 
     <string name="player_aspect_fit">Подогнать под экран</string>
     <string name="player_aspect_crop">Обрезать</string>
@@ -227,17 +217,10 @@
     <string name="timer_picker_enter_timer">Введите время</string>
     <string name="timer_picker_pick_time">Выберите время</string>
     <string name="timer_title">Таймер сна</string>
-    <string name="timer_remaining">%s осталось</string>
 
     <string name="toast_sleep_timer_ended">Таймер сна закончился</string>
     <string name="swap_the_volume_and_brightness_slider">Поменять местами панель громкости и яркости</string>
     <string name="pref_player_display_reduce_player_animation">Уменьшить анимацию плеера</string>
     <string name="pref_player_display_hide_player_control_time">Время скрытия управления плеера</string>
 
-    <plurals name="plural_items">
-        <item quantity="one">%1$d элемент</item>
-        <item quantity="few">%1$d элемента</item>
-        <item quantity="many">%1$d элементов</item>
-        <item quantity="other">%1$d элемента</item>
-    </plurals>
 </resources>

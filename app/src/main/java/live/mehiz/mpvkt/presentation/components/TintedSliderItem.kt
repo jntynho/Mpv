@@ -2,22 +2,14 @@ package live.mehiz.mpvkt.presentation.components
 
 import androidx.annotation.IntRange
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import live.mehiz.mpvkt.ui.theme.spacing
 import kotlin.math.max
 import kotlin.math.min
 
@@ -34,38 +26,9 @@ fun TintedSliderItem(
   icon: @Composable () -> Unit = {},
 ) {
 
-  Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .padding(
-        horizontal = MaterialTheme.spacing.medium,
-        vertical = MaterialTheme.spacing.smaller,
-      ),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.large),
-  ) {
-    icon()
-    Column(modifier = Modifier.weight(0.5f)) {
-      Text(
-        text = label,
-        style = MaterialTheme.typography.bodyMedium,
-      )
-      Text(valueText)
-    }
-
-    TintedSlider(
-      value = value.toFloat(),
-      onValueChange = {
-        val newValue = it.toInt()
-        if (newValue != value) {
-          onChange(newValue)
-        }
-      },
-      modifier = Modifier.weight(1.5f),
-      valueRange = min.toFloat()..max.toFloat(),
-      steps = (max - min - 1).coerceAtLeast(0),
-      tint = tint
-    )
+  PlayerSliderLayout(label, valueText, modifier, icon) {
+    TintedSlider(value.toFloat(), { onChange(kotlin.math.round(it).toInt()) }, Modifier.fillMaxWidth(),
+      valueRange = min.toFloat()..max.toFloat(), steps = (max - min - 1).coerceAtLeast(0), tint = tint)
   }
 }
 
@@ -128,9 +91,9 @@ fun generateSliderColors(baseColor: Color): SliderColors {
 
   // Utility function to lighten a color
   fun lighten(color: Color, factor: Float): Color {
-    val red = min((color.red + (1 - color.red) * factor), 255f)
-    val green = min((color.green + (1 - color.green) * factor), 255f)
-    val blue = min((color.blue + (1 - color.blue) * factor), 255f)
+    val red = min((color.red + (1 - color.red) * factor), 1f)
+    val green = min((color.green + (1 - color.green) * factor), 1f)
+    val blue = min((color.blue + (1 - color.blue) * factor), 1f)
     return Color(red, green, blue, color.alpha)
   }
 
