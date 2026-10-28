@@ -6,4 +6,7 @@
     <string name="mpv_view_videos">Videos</string>
     <string name="mpv_loading_interface">Preparing your library</string>
     <string name="mpv_loading_detail">Getting everything ready for a smoother start</string>
+    <string name="mpv_playback_unconfirmed">Playback did not confirm this action. Please try again.</string>
+    <string name="mpv_pausing">Pausing…</string>
+    <string name="mpv_resuming">Resuming…</string>
 </resources>

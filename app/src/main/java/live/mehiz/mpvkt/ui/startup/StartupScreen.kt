@@ -5,11 +5,9 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,10 +30,13 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import live.mehiz.mpvkt.BuildConfig
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
@@ -70,6 +72,18 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   var prepared by remember { mutableStateOf(false) }
   var interfaceReady by remember { mutableStateOf(library.interfacePrepared) }
   var storageReady by remember { mutableStateOf(false) }
+  var homeReady by remember { mutableStateOf(library.enteredHome) }
+  var minimumReady by remember { mutableStateOf(library.enteredHome) }
+  var thumbnails by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
+  var warmupProgress by remember { mutableFloatStateOf(if (interfaceReady) 1f else 0f) }
+  var renderHealthy by remember { mutableStateOf(false) }
+  val firstPreparation = remember {
+    preferences.getInt("prepared_version", 0) != BuildConfig.VERSION_CODE
+  }
+  LaunchedEffect(library) {
+    if (!library.enteredHome) delay(if (firstPreparation) 3_800 else 1_600)
+    minimumReady = true
+  }
   val database = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>()
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   fun completeIntro() {
@@ -88,6 +102,8 @@ internal fun StartupGate(content: @Composable () -> Unit) {
       }
     }
   val owner = LocalLifecycleOwner.current
+  val lifecycleState by owner.lifecycle.currentStateAsState()
+  val foreground = lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
   DisposableEffect(owner, library) {
     var paused = false
     val observer = LifecycleEventObserver { _, event ->
@@ -130,10 +146,33 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   }
   LaunchedEffect(state.videos) {
     // A small, bounded prefetch, not a decode of the whole library and not a startup gate.
-    state.videos.take(3).forEach { Thumbnails.load(app, it.uri, it.revision) }
+    thumbnails = emptyList()
+    if (library.enteredHome) return@LaunchedEffect
+    state.videos.take(3).forEach { video ->
+      Thumbnails.load(app, video.uri, video.revision)?.let {
+        if (!library.enteredHome) thumbnails = thumbnails + it
+      }
+    }
   }
-  val ready = introduced && prepared && interfaceReady && storageReady && (!access || state.loaded)
-  LaunchedEffect(ready) { if (ready) library.enteredHome = true }
+  val dataReady = !access || state.loaded
+  val ready =
+    introduced &&
+      prepared &&
+      interfaceReady &&
+      storageReady &&
+      dataReady &&
+      homeReady &&
+      minimumReady
+  LaunchedEffect(ready) {
+    if (ready) {
+      library.enteredHome = true
+      thumbnails = emptyList()
+      preferences.edit {
+        putInt("prepared_version", BuildConfig.VERSION_CODE)
+        putBoolean("raster_warmup", renderHealthy)
+      }
+    }
+  }
   val showHome = ready || library.enteredHome
   val requestAccess = {
     if (!requesting) {
@@ -146,26 +185,55 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     LocalLibraryAccess provides LibraryAccess(access, limited, requestAccess),
   ) {
     Box(Modifier.fillMaxSize()) {
-      if (!interfaceReady)
-        InterfaceWarmup {
-          library.interfacePrepared = true
-          interfaceReady = true
+      // Keep this composition alive when the cover leaves: no second cold construction of Home.
+      if (introduced)
+        CompositionLocalProvider(LocalInterfacePreparation provides !showHome) {
+          PreparedHome(
+            preparing = !showHome,
+            captureAllowed = dataReady && foreground && !requesting,
+            captureKey = state.videos,
+            onReady = { homeReady = true },
+          ) {
+            content()
+          }
         }
-      AnimatedContent(
-        showHome,
+      if (!interfaceReady && prepared && foreground && !requesting)
+        InterfaceWarmup(
+          onReady = { report ->
+            library.interfacePrepared = true
+            interfaceReady = true
+            renderHealthy = report.rendered
+          },
+          onProgress = { warmupProgress = it },
+          firstRun = firstPreparation,
+          thumbnails = thumbnails,
+        )
+      androidx.compose.animation.AnimatedVisibility(
+        !showHome,
+        enter = fadeIn(tween(0)),
+        exit = fadeOut(tween(if (reduceMotion) 0 else 280)),
         modifier = Modifier.fillMaxSize(),
-        transitionSpec = {
-          fadeIn(tween(if (reduceMotion) 0 else 220)) togetherWith
-            fadeOut(tween(if (reduceMotion) 0 else 140))
-        },
-        label = "startup",
-      ) { enter ->
-        if (enter) content()
-        else
+      ) {
+        Box(
+          Modifier.fillMaxSize().pointerInput(Unit) {
+            awaitPointerEventScope {
+              while (true) awaitPointerEvent(
+                  androidx.compose.ui.input.pointer.PointerEventPass.Final
+                )
+                .changes
+                .forEach { it.consume() }
+            }
+          }
+        ) {
           StartupPage(
             showIntroduction = !introduced,
             access = access,
-            preparing = !prepared || !interfaceReady || !storageReady || (access && !state.loaded),
+            preparing = !ready,
+            progress =
+              (warmupProgress * .75f +
+                  (if (prepared && storageReady) .15f else 0f) +
+                  (if (homeReady) .1f else 0f))
+                .coerceIn(0f, 1f),
             requesting = requesting,
             denied = denied,
             onAllow = { if (access) completeIntro() else requestAccess() },
@@ -179,6 +247,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
               )
             },
           )
+        }
       }
     }
   }
@@ -189,6 +258,7 @@ private fun StartupPage(
   showIntroduction: Boolean,
   access: Boolean,
   preparing: Boolean,
+  progress: Float,
   requesting: Boolean,
   denied: Boolean,
   onAllow: () -> Unit,
@@ -261,7 +331,16 @@ private fun StartupPage(
           textAlign = TextAlign.Center,
         )
       if (preparing) {
-        LinearProgressIndicator(Modifier.width(160.dp).height(4.dp).clip(RoundedCornerShape(50)))
+        val animatedProgress by
+          androidx.compose.animation.core.animateFloatAsState(
+            progress,
+            tween(240),
+            label = "startup_progress",
+          )
+        LinearProgressIndicator(
+          progress = { animatedProgress },
+          modifier = Modifier.width(180.dp).height(4.dp).clip(RoundedCornerShape(50)),
+        )
         if (showIntroduction)
           Text(
             stringResource(R.string.mpv_preparing),

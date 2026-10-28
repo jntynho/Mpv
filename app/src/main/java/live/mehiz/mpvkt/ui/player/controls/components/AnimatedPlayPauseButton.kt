@@ -32,6 +32,7 @@ fun AnimatedPlayPauseButton(
   enabled: Boolean,
   reduceMotion: Boolean,
   onClick: () -> Unit,
+  pendingPauseTarget: Boolean? = null,
 ) {
   var showPending by remember { mutableStateOf(false) }
   LaunchedEffect(pending) {
@@ -42,7 +43,11 @@ fun AnimatedPlayPauseButton(
     }
   }
   val actionLabel =
-    stringResource(if (paused) R.string.notification_play else R.string.notification_pause)
+    stringResource(
+      if (pending && pendingPauseTarget != null) {
+        if (pendingPauseTarget) R.string.mpv_pausing else R.string.mpv_resuming
+      } else if (paused) R.string.notification_play else R.string.notification_pause
+    )
   val progress by
     animateFloatAsState(
       if (paused) 0f else 1f,

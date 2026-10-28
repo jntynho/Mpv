@@ -21,7 +21,6 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.ui.icons.LocalIconStyle
-import live.mehiz.mpvkt.ui.utils.softTapFeedback
 import org.koin.compose.koinInject
 
 private val lightScheme =
@@ -109,17 +108,6 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val darkTheme = isSystemInDarkTheme()
   val dynamicColor by preferences.materialYou.collectAsState()
   val context = LocalContext.current
-  val hapticView = androidx.compose.ui.platform.LocalView.current
-  val haptics =
-    androidx.compose.runtime.remember(hapticView) {
-      object : androidx.compose.ui.hapticfeedback.HapticFeedback {
-        override fun performHapticFeedback(
-          hapticFeedbackType: androidx.compose.ui.hapticfeedback.HapticFeedbackType
-        ) {
-          live.mehiz.mpvkt.ui.utils.SoftHaptics.tick(hapticView)
-        }
-      }
-    }
   val oledBlack by preferences.oledBlack.collectAsState()
   val iconStyle by preferences.iconStyle.collectAsState()
   val reduceMotion by
@@ -144,7 +132,6 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   CompositionLocalProvider(
     androidx.compose.foundation.LocalOverscrollFactory provides
       if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
-    androidx.compose.ui.platform.LocalHapticFeedback provides haptics,
     LocalSpacing provides Spacing(),
     LocalIconStyle provides iconStyle,
     live.mehiz.mpvkt.ui.motion.LocalReduceMotion provides reduceMotion,
@@ -156,11 +143,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
         ) {
           colorScheme.copy(background = Color.Black, surface = Color.Black)
         } else colorScheme,
-      content = {
-        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.softTapFeedback()) {
-          content()
-        }
-      },
+      content = content,
     )
   }
 }

@@ -64,19 +64,140 @@ class SettingsStandardTest {
   }
 
   @Test
-  fun warmupCompletesWithoutPlacingOrExposingItsFakeControls() {
+  fun warmupActuallyDrawsAndCapturesAllScenesWithoutExposingControls() {
     var complete by mutableStateOf(false)
+    var report: live.mehiz.mpvkt.ui.startup.WarmupReport? = null
+    compose.mainClock.autoAdvance = false
     compose.setContent {
       MpvKtTheme {
         Box(Modifier.fillMaxSize()) {
-          if (!complete) InterfaceWarmup { complete = true }
+          if (!complete)
+            InterfaceWarmup(
+              onReady = {
+                report = it
+                complete = true
+              }
+            )
           Text(if (complete) "Ready" else "Preparing")
         }
       }
     }
-    compose.waitUntil(5000) { complete }
+    repeat(520) {
+      if (!complete) {
+        compose.mainClock.advanceTimeByFrame()
+        compose.waitForIdle()
+        compose.runOnUiThread {
+          val view = compose.activity.findViewById<View>(android.R.id.content)
+          val node = android.graphics.RenderNode("warmup-frame")
+          node.setPosition(0, 0, view.width, view.height)
+          val canvas = node.beginRecording(view.width, view.height)
+          view.draw(canvas)
+          node.endRecording()
+          node.discardDisplayList()
+        }
+      }
+    }
+    compose.mainClock.autoAdvance = true
+    compose.waitForIdle()
+    assertTrue("Warmup did not finish", complete)
+    assertTrue("Warmup report: $report", report?.rendered == true)
+    assertEquals(18, report?.captures)
+    assertEquals(6, report?.scenes)
     compose.onNodeWithText("Ready").assertIsDisplayed()
     compose.onAllNodes(hasClickAction()).assertCountEquals(0)
+  }
+
+  @Test
+  fun unsupportedRasterizationStillFinishesAllPreparationScenes() {
+    var report: live.mehiz.mpvkt.ui.startup.WarmupReport? = null
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MpvKtTheme {
+        Box(Modifier.fillMaxSize()) {
+          if (report == null)
+            InterfaceWarmup(
+              onReady = { report = it },
+              captureFrame = { throw UnsupportedOperationException("capture unavailable") },
+            )
+        }
+      }
+    }
+    repeat(520) { if (report == null) pumpWarmupFrame() }
+    compose.mainClock.autoAdvance = true
+    compose.waitForIdle()
+    assertNotNull("A failed capture must not trap startup", report)
+    assertEquals(6, report!!.scenes)
+    assertEquals(0, report!!.captures)
+    assertFalse(report!!.rendered)
+  }
+
+  @Test
+  fun startupKeepsTheCoverUntilPreparationAndRetainsTheMountedHome() {
+    val context = compose.activity.applicationContext
+    context
+      .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+      .edit()
+      .clear()
+      .putBoolean("introduced", true)
+      .commit()
+    val db =
+      androidx.room.Room.inMemoryDatabaseBuilder(
+          context,
+          live.mehiz.mpvkt.database.MpvKtDatabase::class.java,
+        )
+        .build()
+    org.koin.core.context.loadKoinModules(module { single { db } })
+    var homes = 0
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MpvKtTheme {
+        live.mehiz.mpvkt.ui.startup.StartupGate {
+          DisposableEffect(Unit) {
+            homes++
+            onDispose {}
+          }
+          Box(Modifier.fillMaxSize()) { Button({}) { Text("Actual home") } }
+        }
+      }
+    }
+    repeat(40) { pumpWarmupFrame() }
+    compose.onNodeWithText("Preparing your library").assertIsDisplayed()
+    compose.onNodeWithText("Actual home").assertDoesNotExist()
+    var shown = false
+    repeat(650) {
+      if (!shown) {
+        pumpWarmupFrame()
+        shown = runCatching { compose.onNodeWithText("Actual home").assertIsDisplayed() }.isSuccess
+      }
+    }
+    compose.mainClock.autoAdvance = true
+    compose.waitForIdle()
+    compose.onNodeWithText("Actual home").assertIsDisplayed()
+    compose.onNodeWithText("Preparing your library").assertDoesNotExist()
+    assertEquals(1, homes)
+    assertEquals(
+      live.mehiz.mpvkt.BuildConfig.VERSION_CODE,
+      context
+        .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+        .getInt("prepared_version", 0),
+    )
+    db.close()
+  }
+
+  private fun pumpWarmupFrame() {
+    // Room/vector preparation uses real worker threads while this test clock is virtual.
+    Thread.sleep(2)
+    compose.mainClock.advanceTimeByFrame()
+    compose.waitForIdle()
+    compose.runOnUiThread {
+      val view = compose.activity.findViewById<View>(android.R.id.content)
+      val node = android.graphics.RenderNode("startup-frame")
+      node.setPosition(0, 0, view.width, view.height)
+      val canvas = node.beginRecording(view.width, view.height)
+      view.draw(canvas)
+      node.endRecording()
+      node.discardDisplayList()
+    }
   }
 
   @Test

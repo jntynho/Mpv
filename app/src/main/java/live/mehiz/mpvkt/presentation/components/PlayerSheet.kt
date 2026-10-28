@@ -120,6 +120,7 @@ fun PlayerSheet(
   tonalElevation: Dp = 1.dp,
   reduceMotion: Boolean = false,
   onCloseStart: () -> Unit = {},
+  interactive: Boolean = true,
   content: @Composable (onClose: () -> Unit, headerDrag: Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -147,7 +148,7 @@ fun PlayerSheet(
   }
   LaunchedEffect(reduceMotion) { if (reduceMotion && laidOut && !closing) motion.finishOpen() }
   DisposableEffect(motion) { onDispose(motion::stop) }
-  BackHandler { if (!closing) latestBack?.invoke() ?: close() }
+  BackHandler(enabled = interactive) { if (!closing) latestBack?.invoke() ?: close() }
   val closeLabel = stringResource(R.string.generic_close)
   val headerDrag =
     Modifier.draggable(
@@ -156,7 +157,7 @@ fun PlayerSheet(
           if (!closing) motion.drag(dx / (widthPx + extraPx).coerceAtLeast(1f))
         },
       orientation = Orientation.Horizontal,
-      enabled = !closing && laidOut,
+      enabled = interactive && !closing && laidOut,
       onDragStarted = { motion.stop() },
       onDragStopped = { velocity ->
         if ((motion.position > .3f && velocity > -dismissVelocity) || velocity > dismissVelocity)
@@ -171,7 +172,12 @@ fun PlayerSheet(
           drawRect(Color.Black.copy(alpha = .23f * (1f - motion.position).coerceIn(0f, 1f)))
         }
         .semantics { contentDescription = closeLabel }
-        .clickable(remember { MutableInteractionSource() }, indication = null, onClick = close)
+        .clickable(
+          remember { MutableInteractionSource() },
+          indication = null,
+          enabled = interactive,
+          onClick = close,
+        )
     )
     BoxWithConstraints(
       Modifier.fillMaxSize()

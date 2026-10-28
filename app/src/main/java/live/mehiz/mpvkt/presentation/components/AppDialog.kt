@@ -29,7 +29,6 @@ import androidx.compose.ui.window.DialogProperties
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
-import live.mehiz.mpvkt.ui.utils.softTapFeedback
 
 private val LocalDialogPrimary = compositionLocalOf<Boolean?> { null }
 
@@ -65,7 +64,7 @@ internal fun AppDialog(
       onDispose {}
     }
     BoxWithConstraints(
-      Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(20.dp).softTapFeedback(),
+      Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(20.dp),
       contentAlignment = Alignment.Center,
     ) {
       Box(
