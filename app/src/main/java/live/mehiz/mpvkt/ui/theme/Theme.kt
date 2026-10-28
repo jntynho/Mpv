@@ -18,86 +18,89 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import live.mehiz.mpvkt.R
-import live.mehiz.mpvkt.ui.icons.LocalIconStyle
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.ui.icons.LocalIconStyle
+import live.mehiz.mpvkt.ui.utils.softTapFeedback
 import org.koin.compose.koinInject
 
-private val lightScheme = lightColorScheme(
-  primary = primaryLight,
-  onPrimary = onPrimaryLight,
-  primaryContainer = primaryContainerLight,
-  onPrimaryContainer = onPrimaryContainerLight,
-  secondary = secondaryLight,
-  onSecondary = onSecondaryLight,
-  secondaryContainer = secondaryContainerLight,
-  onSecondaryContainer = onSecondaryContainerLight,
-  tertiary = tertiaryLight,
-  onTertiary = onTertiaryLight,
-  tertiaryContainer = tertiaryContainerLight,
-  onTertiaryContainer = onTertiaryContainerLight,
-  error = errorLight,
-  onError = onErrorLight,
-  errorContainer = errorContainerLight,
-  onErrorContainer = onErrorContainerLight,
-  background = backgroundLight,
-  onBackground = onBackgroundLight,
-  surface = surfaceLight,
-  onSurface = onSurfaceLight,
-  surfaceVariant = surfaceVariantLight,
-  onSurfaceVariant = onSurfaceVariantLight,
-  outline = outlineLight,
-  outlineVariant = outlineVariantLight,
-  scrim = scrimLight,
-  inverseSurface = inverseSurfaceLight,
-  inverseOnSurface = inverseOnSurfaceLight,
-  inversePrimary = inversePrimaryLight,
-  surfaceDim = surfaceDimLight,
-  surfaceBright = surfaceBrightLight,
-  surfaceContainerLowest = surfaceContainerLowestLight,
-  surfaceContainerLow = surfaceContainerLowLight,
-  surfaceContainer = surfaceContainerLight,
-  surfaceContainerHigh = surfaceContainerHighLight,
-  surfaceContainerHighest = surfaceContainerHighestLight,
-)
+private val lightScheme =
+  lightColorScheme(
+    primary = primaryLight,
+    onPrimary = onPrimaryLight,
+    primaryContainer = primaryContainerLight,
+    onPrimaryContainer = onPrimaryContainerLight,
+    secondary = secondaryLight,
+    onSecondary = onSecondaryLight,
+    secondaryContainer = secondaryContainerLight,
+    onSecondaryContainer = onSecondaryContainerLight,
+    tertiary = tertiaryLight,
+    onTertiary = onTertiaryLight,
+    tertiaryContainer = tertiaryContainerLight,
+    onTertiaryContainer = onTertiaryContainerLight,
+    error = errorLight,
+    onError = onErrorLight,
+    errorContainer = errorContainerLight,
+    onErrorContainer = onErrorContainerLight,
+    background = backgroundLight,
+    onBackground = onBackgroundLight,
+    surface = surfaceLight,
+    onSurface = onSurfaceLight,
+    surfaceVariant = surfaceVariantLight,
+    onSurfaceVariant = onSurfaceVariantLight,
+    outline = outlineLight,
+    outlineVariant = outlineVariantLight,
+    scrim = scrimLight,
+    inverseSurface = inverseSurfaceLight,
+    inverseOnSurface = inverseOnSurfaceLight,
+    inversePrimary = inversePrimaryLight,
+    surfaceDim = surfaceDimLight,
+    surfaceBright = surfaceBrightLight,
+    surfaceContainerLowest = surfaceContainerLowestLight,
+    surfaceContainerLow = surfaceContainerLowLight,
+    surfaceContainer = surfaceContainerLight,
+    surfaceContainerHigh = surfaceContainerHighLight,
+    surfaceContainerHighest = surfaceContainerHighestLight,
+  )
 
-private val darkScheme = darkColorScheme(
-  primary = Color(0xFFA4E6D0),
-  onPrimary = Color(0xFF06382D),
-  primaryContainer = Color(0xFF234B40),
-  onPrimaryContainer = onPrimaryContainerDark,
-  secondary = secondaryDark,
-  onSecondary = onSecondaryDark,
-  secondaryContainer = secondaryContainerDark,
-  onSecondaryContainer = onSecondaryContainerDark,
-  tertiary = tertiaryDark,
-  onTertiary = onTertiaryDark,
-  tertiaryContainer = tertiaryContainerDark,
-  onTertiaryContainer = onTertiaryContainerDark,
-  error = errorDark,
-  onError = onErrorDark,
-  errorContainer = errorContainerDark,
-  onErrorContainer = onErrorContainerDark,
-  background = Color(0xFF101719),
-  onBackground = onBackgroundDark,
-  surface = Color(0xFF101719),
-  onSurface = onSurfaceDark,
-  surfaceVariant = surfaceVariantDark,
-  onSurfaceVariant = onSurfaceVariantDark,
-  outline = outlineDark,
-  outlineVariant = outlineVariantDark,
-  scrim = scrimDark,
-  inverseSurface = inverseSurfaceDark,
-  inverseOnSurface = inverseOnSurfaceDark,
-  inversePrimary = inversePrimaryDark,
-  surfaceDim = surfaceDimDark,
-  surfaceBright = surfaceBrightDark,
-  surfaceContainerLowest = surfaceContainerLowestDark,
-  surfaceContainerLow = Color(0xFF162023),
-  surfaceContainer = Color(0xFF1B2528),
-  surfaceContainerHigh = surfaceContainerHighDark,
-  surfaceContainerHighest = surfaceContainerHighestDark,
-)
+private val darkScheme =
+  darkColorScheme(
+    primary = Color(0xFFA4E6D0),
+    onPrimary = Color(0xFF06382D),
+    primaryContainer = Color(0xFF234B40),
+    onPrimaryContainer = onPrimaryContainerDark,
+    secondary = secondaryDark,
+    onSecondary = onSecondaryDark,
+    secondaryContainer = secondaryContainerDark,
+    onSecondaryContainer = onSecondaryContainerDark,
+    tertiary = tertiaryDark,
+    onTertiary = onTertiaryDark,
+    tertiaryContainer = tertiaryContainerDark,
+    onTertiaryContainer = onTertiaryContainerDark,
+    error = errorDark,
+    onError = onErrorDark,
+    errorContainer = errorContainerDark,
+    onErrorContainer = onErrorContainerDark,
+    background = Color(0xFF101719),
+    onBackground = onBackgroundDark,
+    surface = Color(0xFF101719),
+    onSurface = onSurfaceDark,
+    surfaceVariant = surfaceVariantDark,
+    onSurfaceVariant = onSurfaceVariantDark,
+    outline = outlineDark,
+    outlineVariant = outlineVariantDark,
+    scrim = scrimDark,
+    inverseSurface = inverseSurfaceDark,
+    inverseOnSurface = inverseOnSurfaceDark,
+    inversePrimary = inversePrimaryDark,
+    surfaceDim = surfaceDimDark,
+    surfaceBright = surfaceBrightDark,
+    surfaceContainerLowest = surfaceContainerLowestDark,
+    surfaceContainerLow = Color(0xFF162023),
+    surfaceContainer = Color(0xFF1B2528),
+    surfaceContainerHigh = surfaceContainerHighDark,
+    surfaceContainerHighest = surfaceContainerHighestDark,
+  )
 
 @Composable
 fun MpvKtTheme(content: @Composable () -> Unit) {
@@ -106,32 +109,58 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val darkTheme = isSystemInDarkTheme()
   val dynamicColor by preferences.materialYou.collectAsState()
   val context = LocalContext.current
-  val oledBlack by preferences.oledBlack.collectAsState()
-  val iconStyle by preferences.iconStyle.collectAsState()
-
-  val colorScheme = when {
-    dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-      when (darkMode) {
-        DarkMode.Dark -> dynamicDarkColorScheme(context)
-        DarkMode.Light -> dynamicLightColorScheme(context)
-        else -> if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+  val hapticView = androidx.compose.ui.platform.LocalView.current
+  val haptics =
+    androidx.compose.runtime.remember(hapticView) {
+      object : androidx.compose.ui.hapticfeedback.HapticFeedback {
+        override fun performHapticFeedback(
+          hapticFeedbackType: androidx.compose.ui.hapticfeedback.HapticFeedbackType
+        ) {
+          live.mehiz.mpvkt.ui.utils.SoftHaptics.tick(hapticView)
+        }
       }
     }
+  val oledBlack by preferences.oledBlack.collectAsState()
+  val iconStyle by preferences.iconStyle.collectAsState()
+  val reduceMotion by
+    koinInject<live.mehiz.mpvkt.preferences.PlayerPreferences>().reduceMotion.collectAsState()
 
-    darkMode == DarkMode.Dark -> darkScheme
-    darkMode == DarkMode.Light -> lightScheme
-    else -> if (darkTheme) darkScheme else lightScheme
-  }
+  val colorScheme =
+    when {
+      dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        when (darkMode) {
+          DarkMode.Dark -> dynamicDarkColorScheme(context)
+          DarkMode.Light -> dynamicLightColorScheme(context)
+          else ->
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+      }
+
+      darkMode == DarkMode.Dark -> darkScheme
+      darkMode == DarkMode.Light -> lightScheme
+      else -> if (darkTheme) darkScheme else lightScheme
+    }
 
   CompositionLocalProvider(
+    androidx.compose.foundation.LocalOverscrollFactory provides
+      if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
+    androidx.compose.ui.platform.LocalHapticFeedback provides haptics,
     LocalSpacing provides Spacing(),
     LocalIconStyle provides iconStyle,
+    live.mehiz.mpvkt.ui.motion.LocalReduceMotion provides reduceMotion,
   ) {
     MaterialTheme(
-      colorScheme = if (oledBlack && (darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme))) {
-        colorScheme.copy(background = Color.Black, surface = Color.Black)
-      } else colorScheme,
-      content = content,
+      colorScheme =
+        if (
+          oledBlack && (darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme))
+        ) {
+          colorScheme.copy(background = Color.Black, surface = Color.Black)
+        } else colorScheme,
+      content = {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.softTapFeedback()) {
+          content()
+        }
+      },
     )
   }
 }
@@ -149,12 +178,15 @@ private const val RIPPLE_PRESSED_ALPHA = .6f
 
 @OptIn(ExperimentalMaterial3Api::class)
 val playerRippleConfiguration
-  @Composable get() = RippleConfiguration(
-    color = MaterialTheme.colorScheme.primaryContainer,
-    rippleAlpha = RippleAlpha(
-      draggedAlpha = RIPPLE_DRAGGED_ALPHA,
-      focusedAlpha = RIPPLE_FOCUSED_ALPHA,
-      hoveredAlpha = RIPPLE_HOVERED_ALPHA,
-      pressedAlpha = RIPPLE_PRESSED_ALPHA,
-    ),
-  )
+  @Composable
+  get() =
+    RippleConfiguration(
+      color = MaterialTheme.colorScheme.primaryContainer,
+      rippleAlpha =
+        RippleAlpha(
+          draggedAlpha = RIPPLE_DRAGGED_ALPHA,
+          focusedAlpha = RIPPLE_FOCUSED_ALPHA,
+          hoveredAlpha = RIPPLE_HOVERED_ALPHA,
+          pressedAlpha = RIPPLE_PRESSED_ALPHA,
+        ),
+    )

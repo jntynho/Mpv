@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -30,6 +31,9 @@ import live.mehiz.mpvkt.preferences.AdvancedPreferences
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
+import live.mehiz.mpvkt.presentation.components.AppDialog as AlertDialog
+import live.mehiz.mpvkt.presentation.components.DialogButton as TextButton
+import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold
@@ -69,6 +73,8 @@ object SubtitlesPreferencesScreen : Screen {
     )
     if (folderError)
       AlertDialog(
+        title = { Text(stringResource(R.string.subtitle_fonts)) },
+        icon = { Icon(Icons.Folder, null) },
         onDismissRequest = { folderError = false },
         text = { Text(stringResource(R.string.subtitle_font_failure)) },
         confirmButton = {
@@ -143,7 +149,7 @@ internal fun SubtitleSettingsPage(
   var editLanguages by remember { mutableStateOf(false) }
   var confirmClear by remember { mutableStateOf(false) }
   var confirmFonts by remember { mutableStateOf(false) }
-  var advanced by remember { mutableStateOf(false) }
+  var advanced by rememberSaveable { mutableStateOf(false) }
   var wyzieValues by remember {
     mutableStateOf<Map<String, String>>(
       mapOf("all" to context.getString(R.string.subtitle_all_sources))
@@ -451,10 +457,15 @@ internal fun SubtitleSettingsPage(
               )
             }
             SubtitleSettingsDivider()
-            SubtitleSettingRow(stringResource(R.string.subtitle_filters), "", Icons.Tune) {
+            SubtitleSettingRow(
+              stringResource(R.string.subtitle_filters),
+              "",
+              Icons.Tune,
+              expanded = advanced,
+            ) {
               advanced = !advanced
             }
-            if (advanced) {
+            ExpandableSettingsContent(advanced) {
               SubtitleSettingsDivider()
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_hearing),
@@ -715,6 +726,7 @@ internal fun ProviderKeyRow(
           { draft = it.take(4096) },
           Modifier.fillMaxWidth(),
           singleLine = true,
+          label = { Text("API key") },
           enabled = !saving,
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
           visualTransformation =
@@ -787,6 +799,7 @@ internal fun ProviderKeyRow(
       }
     else
       AlertDialog(
+        icon = { Icon(Icons.Lock, null) },
         onDismissRequest = { if (!saving) editing = false },
         title = { Text("$name API key") },
         text = editor,
@@ -804,6 +817,8 @@ internal fun ProviderKeyRow(
       )
     else
       AlertDialog(
+        title = { Text("$name API key") },
+        icon = { Icon(Icons.Lock, null) },
         onDismissRequest = { failure = false },
         text = { Text(stringResource(R.string.subtitle_key_failure)) },
         confirmButton = {

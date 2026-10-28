@@ -91,6 +91,42 @@ class SheetAndSortMotionTest {
   }
 
   @Test
+  fun paneKeepsMovingWhenInsetsChangeDuringItsFirstEntrance() {
+    var inset by mutableStateOf(0.dp)
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MaterialTheme {
+        Box(Modifier.fillMaxSize().padding(top = inset)) {
+          live.mehiz.mpvkt.presentation.components.PlayerSheet(
+            {},
+            modifier = Modifier.testTag("pane"),
+          ) { _, _ ->
+            Box(Modifier.fillMaxSize())
+          }
+        }
+      }
+    }
+    repeat(4) {
+      compose.mainClock.advanceTimeByFrame()
+      compose.waitForIdle()
+    }
+    val start = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot.left
+    compose.runOnIdle { inset = 20.dp }
+    repeat(2) {
+      compose.mainClock.advanceTimeByFrame()
+      compose.waitForIdle()
+    }
+    val afterResize = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot.left
+    assertTrue(
+      "Entrance must still be in flight after resize: start=$start resized=$afterResize",
+      afterResize > 24f,
+    )
+    compose.mainClock.advanceTimeBy(1000)
+    val settled = compose.onNodeWithTag("pane").fetchSemanticsNode().boundsInRoot.left
+    assertEquals(12f, settled, 1f)
+  }
+
+  @Test
   fun paneReboundIsBoundedAndAnInterruptedEntranceCannotReopenAfterClose() {
     lateinit var motion: PaneMotion
     lateinit var scope: kotlinx.coroutines.CoroutineScope
@@ -100,17 +136,17 @@ class SheetAndSortMotionTest {
       Box(Modifier.size(1.dp))
     }
     compose.mainClock.autoAdvance = false
-    compose.runOnIdle { motion.open(scope, 400f, 8f, false) }
+    compose.runOnIdle { motion.open(scope, 400f, 24f, false) }
     var minimum = 1f
     repeat(60) {
       compose.mainClock.advanceTimeBy(16)
       compose.runOnIdle { minimum = minOf(minimum, motion.position) }
     }
-    assertTrue(minimum >= -.0201f)
+    assertTrue(minimum >= -.0601f)
     assertTrue(minimum < 0f)
     compose.runOnIdle {
       assertEquals(0f, motion.position, .001f)
-      motion.open(scope, 400f, 8f, false)
+      motion.open(scope, 400f, 24f, false)
     }
     compose.mainClock.advanceTimeBy(100)
     var closed = 0

@@ -29,6 +29,7 @@ import kotlinx.coroutines.*
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.player.Panels
@@ -114,8 +115,8 @@ internal fun SubtitleSearchPanel(
               color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
           }
-          TextButton(onClick = { controller.editQuery(state.query) }) {
-            Text(stringResource(R.string.subtitle_change_title))
+          IconButton(onClick = { controller.editQuery(state.query) }) {
+            Icon(Icons.Edit, stringResource(R.string.subtitle_change_title), Modifier.size(20.dp))
           }
         } else {
           Text(

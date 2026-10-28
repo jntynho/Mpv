@@ -28,7 +28,7 @@ internal fun subtitlePosterUrl(raw: String): String? {
     }
   if (!file.matches(Regex("[A-Za-z0-9_-]{1,160}\\.(?:jpg|jpeg|png|webp)", RegexOption.IGNORE_CASE)))
     return null
-  return "https://image.tmdb.org/t/p/w185/$file"
+  return "https://image.tmdb.org/t/p/w342/$file"
 }
 
 internal class SubtitlePosters(private val http: SubtitleTransport = SubtitleHttp()) {
@@ -39,7 +39,7 @@ internal class SubtitlePosters(private val http: SubtitleTransport = SubtitleHtt
   private val permits = Semaphore(2)
   private val locks = Array(16) { Mutex() }
 
-  fun peek(url: String?): Bitmap? = url?.let(cache::get)
+  fun peek(url: String?): Bitmap? = url?.let(::subtitlePosterUrl)?.let(cache::get)
 
   suspend fun load(raw: String?): Bitmap? =
     withContext(Dispatchers.IO) {
@@ -72,8 +72,8 @@ internal class SubtitlePosters(private val http: SubtitleTransport = SubtitleHtt
                         inPreferredConfig = Bitmap.Config.ARGB_8888
                         inSampleSize = 1
                         while (
-                          bounds.outWidth / inSampleSize > 240 ||
-                            bounds.outHeight / inSampleSize > 360
+                          bounds.outWidth / inSampleSize > 384 ||
+                            bounds.outHeight / inSampleSize > 576
                         ) inSampleSize *= 2
                       }
                     result = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)

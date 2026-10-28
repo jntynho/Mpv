@@ -37,6 +37,8 @@ internal fun LibrarySortButton(
   countEnabled: Boolean,
   reduceMotion: Boolean,
   enabled: Boolean = true,
+  viewMode: LibraryViewMode = LibraryViewMode.Folder,
+  onViewMode: (LibraryViewMode) -> Unit = {},
   onSelect: (LibrarySort) -> Unit,
 ) {
   var expanded by remember { mutableStateOf(false) }
@@ -65,6 +67,13 @@ internal fun LibrarySortButton(
           countEnabled,
           reduceMotion = reduceMotion,
           modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+          viewMode = viewMode,
+          onViewMode = { mode ->
+            if (!closing) {
+              onViewMode(mode)
+              closing = true
+            }
+          },
           onSelect = { choice ->
             if (!closing) {
               onSelect(choice)
@@ -84,6 +93,8 @@ internal fun LibrarySortMenuContent(
   countEnabled: Boolean,
   modifier: Modifier = Modifier,
   reduceMotion: Boolean = false,
+  viewMode: LibraryViewMode = LibraryViewMode.Folder,
+  onViewMode: (LibraryViewMode) -> Unit = {},
   onSelect: (LibrarySort) -> Unit,
 ) {
   val colors = MaterialTheme.colorScheme
@@ -103,6 +114,36 @@ internal fun LibrarySortMenuContent(
       .verticalScroll(rememberScrollState())
       .padding(start = 20.dp, end = 20.dp, bottom = 24.dp)
   ) {
+    Text(
+      stringResource(R.string.mpv_view_mode),
+      style = MaterialTheme.typography.labelLarge,
+      color = colors.onSurfaceVariant,
+      modifier = Modifier.padding(start = 12.dp, bottom = 12.dp),
+    )
+    Row(
+      Modifier.fillMaxWidth().selectableGroup(),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      LibraryViewMode.entries.forEach { mode ->
+        SortChoice(
+          stringResource(
+            when (mode) {
+              LibraryViewMode.Folder -> R.string.mpv_view_folders
+              LibraryViewMode.Tree -> R.string.mpv_view_tree
+              LibraryViewMode.Videos -> R.string.mpv_view_videos
+            }
+          ),
+          viewMode == mode,
+          true,
+          Modifier.weight(1f).heightIn(min = rowHeight),
+          tonal = true,
+          duration = duration,
+        ) {
+          onViewMode(mode)
+        }
+      }
+    }
+    Spacer(Modifier.height(24.dp))
     Text(
       stringResource(R.string.mpv_sort),
       style = MaterialTheme.typography.titleLarge,
@@ -203,7 +244,7 @@ private fun SortChoice(
       .clip(RoundedCornerShape(20.dp))
       .background(background)
       .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-      .padding(horizontal = 20.dp),
+      .padding(horizontal = if (tonal) 10.dp else 20.dp),
     contentAlignment = if (tonal) Alignment.Center else Alignment.CenterStart,
   ) {
     Text(

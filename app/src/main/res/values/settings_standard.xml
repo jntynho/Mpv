@@ -1,0 +1,9 @@
+<resources>
+    <string name="mpv_setting_save_failed">Could not save this setting. Check the selected folder and try again.</string>
+    <string name="mpv_view_mode">View mode</string>
+    <string name="mpv_view_folders">Folder</string>
+    <string name="mpv_view_tree">Tree</string>
+    <string name="mpv_view_videos">Videos</string>
+    <string name="mpv_loading_interface">Preparing your library</string>
+    <string name="mpv_loading_detail">Getting everything ready for a smoother start</string>
+</resources>

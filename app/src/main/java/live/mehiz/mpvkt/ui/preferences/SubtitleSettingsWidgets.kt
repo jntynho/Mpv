@@ -22,12 +22,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import live.mehiz.mpvkt.presentation.components.StableBottomSheet
+import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import org.koin.compose.koinInject
-import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
+import live.mehiz.mpvkt.presentation.components.StableBottomSheet
 import live.mehiz.mpvkt.ui.icons.*
+import org.koin.compose.koinInject
 
 @Composable
 internal fun SubtitleSettingRow(
@@ -38,9 +39,18 @@ internal fun SubtitleSettingRow(
   enabled: Boolean = true,
   danger: Boolean = false,
   toggle: Boolean? = null,
+  expanded: Boolean? = null,
   onClick: () -> Unit,
 ) {
   val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+  val rotation by
+    androidx.compose.animation.core.animateFloatAsState(
+      if (expanded == true) 180f else 0f,
+      androidx.compose.animation.core.tween(
+        if (live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current) 0 else 280
+      ),
+      label = "subtitle_expand",
+    )
   val color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
   val action =
     if (toggle != null)
@@ -85,6 +95,8 @@ internal fun SubtitleSettingRow(
         )
     }
     if (toggle != null) Switch(toggle, onCheckedChange = null, enabled = enabled)
+    else if (expanded != null)
+      Icon(Icons.ArrowDropDown, null, Modifier.size(18.dp).graphicsLayer { rotationZ = rotation })
     else if (!danger)
       Icon(
         Icons.ArrowDropDown,
@@ -97,12 +109,7 @@ internal fun SubtitleSettingRow(
 
 @Composable
 internal fun SubtitleSettingsCard(content: @Composable ColumnScope.() -> Unit) {
-  Column(
-    Modifier.fillMaxWidth()
-      .clip(RoundedCornerShape(24.dp))
-      .background(MaterialTheme.colorScheme.surfaceContainer),
-    content = content,
-  )
+  SettingsCard(content = content)
 }
 
 @Composable
@@ -149,7 +156,12 @@ internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
         it.value.contains(query, true) || it.key.contains(query, true)
       }
     }
-  StableBottomSheet(onDismissRequest = dismiss, dismissRequested = closing, reduceMotion = reduceMotion, title = choice.title) {
+  StableBottomSheet(
+    onDismissRequest = dismiss,
+    dismissRequested = closing,
+    reduceMotion = reduceMotion,
+    title = choice.title,
+  ) {
     Text(
       choice.title,
       Modifier.padding(horizontal = 24.dp, vertical = 8.dp),

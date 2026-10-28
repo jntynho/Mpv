@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,12 +18,16 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.database.entities.CustomButtonEntity
+import live.mehiz.mpvkt.presentation.components.AppDialog as AlertDialog
+import live.mehiz.mpvkt.presentation.components.DialogButton as TextButton
+import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.theme.spacing
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun CustomButtonAddDialog(
@@ -38,17 +40,19 @@ fun CustomButtonAddDialog(
   var longPressContent by remember { mutableStateOf("") }
 
   val focusRequester = remember { FocusRequester() }
-  val titleAlreadyExists = remember(title) { buttonNames.contains(title) }
+  val titleAlreadyExists =
+    remember(title, buttonNames) { buttonNames.any { it.trim().equals(title.trim(), true) } }
 
   AlertDialog(
+    icon = { Icon(Icons.Add, null) },
     onDismissRequest = onDismissRequest,
     confirmButton = {
       TextButton(
-        enabled = title.isNotEmpty() && content.isNotEmpty() && !titleAlreadyExists,
+        enabled = title.isNotBlank() && content.isNotBlank() && !titleAlreadyExists,
         onClick = {
           onAdd(title, content, longPressContent)
           onDismissRequest()
-        }
+        },
       ) {
         Text(text = stringResource(id = R.string.pref_custom_button_action_add))
       }
@@ -58,27 +62,23 @@ fun CustomButtonAddDialog(
         Text(text = stringResource(id = R.string.generic_cancel))
       }
     },
-    title = {
-      Text(text = stringResource(id = R.string.pref_custom_button_add_button))
-    },
+    title = { Text(text = stringResource(id = R.string.pref_custom_button_add_button)) },
     text = {
-      Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
-      ) {
+      Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
         OutlinedTextField(
-          modifier = Modifier
-            .focusRequester(focusRequester),
+          modifier = Modifier.focusRequester(focusRequester),
           value = title,
           onValueChange = { title = it },
           label = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_title_text))
           },
           supportingText = {
-            val msgRes = if (title.isNotEmpty() && titleAlreadyExists) {
-              R.string.pref_custom_button_action_add_already_exists
-            } else {
-              R.string.pref_custom_button_action_add_required
-            }
+            val msgRes =
+              if (title.isNotEmpty() && titleAlreadyExists) {
+                R.string.pref_custom_button_action_add_already_exists
+              } else {
+                R.string.pref_custom_button_action_add_required
+              }
             Text(text = stringResource(id = msgRes))
           },
           isError = title.isNotEmpty() && titleAlreadyExists,
@@ -95,6 +95,7 @@ fun CustomButtonAddDialog(
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_required))
           },
           minLines = 3,
+          maxLines = 6,
         )
 
         OutlinedTextField(
@@ -107,9 +108,10 @@ fun CustomButtonAddDialog(
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_optional))
           },
           minLines = 3,
+          maxLines = 6,
         )
       }
-    }
+    },
   )
 
   @Suppress("ForbiddenComment")
@@ -121,18 +123,17 @@ fun CustomButtonAddDialog(
 }
 
 @Composable
-fun CustomButtonDeleteDialog(
-  onDismissRequest: () -> Unit,
-  onDelete: () -> Unit,
-  title: String,
-) {
+fun CustomButtonDeleteDialog(onDismissRequest: () -> Unit, onDelete: () -> Unit, title: String) {
   AlertDialog(
+    icon = { Icon(Icons.Delete, null) },
     onDismissRequest = onDismissRequest,
     confirmButton = {
-      TextButton(onClick = {
-        onDelete()
-        onDismissRequest()
-      }) {
+      TextButton(
+        onClick = {
+          onDelete()
+          onDismissRequest()
+        }
+      ) {
         Text(text = stringResource(R.string.generic_ok))
       }
     },
@@ -141,12 +142,8 @@ fun CustomButtonDeleteDialog(
         Text(text = stringResource(R.string.generic_cancel))
       }
     },
-    title = {
-      Text(text = stringResource(R.string.pref_custom_button_delete_button))
-    },
-    text = {
-      Text(text = stringResource(R.string.pref_custom_button_delete_confirmation, title))
-    },
+    title = { Text(text = stringResource(R.string.pref_custom_button_delete_button)) },
+    text = { Text(text = stringResource(R.string.pref_custom_button_delete_confirmation, title)) },
   )
 }
 
@@ -162,17 +159,22 @@ fun CustomButtonEditDialog(
   var longPressContent by remember { mutableStateOf(initialState.longPressContent) }
 
   val focusRequester = remember { FocusRequester() }
-  val titleAlreadyExists = remember(title) { buttonNames.contains(title) }
+  val titleAlreadyExists =
+    remember(title, buttonNames, initialState.title) {
+      !title.trim().equals(initialState.title.trim(), true) &&
+        buttonNames.any { it.trim().equals(title.trim(), true) }
+    }
 
   AlertDialog(
+    icon = { Icon(Icons.Edit, null) },
     onDismissRequest = onDismissRequest,
     confirmButton = {
       TextButton(
-        enabled = title.isNotEmpty() && content.isNotEmpty() && !titleAlreadyExists,
+        enabled = title.isNotBlank() && content.isNotBlank() && !titleAlreadyExists,
         onClick = {
           onEdit(title, content, longPressContent)
           onDismissRequest()
-        }
+        },
       ) {
         Text(text = stringResource(id = R.string.generic_ok))
       }
@@ -194,23 +196,21 @@ fun CustomButtonEditDialog(
       }
     },
     text = {
-      Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
-      ) {
+      Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
         OutlinedTextField(
-          modifier = Modifier
-            .focusRequester(focusRequester),
+          modifier = Modifier.focusRequester(focusRequester),
           value = title,
           onValueChange = { title = it },
           label = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_title_text))
           },
           supportingText = {
-            val msgRes = if (title.isNotEmpty() && titleAlreadyExists) {
-              R.string.pref_custom_button_action_add_already_exists
-            } else {
-              R.string.pref_custom_button_action_add_required
-            }
+            val msgRes =
+              if (title.isNotEmpty() && titleAlreadyExists) {
+                R.string.pref_custom_button_action_add_already_exists
+              } else {
+                R.string.pref_custom_button_action_add_required
+              }
             Text(text = stringResource(id = msgRes))
           },
           isError = title.isNotEmpty() && titleAlreadyExists,
@@ -243,7 +243,7 @@ fun CustomButtonEditDialog(
           maxLines = 6,
         )
       }
-    }
+    },
   )
 
   @Suppress("ForbiddenComment")

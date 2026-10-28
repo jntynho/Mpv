@@ -32,16 +32,18 @@ internal fun SubtitlePoster(url: String?, reduceMotion: Boolean, modifier: Modif
   val loader = LocalSubtitlePosters.current
   key(url, loader) {
     val bitmap by produceState(loader.peek(url), url, loader) { value = loader.load(url) }
+    var revealed by remember { mutableStateOf(false) }
+    LaunchedEffect(bitmap) { revealed = bitmap != null }
     val alpha by
       animateFloatAsState(
-        if (bitmap != null) 1f else 0f,
-        tween(if (reduceMotion) 0 else 180),
+        if (revealed) 1f else 0f,
+        tween(if (reduceMotion) 0 else 220),
         label = "subtitle_poster",
       )
     Box(
       modifier
-        .size(56.dp, 84.dp)
-        .clip(RoundedCornerShape(12.dp))
+        .size(76.dp, 114.dp)
+        .clip(RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
       contentAlignment = Alignment.Center,
     ) {

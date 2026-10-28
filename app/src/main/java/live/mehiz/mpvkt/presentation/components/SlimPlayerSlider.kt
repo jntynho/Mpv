@@ -15,19 +15,28 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import kotlin.math.abs
+import kotlinx.coroutines.delay
 
-/** Native slider semantics/gestures, with a thin track and a local drag preview immune to delayed engine echoes. */
+/**
+ * Native slider semantics/gestures, with a thin track and a local drag preview immune to delayed
+ * engine echoes.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SlimPlayerSlider(
-  value: Float, onValueChange: (Float) -> Unit, modifier: Modifier = Modifier,
-  enabled: Boolean = true, valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-  steps: Int = 0, onValueChangeFinished: (() -> Unit)? = null,
+  value: Float,
+  onValueChange: (Float) -> Unit,
+  modifier: Modifier = Modifier,
+  enabled: Boolean = true,
+  valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+  steps: Int = 0,
+  onValueChangeFinished: (() -> Unit)? = null,
   colors: SliderColors = SliderDefaults.colors(),
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
+  val hapticView = androidx.compose.ui.platform.LocalView.current
+  var lastHaptic by remember { mutableIntStateOf(-1) }
   val dragged by interactionSource.collectIsDraggedAsState()
   var editing by remember { mutableStateOf(false) }
   var pending by remember { mutableStateOf<Float?>(null) }
@@ -42,22 +51,50 @@ fun SlimPlayerSlider(
     }
   }
   val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-  Slider(value = (pending ?: value).coerceIn(range), onValueChange = {
-    editing = true; pending = it; onValueChange(it)
-  }, modifier = modifier.heightIn(min = 48.dp), enabled = enabled && max > min,
-    valueRange = range, steps = steps.coerceAtLeast(0), colors = colors,
+  Slider(
+    value = (pending ?: value).coerceIn(range),
+    onValueChange = {
+      editing = true
+      pending = it
+      onValueChange(it)
+      val tick = if (max > min) (((it - min) / (max - min)) * 20).toInt() else 0
+      if (tick != lastHaptic) {
+        lastHaptic = tick
+        live.mehiz.mpvkt.ui.utils.SoftHaptics.tick(hapticView)
+      }
+    },
+    modifier = modifier.heightIn(min = 48.dp),
+    enabled = enabled && max > min,
+    valueRange = range,
+    steps = steps.coerceAtLeast(0),
+    colors = colors,
     interactionSource = interactionSource,
-    onValueChangeFinished = { editing = false; onValueChangeFinished?.invoke() },
-    thumb = { Box(Modifier.size(14.dp).background(
-      if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape)) },
+    onValueChangeFinished = {
+      editing = false
+      onValueChangeFinished?.invoke()
+    },
+    thumb = {
+      Box(
+        Modifier.size(14.dp)
+          .background(if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape)
+      )
+    },
     track = { state ->
       Canvas(Modifier.fillMaxWidth().height(4.dp)) {
         val fraction = if (max > min) ((state.value - min) / (max - min)).coerceIn(0f, 1f) else 0f
         val width = size.width * fraction
-        drawRoundRect(if (enabled) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
-          size = size, cornerRadius = CornerRadius(size.height))
-        drawRoundRect(if (enabled) colors.activeTrackColor else colors.disabledActiveTrackColor,
-          topLeft = Offset(if (rtl) size.width - width else 0f, 0f), size = Size(width, size.height), cornerRadius = CornerRadius(size.height))
+        drawRoundRect(
+          if (enabled) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
+          size = size,
+          cornerRadius = CornerRadius(size.height),
+        )
+        drawRoundRect(
+          if (enabled) colors.activeTrackColor else colors.disabledActiveTrackColor,
+          topLeft = Offset(if (rtl) size.width - width else 0f, 0f),
+          size = Size(width, size.height),
+          cornerRadius = CornerRadius(size.height),
+        )
       }
-    })
+    },
+  )
 }
