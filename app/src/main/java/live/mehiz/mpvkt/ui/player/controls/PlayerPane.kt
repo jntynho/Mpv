@@ -31,12 +31,13 @@ internal fun PlayerPane(
   pages: List<PlayerPanelRoute>,
   onDismiss: () -> Unit,
   onBack: () -> Unit,
+  onCloseStart: () -> Unit = {},
   content: @Composable (PlayerPanelRoute) -> Unit,
 ) {
   val page = pages.lastOrNull() ?: return
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   val savedPages = rememberSaveableStateHolder()
-  PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }, reduceMotion = reduceMotion) { close, headerDrag ->
+  PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }, reduceMotion = reduceMotion, onCloseStart = onCloseStart) { close, headerDrag ->
     CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory) {
     Column(Modifier.fillMaxSize()) {
       PlayerPanelHeader(title = page.title(), icon = page.icon(), onClose = close, onBack = onBack.takeIf { pages.size > 1 }, animateTitle = !reduceMotion, modifier = headerDrag)
@@ -63,6 +64,12 @@ internal fun PlayerPane(
 
 @Composable
 private fun PlayerPanelRoute.title(): String = stringResource(when (panel) {
+  Panels.SubtitleSearch -> R.string.subtitle_search
+  Panels.SubtitleSearchOptions -> R.string.subtitle_filters
+  Panels.SubtitleSearchLanguages -> R.string.subtitle_languages
+  Panels.SubtitleSearchSeason -> R.string.subtitle_season
+  Panels.SubtitleSearchEpisode -> R.string.subtitle_episode
+  Panels.SubtitleSearchFiles -> R.string.subtitle_choose_file
   Panels.VideoFilters -> R.string.player_sheets_filters_title
   Panels.SubtitleSettings -> R.string.player_sheets_subtitles_settings_title
   Panels.SubtitleDelay -> R.string.player_sheets_sub_delay_card_title

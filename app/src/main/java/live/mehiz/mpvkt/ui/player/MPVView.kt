@@ -91,6 +91,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   }
 
   override fun observeProperties() {
+    MPVLib.observeProperty("sub-text",MPVLib.mpvFormat.MPV_FORMAT_STRING)
+    MPVLib.observeProperty("secondary-sub-text",MPVLib.mpvFormat.MPV_FORMAT_STRING)
     for ((name, format) in observedProps) MPVLib.observeProperty(name, format)
   }
 
@@ -177,7 +179,10 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
 
   // Setup
   private fun setupSubtitlesOptions() {
-    MPVLib.setOptionString("slang", subtitlesPreferences.preferredLanguages.get())
+    MPVLib.setOptionString("slang", live.mehiz.mpvkt.subtitles.subtitleLanguageCodes(subtitlesPreferences.preferredLanguages.get()))
+    MPVLib.setOptionString("sub-auto", if(subtitlesPreferences.autoLoadExternal.get()) "exact" else "no")
+    MPVLib.setOptionString("sub-scale-by-window", if(subtitlesPreferences.scaleByWindow.get()) "yes" else "no")
+    MPVLib.setOptionString("sub-use-margins", if(subtitlesPreferences.scaleByWindow.get()) "yes" else "no")
 
     MPVLib.setOptionString("sub-fonts-dir", context.cacheDir.path + "/fonts/")
     MPVLib.setOptionString("sub-delay", (subtitlesPreferences.defaultSubDelay.get() / 1000.0).toString())
@@ -190,6 +195,7 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
     MPVLib.setOptionString("sub-font", subtitlesPreferences.font.get())
     if (subtitlesPreferences.overrideAssSubs.get()) {
       MPVLib.setOptionString("sub-ass-override", "force")
+      MPVLib.setOptionString("secondary-sub-ass-override", "force")
       MPVLib.setOptionString("sub-ass-justify", "yes")
     }
     MPVLib.setOptionString("sub-font-size", subtitlesPreferences.fontSize.get().toString())

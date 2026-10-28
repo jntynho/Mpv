@@ -22,6 +22,8 @@ fun PlayerPanels(
 ) {
   when (panelShown) {
     Panels.None -> Unit
+    Panels.SubtitleSearch, Panels.SubtitleSearchOptions, Panels.SubtitleSearchLanguages,
+    Panels.SubtitleSearchSeason, Panels.SubtitleSearchEpisode, Panels.SubtitleSearchFiles -> Unit // Owned by the persistent subtitle controller.
     Panels.SubtitleSettings -> SubtitleSettingsPanel()
     Panels.SubtitleDelay -> SubtitleDelayPanel()
     Panels.AudioDelay -> AudioDelayPanel()

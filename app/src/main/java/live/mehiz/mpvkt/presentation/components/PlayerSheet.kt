@@ -64,10 +64,12 @@ fun PlayerSheet(
   onNavigateBack: (() -> Unit)? = null,
   tonalElevation: Dp = 1.dp,
   reduceMotion: Boolean = false,
+  onCloseStart: () -> Unit = {},
   content: @Composable (onClose: () -> Unit, headerDrag: Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
   val latestDismiss by rememberUpdatedState(onDismissRequest)
+  val latestCloseStart by rememberUpdatedState(onCloseStart)
   val latestBack by rememberUpdatedState(onNavigateBack)
   val motion = remember { PaneMotion() }
   val dismissVelocity = with(LocalDensity.current) { 550.dp.toPx() }
@@ -77,6 +79,7 @@ fun PlayerSheet(
   val close: () -> Unit = {
     if (!closing) {
       closing = true
+      latestCloseStart()
       motion.animate(scope, 1f, if (reduceMotion) 0 else 240) { latestDismiss() }
     }
   }

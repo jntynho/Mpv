@@ -86,6 +86,7 @@ class PlayerActivity : AppCompatActivity() {
   private val appearancePreferences: AppearancePreferences by inject()
   private val playerPreferences: PlayerPreferences by inject()
   private val audioPreferences: AudioPreferences by inject()
+  private val json: kotlinx.serialization.json.Json by inject()
   private val subtitlesPreferences: SubtitlesPreferences by inject()
   private val advancedPreferences: AdvancedPreferences by inject()
   private val gesturePreferences: GesturePreferences by inject()
@@ -151,6 +152,7 @@ class PlayerActivity : AppCompatActivity() {
 
     setupMPV()
     PlaybackControl.attach(this)
+    viewModel.probeSubtitleFeatures()
     viewModel.attachActivity(this)
     requestDefaults = listOf("force-media-title", "user-agent", "http-header-fields").associateWith { MPVLib.getPropertyString(it) }
     applyRequestOptions(intent.extras)
@@ -293,7 +295,9 @@ class PlayerActivity : AppCompatActivity() {
     copyMPVConfigFiles()
     // fonts can be lazily loaded
     lifecycleScope.launch(Dispatchers.IO) {
-      copyMPVFonts()
+      try { org.koin.java.KoinJavaComponent.get<live.mehiz.mpvkt.subtitles.SubtitleFonts>(live.mehiz.mpvkt.subtitles.SubtitleFonts::class.java).prepare(subtitlesPreferences.fontsFolder.get()) }
+      catch(c: kotlinx.coroutines.CancellationException) { throw c }
+      catch(_: Exception) { Log.w(TAG,"Subtitle font directory unavailable") }
     }
   }
 
@@ -384,26 +388,6 @@ class PlayerActivity : AppCompatActivity() {
     MPVLib.command("load-script", file.absolutePath)
   }
 
-  private fun copyMPVFonts() {
-    try {
-      val cachePath = cacheDir.path
-      val fontsDir = fileManager.fromUri(subtitlesPreferences.fontsFolder.get().toUri())
-        ?: error("User hasn't set any fonts directory")
-      if (!fileManager.exists(fontsDir)) error("Couldn't access fonts directory")
-
-      val destDir = fileManager.fromPath("$cachePath/fonts")
-      if (!fileManager.exists(destDir)) fileManager.createDir(fileManager.fromPath(cachePath), "fonts")
-
-      if (fileManager.findFile(destDir, "subfont.ttf") == null) {
-        resources.assets.open("subfont.ttf")
-          .copyTo(File("$cachePath/fonts/subfont.ttf").outputStream())
-      }
-
-      fileManager.copyDirectoryWithContent(fontsDir, destDir, false)
-    } catch (e: Exception) {
-      Log.e("PlayerActivity", "Couldn't copy fonts to application directory: ${e.message}")
-    }
-  }
 
   private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { change ->
     if (audioFocusRequest == null) return@OnAudioFocusChangeListener
@@ -617,6 +601,7 @@ class PlayerActivity : AppCompatActivity() {
   internal fun event(eventId: Int) {
     if (player.isExiting) return
     when (eventId) {
+      MPVLib.mpvEventId.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
       MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
         fileName = getFileName(intent)
         setIntentExtras(intent.extras)
@@ -669,6 +654,10 @@ class PlayerActivity : AppCompatActivity() {
     if (mediaTitle.isBlank()) return
     val state = withContext(Dispatchers.IO) { playbackStateRepository.getVideoDataByTitle(mediaTitle) }
     if (generation != mediaGeneration || isDestroyed || player.isExiting) return
+    if(state==null && !intent.hasExtra("subs.enable") && "slang" !in live.mehiz.mpvkt.subtitles.SubtitleConfig.active) {
+      val tracks=MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
+      live.mehiz.mpvkt.subtitles.preferredSubtitleTrack(tracks,subtitlesPreferences.preferredLanguages.get())?.let { player.sid=it }
+    }
     state?.let {
       player.sid = it.sid
       player.secondarySid = it.secondarySid
