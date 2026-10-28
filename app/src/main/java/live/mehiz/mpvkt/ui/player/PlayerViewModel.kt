@@ -87,20 +87,20 @@ class PlayerViewModel(
 
   internal val playback = PlaybackControl.state
   val paused get() = playback.value.displayPaused
-  val pos by MPVLib.propDouble["time-pos"].map { it?.toInt() }.collectAsState(viewModelScope)
-  val duration by MPVLib.propDouble["duration"].map { it?.toInt() }.collectAsState(viewModelScope)
-  private val currentMPVVolume by MPVLib.propInt["volume"].collectAsState(viewModelScope)
+  val pos by MpvProperties.propDouble["time-pos"].map { it?.toInt() }.collectAsState(viewModelScope)
+  val duration by MpvProperties.propDouble["duration"].map { it?.toInt() }.collectAsState(viewModelScope)
+  private val currentMPVVolume by MpvProperties.propInt["volume"].collectAsState(viewModelScope)
 
   val currentVolume = MutableStateFlow(activity.audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
-  private val volumeBoostCap by MPVLib.propInt["volume-max"].collectAsState(viewModelScope)
+  private val volumeBoostCap by MpvProperties.propInt["volume-max"].collectAsState(viewModelScope)
 
-  val subtitleTracks = MPVLib.propNode["track-list"]
+  val subtitleTracks = MpvProperties.propNode["track-list"]
     .map { (it?.toObject<List<TrackNode>>(json)?.filter { it.isSubtitle } ?: persistentListOf()).toImmutableList() }
 
-  val audioTracks = MPVLib.propNode["track-list"]
+  val audioTracks = MpvProperties.propNode["track-list"]
     .map { (it?.toObject<List<TrackNode>>(json)?.filter { it.isAudio } ?: persistentListOf()).toImmutableList() }
 
-  val chapters = MPVLib.propNode["chapter-list"]
+  val chapters = MpvProperties.propNode["chapter-list"]
     .map { (it?.toObject<List<ChapterNode>>(json) ?: persistentListOf()).map { it.toSegment() }.toImmutableList() }
 
   private val _controlsShown = MutableStateFlow(true)

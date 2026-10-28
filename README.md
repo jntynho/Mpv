@@ -1,8 +1,16 @@
 # MPV
 
 مشغل Android مشتق من [mpvKt](https://github.com/abdallahmehiz/mpvKt)، بمحرك
-`io.github.abdallahmehiz:mpv-android-lib:0.1.9` نفسه، وواجهة Compose جديدة بألوان ليلية ونعناعية.
-لم نغيّر إصدار المحرك دون اختبار توافقه. المصدر الأصلي وترخيص Apache-2.0 محفوظان في `NOTICE` و`LICENSE`.
+`app.gyrolet.mpvlib:mpvlib:1.1.4` وواجهة Compose بألوان ليلية ونعناعية.
+المصدر الأصلي وترخيص Apache-2.0 محفوظان في `NOTICE` و`LICENSE`.
+
+## ما تغير في 0.16
+
+- استبدال مكتبة المحرك القديمة بالمكتبة الرسمية المستخدمة في mpvRx، مع تثبيت الإصدار والتحقق من بصمة AAR.
+- اشتراكات خصائص مستقرة عند إعادة فتح المحرك، وتنظيف Surface والمراقبين عند إغلاقه.
+- الحفاظ على الواجهة وإعدادات المشغل والأيقونات ومنطق تأكيد Pause.
+- يتطلب هذا المحرك Android 7.0 (API 24) فأحدث.
+- [تفاصيل التوافق والتحقق وحدود الاختبارات](docs/MPVLIB-MIGRATION-0.16.md).
 
 ## ما تغير في 0.10
 
@@ -49,9 +57,9 @@
 يعمل [.github/workflows/build-apk.yml](.github/workflows/build-apk.yml) على:
 
 1. تجهيز JDK 17 وAndroid SDK 36 وBuild Tools 35.
-2. التحقق من كتالوج الأيقونات وثبات رسم المجلد، ثم تشغيل `testDebugUnitTest lintDebug assembleDebug assemblePreview`.
+2. التحقق من كتالوج الأيقونات وثبات رسم المجلد، ثم تشغيل `verifyMpvRuntime testDebugUnitTest lintDebug assemblePreview`.
 3. فحص توقيع APK ووجود مكتبات `.so` لكل معمارية.
-4. رفع ملفات **MPV-arm64-64bit** و**MPV-armv7-32bit** ونسخة universal مع SHA-256.
+4. رفع artifacts للمعماريات الثلاث، ونشر APKs مباشرة في Release عند دفع وسم إصدار، دون ملف SHA256SUMS.txt.
 
 لا توجد أي مراجع إلى `secrets` في YAML. نسخ Preview قابلة للتثبيت بتوقيع debug تلقائي،
 ومعرفها `io.github.jntynho.luma.preview`. لا تحتاج المتاجر أو GitHub Releases إلى تفعيل لاستخدام artifacts.
@@ -61,25 +69,25 @@
 ## التطوير المحلي
 
 يتطلب JDK 17، Android SDK platform 36 وbuild-tools 35.0.0، واتصالًا بـGoogle Maven وMaven Central
-وGradle. تم تضمين مصدر Seeker وFSAF بإصدارات محددة وتراخيصهما داخل third_party، لذلك لا حاجة إلى JitPack. استخدم checkout الموجود مباشرة، دون إنشاء worktree إضافي.
+وGradle وGitHub لتنزيل المحرك الرسمي. تم تضمين مصدر Seeker وFSAF بإصدارات محددة وتراخيصهما داخل third_party، لذلك لا حاجة إلى JitPack. استخدم checkout الموجود مباشرة، دون إنشاء worktree إضافي.
 
 ```sh
 chmod +x gradlew
-./gradlew --no-daemon --max-workers=2 testDebugUnitTest lintDebug assembleDebug assemblePreview
+./gradlew --no-daemon --max-workers=1 verifyMpvRuntime testDebugUnitTest lintDebug assemblePreview
 ```
 
 توجد ملفات APK تحت `app/build/outputs/apk/preview/` بعد نجاح البناء.
-لا حاجة إلى API keys أو خدمات خارجية لتشغيل الوسائط المحلية. الحد الأدنى Android 5.0 (API 21).
+لا حاجة إلى API keys أو خدمات خارجية لتشغيل الوسائط المحلية. الحد الأدنى Android 7.0 (API 24).
 
 ## حالة التحقق
 
-الإصدار 0.11: نجح البناء المحلي مع **66 اختبارًا وLint دون أخطاء**، مع بقاء 337 تحذيرًا، معظمها متعلق بالترجمات والاعتمادات والكود السابق. تشمل الاختبارات الفرز المتلاحق، هندسة رأس الصفحة واللوحة، سحب Slider دون إغلاق اللوحة، إلغاء طلبات الأغلفة، التشغيل والإيماءات والرجوع.
+الإصدار 0.16: نجح البناء مع **138 اختبارًا وLint دون أخطاء**؛ ما زالت توجد تحذيرات للكود والاعتمادات. تحقق البناء من المكتبة الجديدة وبصمتها ومن غياب الاعتماد القديم.
 
-اجتازت APKs الثلاث فحص التوقيع ومحاذاة ZIP بصفحات 16KB والتحقق من المعماريات. بقي رسم المجلد وأبعاده والأيقونات Outline/Broken كما هي.
+اجتازت APKs الثلاث فحص التوقيع ومحاذاة ZIP بصفحات 16KB وربط JNI والمعماريات، مع تحقق محاذاة ELF لجميع مكتبات ARM64. بقي رسم المجلد والأيقونات Outline/Broken كما هي.
 
-الأحجام المحلية: **ARM64 ‏20.43 MB، ARM32 ‏19.76 MB، Universal ‏32.66 MB**. الزيادة الصافية نحو 37KB لكل APK مقارنة بالبناء السابق بعد إضافة Bottom Sheet؛ لم يُضف اعتماد جديد. حُذفت الموارد غير المستخدمة والكود القديم دون حذف برامج ترميز أو خطوط.
+الأحجام المحلية التقريبية: **ARM64 ‏31.3 MB، ARM32 ‏29.8 MB، Universal ‏48.9 MB**. زاد الحجم مع مكونات المحرك الجديد؛ لم تُحذف برامج ترميز أو خطوط لتقليله.
 
-لا يوجد هاتف أو محاكي متصل؛ اختبارات الرسم واللمس تستخدم Robolectric، وليست قياسات FPS على جهاز. [التغييرات والفحوص والحدود بالتفصيل](docs/PLAYER-UI-0.11.md).
+لا يوجد هاتف أو محاكي متصل؛ اختبارات الرسم واللمس تستخدم Robolectric، وليست قياسات تشغيل أو FPS على جهاز. [التوافق والفحوص والحدود بالتفصيل](docs/MPVLIB-MIGRATION-0.16.md).
 
 ## GitHub Releases
 

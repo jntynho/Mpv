@@ -91,8 +91,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   }
 
   override fun observeProperties() {
-    MPVLib.observeProperty("sub-text",MPVLib.mpvFormat.MPV_FORMAT_STRING)
-    MPVLib.observeProperty("secondary-sub-text",MPVLib.mpvFormat.MPV_FORMAT_STRING)
+    MPVLib.observeProperty("sub-text",MPVLib.MpvFormat.MPV_FORMAT_STRING)
+    MPVLib.observeProperty("secondary-sub-text",MPVLib.MpvFormat.MPV_FORMAT_STRING)
     for ((name, format) in observedProps) MPVLib.observeProperty(name, format)
   }
 
@@ -152,22 +152,22 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   }
 
   private val observedProps = mapOf(
-    "pause" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
-    "video-params/rotate" to MPVLib.mpvFormat.MPV_FORMAT_INT64,
-    "video-params/aspect" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
-    "eof-reached" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
+    "pause" to MPVLib.MpvFormat.MPV_FORMAT_FLAG,
+    "video-params/rotate" to MPVLib.MpvFormat.MPV_FORMAT_INT64,
+    "video-params/aspect" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
+    "eof-reached" to MPVLib.MpvFormat.MPV_FORMAT_FLAG,
 
-    "user-data/mpvkt/show_text" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/toggle_ui" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/show_panel" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/set_button_title" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/reset_button_title" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/toggle_button" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/seek_by" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/seek_to" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/seek_by_with_text" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/seek_to_with_text" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
-    "user-data/mpvkt/software_keyboard" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/show_text" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/toggle_ui" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/show_panel" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/set_button_title" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/reset_button_title" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/toggle_button" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/seek_by" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/seek_to" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/seek_by_with_text" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/seek_to_with_text" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+    "user-data/mpvkt/software_keyboard" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
   )
 
   private fun setupAudioOptions() {

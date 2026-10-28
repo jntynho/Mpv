@@ -204,7 +204,9 @@ class PlayerActivity : AppCompatActivity() {
     }
     PlaybackControl.detach(this)
     MPVLib.removeObserver(playerObserver)
-    MPVLib.destroy()
+    MpvProperties.detach(this)
+    playerObserver.release()
+    player.destroy()
 
     restoreJob?.cancel()
     pipReceiver?.let { unregisterReceiver(it); pipReceiver = null }
@@ -304,6 +306,7 @@ class PlayerActivity : AppCompatActivity() {
   private fun setupMPV() {
     copyMPVAssets()
     player.initialize(filesDir.path, cacheDir.path)
+    MpvProperties.attach(this)
     MPVLib.addObserver(playerObserver)
   }
 
@@ -601,8 +604,8 @@ class PlayerActivity : AppCompatActivity() {
   internal fun event(eventId: Int) {
     if (player.isExiting) return
     when (eventId) {
-      MPVLib.mpvEventId.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
-      MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
+      MPVLib.MpvEvent.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
+      MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> {
         fileName = getFileName(intent)
         setIntentExtras(intent.extras)
         val mediaTitle = MPVLib.getPropertyString("media-title")
@@ -617,7 +620,7 @@ class PlayerActivity : AppCompatActivity() {
         viewModel.changeVideoAspect(playerPreferences.videoAspect.get())
       }
 
-      MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> player.isExiting = false
+      MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> player.isExiting = false
     }
   }
 

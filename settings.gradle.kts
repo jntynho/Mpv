@@ -17,6 +17,18 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
+    exclusiveContent {
+      forRepository {
+        ivy {
+          name = "mpvlibGitHubReleases"
+          url = uri("https://github.com/Riteshp2001/mpvlibAndroid/releases/download")
+          patternLayout { artifact("v[revision]/[artifact]-[revision].[ext]") }
+          artifactPattern("https://raw.githubusercontent.com/jntynho/Mpv/f8d492f2425303162e049af1708c54568f4d6aa3/gradle/mpvlib-metadata/[artifact]-[revision].[ext]")
+          metadataSources { artifact() }
+        }
+      }
+      filter { includeGroup("app.gyrolet.mpvlib") }
+    }
 
   }
 }

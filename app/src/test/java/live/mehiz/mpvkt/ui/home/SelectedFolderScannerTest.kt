@@ -37,7 +37,7 @@ class SelectedFolderScannerTest {
           return MatrixCursor(projection).apply {
             if (id == "primary:Hidden") {
               addRow(
-                arrayOf(
+                arrayOf<Any>(
                   "primary:Hidden/.series",
                   ".series",
                   DocumentsContract.Document.MIME_TYPE_DIR,
@@ -46,7 +46,7 @@ class SelectedFolderScannerTest {
                 )
               )
               addRow(
-                arrayOf(
+                arrayOf<Any>(
                   "primary:Hidden/.nomedia",
                   ".nomedia",
                   "application/octet-stream",
@@ -56,7 +56,7 @@ class SelectedFolderScannerTest {
               )
             } else {
               addRow(
-                arrayOf(
+                arrayOf<Any>(
                   "primary:Hidden/.series/film.mkv",
                   "film.mkv",
                   "video/x-matroska",
@@ -66,7 +66,7 @@ class SelectedFolderScannerTest {
               )
               // A provider cycle must not cause an infinite traversal.
               addRow(
-                arrayOf(
+                arrayOf<Any>(
                   "primary:Hidden",
                   "cycle",
                   DocumentsContract.Document.MIME_TYPE_DIR,

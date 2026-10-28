@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.calculateZoom
@@ -69,16 +70,16 @@ fun GestureHandler(
   val subtitlePreferences = koinInject<SubtitlesPreferences>()
   val linkedSecondary by subtitlePreferences.secondaryPinchZoom.collectAsState()
   val secondaryScaleSupported by subtitlePreferences.secondaryScaleSupported.collectAsState()
-  val primaryText by MPVLib.propString["sub-text"].collectAsState()
-  val secondaryText by MPVLib.propString["secondary-sub-text"].collectAsState()
+  val primaryText by MpvProperties.propString["sub-text"].collectAsState()
+  val secondaryText by MpvProperties.propString["secondary-sub-text"].collectAsState()
   val audioPreferences = koinInject<AudioPreferences>()
   val panelPages by viewModel.panelNavigator.state.collectAsState()
   val allowGesturesInPanels by playerPreferences.allowGesturesInPanels.collectAsState()
   val playback by viewModel.playback.collectAsState()
   val paused = playback.displayPaused
-  val duration by remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
-  val position by remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
-  val playbackSpeed by MPVLib.propFloat["speed"].collectAsState()
+  val duration by remember { MpvProperties.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
+  val position by remember { MpvProperties.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
+  val playbackSpeed by MpvProperties.propFloat["speed"].collectAsState()
   val controlsShown by viewModel.controlsShown.collectAsState()
   val areControlsLocked by viewModel.areControlsLocked.collectAsState()
   val seekAmount by viewModel.doubleTapSeekAmount.collectAsState()
@@ -102,7 +103,7 @@ fun GestureHandler(
   val showSeekbarWhenSeeking by playerPreferences.showSeekBarWhenSeeking.collectAsState()
   var isLongPressing by remember { mutableStateOf(false) }
   val currentVolume by viewModel.currentVolume.collectAsState()
-  val currentMPVVolume by MPVLib.propInt["volume"].collectAsState()
+  val currentMPVVolume by MpvProperties.propInt["volume"].collectAsState()
   val currentBrightness by viewModel.currentBrightness.collectAsState()
   val volumeBoostingCap = audioPreferences.volumeBoostCap.get()
   val haptics = LocalHapticFeedback.current

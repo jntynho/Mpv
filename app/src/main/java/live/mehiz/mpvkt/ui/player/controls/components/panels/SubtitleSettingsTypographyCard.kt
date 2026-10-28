@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import live.mehiz.mpvkt.ui.icons.Shadow
 
 import androidx.compose.foundation.layout.FlowRow
@@ -126,20 +127,20 @@ fun SubtitleSettingsTypographyCard(
     colors = panelCardsColors(),
   ) {
     Column {
-      val isBold by MPVLib.propBoolean["sub-bold"].collectAsState()
-      val isItalic by MPVLib.propBoolean["sub-italic"].collectAsState()
-      val mpvJustify by MPVLib.propString["sub-justify"].collectAsState()
+      val isBold by MpvProperties.propBoolean["sub-bold"].collectAsState()
+      val isItalic by MpvProperties.propBoolean["sub-italic"].collectAsState()
+      val mpvJustify by MpvProperties.propString["sub-justify"].collectAsState()
       val justify by remember {
         derivedStateOf { SubtitleJustification.entries.firstOrNull { it.value == mpvJustify } ?: preferences.justification.get() }
       }
-      val font by MPVLib.propString["sub-font"].collectAsState()
-      val fontSize by MPVLib.propInt["sub-font-size"].collectAsState()
-      val mpvBorderStyle by MPVLib.propString["sub-border-style"].collectAsState()
+      val font by MpvProperties.propString["sub-font"].collectAsState()
+      val fontSize by MpvProperties.propInt["sub-font-size"].collectAsState()
+      val mpvBorderStyle by MpvProperties.propString["sub-border-style"].collectAsState()
       val borderStyle by remember {
         derivedStateOf { SubtitlesBorderStyle.entries.firstOrNull { it.value == mpvBorderStyle } ?: preferences.borderStyle.get() }
       }
-      val borderSize by MPVLib.propInt["sub-outline-size"].collectAsState()
-      val shadowOffset by MPVLib.propInt["sub-shadow-offset"].collectAsState()
+      val borderSize by MpvProperties.propInt["sub-outline-size"].collectAsState()
+      val shadowOffset by MpvProperties.propInt["sub-shadow-offset"].collectAsState()
       FlowRow(
         Modifier
           .fillMaxWidth()

@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -66,8 +67,8 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
           },
           { Text(stringResource(R.string.player_sheets_sub_override_ass)) },
         )
-        val subScale by MPVLib.propFloat["sub-scale"].collectAsState()
-        val subPos by MPVLib.propInt["sub-pos"].collectAsState()
+        val subScale by MpvProperties.propFloat["sub-scale"].collectAsState()
+        val subPos by MpvProperties.propInt["sub-pos"].collectAsState()
         SliderItem(
           label = stringResource(R.string.player_sheets_sub_scale),
           value = subScale ?: preferences.subScale.get(),
