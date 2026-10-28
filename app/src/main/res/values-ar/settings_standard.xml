@@ -6,4 +6,7 @@
     <string name="mpv_view_videos">الفيديوهات</string>
     <string name="mpv_loading_interface">جارٍ تجهيز مكتبتك</string>
     <string name="mpv_loading_detail">نجهز العناصر لبداية أكثر سلاسة</string>
+    <string name="mpv_playback_unconfirmed">لم يؤكد المشغل تنفيذ الإجراء. حاول مجددًا.</string>
+    <string name="mpv_pausing">جارٍ إيقاف التشغيل…</string>
+    <string name="mpv_resuming">جارٍ استئناف التشغيل…</string>
 </resources>

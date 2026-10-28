@@ -20,8 +20,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.Lock
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
@@ -32,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,19 +49,23 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.Utils
+import kotlin.math.abs
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.PlayerPreferences
+import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.preferences.preference.minusAssign
 import live.mehiz.mpvkt.preferences.preference.plusAssign
-import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.ui.custombuttons.getButtons
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Lock
 import live.mehiz.mpvkt.ui.player.Decoder.Companion.getDecoderFromValue
 import live.mehiz.mpvkt.ui.player.Panels
 import live.mehiz.mpvkt.ui.player.PlayerActivity
@@ -79,13 +80,11 @@ import live.mehiz.mpvkt.ui.player.controls.components.MultipleSpeedPlayerUpdate
 import live.mehiz.mpvkt.ui.player.controls.components.SeekbarWithTimers
 import live.mehiz.mpvkt.ui.player.controls.components.TextPlayerUpdate
 import live.mehiz.mpvkt.ui.player.controls.components.VolumeSlider
-import live.mehiz.mpvkt.ui.player.controls.components.sheets.toFixed
 import live.mehiz.mpvkt.ui.player.controls.components.panels.*
-import live.mehiz.mpvkt.preferences.SubtitlesPreferences
+import live.mehiz.mpvkt.ui.player.controls.components.sheets.toFixed
 import live.mehiz.mpvkt.ui.theme.playerRippleConfiguration
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
-import kotlin.math.abs
 
 @Suppress("CompositionLocalAllowlist")
 val LocalPlayerButtonsClickEvent = staticCompositionLocalOf { {} }
@@ -106,10 +105,24 @@ fun PlayerControls(
   val areControlsLocked by viewModel.areControlsLocked.collectAsState()
   val seekBarShown by viewModel.seekBarShown.collectAsState()
   val playback by viewModel.playback.collectAsState()
+  val context = androidx.compose.ui.platform.LocalContext.current
+  LaunchedEffect(playback.failure) {
+    if (playback.failure != null) {
+      viewModel.showControls()
+      android.widget.Toast.makeText(
+          context,
+          R.string.mpv_playback_unconfirmed,
+          android.widget.Toast.LENGTH_LONG,
+        )
+        .show()
+    }
+  }
   val paused = playback.displayPaused
   val pausedForCache = playback.isBuffering
-  val duration by remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
-  val position by remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
+  val duration by
+    remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
+  val position by
+    remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
   val playbackSpeed by MPVLib.propFloat["speed"].collectAsState()
   val gestureSeekAmount by viewModel.gestureSeekAmount.collectAsState()
   val doubleTapSeekAmount by viewModel.doubleTapSeekAmount.collectAsState()
@@ -122,7 +135,9 @@ fun PlayerControls(
   val currentChapter by MPVLib.propInt["chapter"].collectAsState()
   val mpvDecoder by MPVLib.propString["hwdec-current"].collectAsState()
   var decoder by remember { mutableStateOf(getDecoderFromValue(mpvDecoder ?: "auto")) }
-  LaunchedEffect(mpvDecoder) { if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!) }
+  LaunchedEffect(mpvDecoder) {
+    if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!)
+  }
   val decoderReduceMotion by playerPreferences.reduceMotion.collectAsState()
   val playerTimeToDisappear by playerPreferences.playerTimeToDisappear.collectAsState()
   val chapters by viewModel.chapters.collectAsState(persistentListOf())
@@ -131,55 +146,55 @@ fun PlayerControls(
     if (it == Sheets.None) viewModel.showControls() else viewModel.hideControls()
   }
   val onOpenPanel: (Panels) -> Unit = {
-    if(it.name.startsWith("SubtitleSearch") && it!=Panels.SubtitleSearchFiles) viewModel.subtitleSearch.stop()
+    if (it.name.startsWith("SubtitleSearch") && it != Panels.SubtitleSearchFiles)
+      viewModel.subtitleSearch.stop()
     viewModel.panelNavigator.openPanel(it)
     if (it == Panels.None) viewModel.showControls() else viewModel.hideControls()
   }
   val customButtons by viewModel.customButtons.collectAsState()
   val customButton by viewModel.primaryButton.collectAsState()
 
-  LaunchedEffect(
-    controlsShown,
-    paused,
-    isSeeking,
-    resetControls,
-  ) {
+  LaunchedEffect(controlsShown, paused, isSeeking, resetControls) {
     if (controlsShown && paused == false && !isSeeking) {
       delay(playerTimeToDisappear.toLong())
       viewModel.hideControls()
     }
   }
-  val transparentOverlay by animateFloatAsState(
-    if (controlsShown && !areControlsLocked) .8f else 0f,
-    animationSpec = playerControlsExitAnimationSpec(),
-    label = "controls_transparent_overlay",
+  val transparentOverlay by
+    animateFloatAsState(
+      if (controlsShown && !areControlsLocked) .8f else 0f,
+      animationSpec = playerControlsExitAnimationSpec(),
+      label = "controls_transparent_overlay",
+    )
+  GestureHandler(viewModel = viewModel, interactionSource = interactionSource)
+  DoubleTapToSeekOvals(
+    doubleTapSeekAmount,
+    seekText,
+    showDoubleTapOvals,
+    showSeekIcon,
+    showSeekTime,
+    interactionSource,
   )
-  GestureHandler(
-    viewModel = viewModel,
-    interactionSource = interactionSource,
-  )
-  DoubleTapToSeekOvals(doubleTapSeekAmount, seekText, showDoubleTapOvals, showSeekIcon, showSeekTime, interactionSource)
   CompositionLocalProvider(
     LocalRippleConfiguration provides playerRippleConfiguration,
     LocalPlayerButtonsClickEvent provides { resetControls = !resetControls },
     LocalContentColor provides Color.White,
   ) {
-    CompositionLocalProvider(
-      LocalLayoutDirection provides LayoutDirection.Ltr,
-    ) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
       ConstraintLayout(
-        modifier = modifier
-          .fillMaxSize()
-          .background(
-            Brush.verticalGradient(
-              Pair(0f, Color.Black),
-              Pair(.2f, Color.Transparent),
-              Pair(.7f, Color.Transparent),
-              Pair(1f, Color.Black),
-            ),
-            alpha = transparentOverlay,
-          )
-          .padding(horizontal = MaterialTheme.spacing.medium),
+        modifier =
+          modifier
+            .fillMaxSize()
+            .background(
+              Brush.verticalGradient(
+                Pair(0f, Color.Black),
+                Pair(.2f, Color.Transparent),
+                Pair(.7f, Color.Transparent),
+                Pair(1f, Color.Black),
+              ),
+              alpha = transparentOverlay,
+            )
+            .padding(horizontal = MaterialTheme.spacing.medium)
       ) {
         val (topLeftControls, topRightControls) = createRefs()
         val (volumeSlider, brightnessSlider) = createRefs()
@@ -208,74 +223,67 @@ fun PlayerControls(
         AnimatedVisibility(
           isBrightnessSliderShown,
           enter =
-          if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) {
-              if (swapVolumeAndBrightness) -it else it
-            } +
-              fadeIn(
-                playerControlsEnterAnimationSpec(),
-              )
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit =
-          if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) {
-              if (swapVolumeAndBrightness) -it else it
-            } +
-              fadeOut(
-                playerControlsExitAnimationSpec(),
-              )
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(brightnessSlider) {
-            if (swapVolumeAndBrightness) {
-              start.linkTo(parent.start, spacing.medium)
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) {
+                if (swapVolumeAndBrightness) -it else it
+              } + fadeIn(playerControlsEnterAnimationSpec())
             } else {
-              end.linkTo(parent.end, spacing.medium)
-            }
-            top.linkTo(parent.top)
-            bottom.linkTo(parent.bottom)
-          },
-        ) { BrightnessSlider(brightness, 0f..1f) }
+              fadeIn(playerControlsEnterAnimationSpec())
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) {
+                if (swapVolumeAndBrightness) -it else it
+              } + fadeOut(playerControlsExitAnimationSpec())
+            } else {
+              fadeOut(playerControlsExitAnimationSpec())
+            },
+          modifier =
+            Modifier.constrainAs(brightnessSlider) {
+              if (swapVolumeAndBrightness) {
+                start.linkTo(parent.start, spacing.medium)
+              } else {
+                end.linkTo(parent.end, spacing.medium)
+              }
+              top.linkTo(parent.top)
+              bottom.linkTo(parent.bottom)
+            },
+        ) {
+          BrightnessSlider(brightness, 0f..1f)
+        }
 
         AnimatedVisibility(
           isVolumeSliderShown,
           enter =
-          if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) {
-              if (swapVolumeAndBrightness) it else -it
-            } +
-              fadeIn(
-                playerControlsEnterAnimationSpec(),
-              )
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit =
-          if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) {
-              if (swapVolumeAndBrightness) it else -it
-            } +
-              fadeOut(
-                playerControlsExitAnimationSpec(),
-              )
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(volumeSlider) {
-            if (swapVolumeAndBrightness) {
-              end.linkTo(parent.end, spacing.medium)
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) {
+                if (swapVolumeAndBrightness) it else -it
+              } + fadeIn(playerControlsEnterAnimationSpec())
             } else {
-              start.linkTo(parent.start, spacing.medium)
-            }
-            top.linkTo(parent.top)
-            bottom.linkTo(parent.bottom)
-          },
+              fadeIn(playerControlsEnterAnimationSpec())
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) {
+                if (swapVolumeAndBrightness) it else -it
+              } + fadeOut(playerControlsExitAnimationSpec())
+            } else {
+              fadeOut(playerControlsExitAnimationSpec())
+            },
+          modifier =
+            Modifier.constrainAs(volumeSlider) {
+              if (swapVolumeAndBrightness) {
+                end.linkTo(parent.end, spacing.medium)
+              } else {
+                start.linkTo(parent.start, spacing.medium)
+              }
+              top.linkTo(parent.top)
+              bottom.linkTo(parent.bottom)
+            },
         ) {
           val boostCap by audioPreferences.volumeBoostCap.collectAsState()
-          val displayVolumeAsPercentage by playerPreferences.displayVolumeAsPercentage.collectAsState()
+          val displayVolumeAsPercentage by
+            playerPreferences.displayVolumeAsPercentage.collectAsState()
           VolumeSlider(
             volume,
             mpvVolume = mpvVolume ?: 100,
@@ -288,7 +296,10 @@ fun PlayerControls(
         val currentPlayerUpdate by viewModel.playerUpdate.collectAsState()
         val aspectRatio by playerPreferences.videoAspect.collectAsState()
         LaunchedEffect(currentPlayerUpdate, aspectRatio) {
-          if (currentPlayerUpdate is PlayerUpdates.MultipleSpeed || currentPlayerUpdate is PlayerUpdates.None) {
+          if (
+            currentPlayerUpdate is PlayerUpdates.MultipleSpeed ||
+              currentPlayerUpdate is PlayerUpdates.None
+          ) {
             return@LaunchedEffect
           }
           delay(2000)
@@ -298,15 +309,18 @@ fun PlayerControls(
           currentPlayerUpdate !is PlayerUpdates.None,
           enter = fadeIn(playerControlsEnterAnimationSpec()),
           exit = fadeOut(playerControlsExitAnimationSpec()),
-          modifier = Modifier.constrainAs(playerUpdates) {
-            linkTo(parent.start, parent.end)
-            linkTo(parent.top, parent.bottom, bias = 0.2f)
-          },
+          modifier =
+            Modifier.constrainAs(playerUpdates) {
+              linkTo(parent.start, parent.end)
+              linkTo(parent.top, parent.bottom, bias = 0.2f)
+            },
         ) {
           when (currentPlayerUpdate) {
-            is PlayerUpdates.MultipleSpeed -> MultipleSpeedPlayerUpdate(currentSpeed = holdForMultipleSpeed)
+            is PlayerUpdates.MultipleSpeed ->
+              MultipleSpeedPlayerUpdate(currentSpeed = holdForMultipleSpeed)
             is PlayerUpdates.AspectRatio -> TextPlayerUpdate(stringResource(aspectRatio.titleRes))
-            is PlayerUpdates.ShowText -> TextPlayerUpdate((currentPlayerUpdate as PlayerUpdates.ShowText).value)
+            is PlayerUpdates.ShowText ->
+              TextPlayerUpdate((currentPlayerUpdate as PlayerUpdates.ShowText).value)
             else -> {}
           }
         }
@@ -315,26 +329,27 @@ fun PlayerControls(
           controlsShown && areControlsLocked,
           enter = fadeIn(),
           exit = fadeOut(),
-          modifier = Modifier.constrainAs(unlockControlsButton) {
-            top.linkTo(parent.top, spacing.medium)
-            start.linkTo(parent.start, spacing.medium)
-          },
+          modifier =
+            Modifier.constrainAs(unlockControlsButton) {
+              top.linkTo(parent.top, spacing.medium)
+              start.linkTo(parent.start, spacing.medium)
+            },
         ) {
-          ControlsButton(
-            Icons.Lock,
-            onClick = { viewModel.unlockControls() },
-          )
+          ControlsButton(Icons.Lock, onClick = { viewModel.unlockControls() })
         }
         AnimatedVisibility(
-          visible = (controlsShown && !areControlsLocked || gestureSeekAmount != null) || pausedForCache == true,
+          visible =
+            (controlsShown && !areControlsLocked || gestureSeekAmount != null) ||
+              pausedForCache == true,
           enter = fadeIn(playerControlsEnterAnimationSpec()),
           exit = fadeOut(playerControlsExitAnimationSpec()),
-          modifier = Modifier.constrainAs(playerPauseButton) {
-            end.linkTo(parent.absoluteRight)
-            start.linkTo(parent.absoluteLeft)
-            top.linkTo(parent.top)
-            bottom.linkTo(parent.bottom)
-          },
+          modifier =
+            Modifier.constrainAs(playerPauseButton) {
+              end.linkTo(parent.absoluteRight)
+              start.linkTo(parent.absoluteLeft)
+              top.linkTo(parent.top)
+              bottom.linkTo(parent.bottom)
+            },
         ) {
           val showLoadingCircle by playerPreferences.showLoadingCircle.collectAsState()
 
@@ -348,40 +363,49 @@ fun PlayerControls(
                   Utils.prettyTime(abs(gestureSeekAmount!!.second)),
                   Utils.prettyTime(gestureSeekAmount!!.first + gestureSeekAmount!!.second),
                 ),
-                style = MaterialTheme.typography.headlineMedium.copy(
-                  shadow = Shadow(Color.Black, blurRadius = 5f),
-                ),
+                style =
+                  MaterialTheme.typography.headlineMedium.copy(
+                    shadow = Shadow(Color.Black, blurRadius = 5f)
+                  ),
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
               )
             }
 
-            (controlsShown || pausedForCache) && !areControlsLocked -> AnimatedPlayPauseButton(
-              paused = paused, loading = pausedForCache && showLoadingCircle,
-              pending = playback.pending, enabled = playback.attached, reduceMotion = reduceMotion,
-              onClick = { resetControls = !resetControls; viewModel.pauseUnpause() },
-            )
-            pausedForCache && showLoadingCircle -> CircularProgressIndicator(Modifier.size(88.dp), strokeWidth = 2.dp)
-
+            (controlsShown || pausedForCache) && !areControlsLocked ->
+              AnimatedPlayPauseButton(
+                paused = playback.iconPaused,
+                pendingPauseTarget = playback.needsPause,
+                loading = pausedForCache && showLoadingCircle,
+                pending = playback.pending,
+                enabled = playback.attached,
+                reduceMotion = reduceMotion,
+                onClick = {
+                  resetControls = !resetControls
+                  viewModel.pauseUnpause()
+                },
+              )
+            pausedForCache && showLoadingCircle ->
+              CircularProgressIndicator(Modifier.size(88.dp), strokeWidth = 2.dp)
           }
         }
         AnimatedVisibility(
           visible = (controlsShown || seekBarShown) && !areControlsLocked,
-          enter = if (!reduceMotion) {
-            slideInVertically(playerControlsEnterAnimationSpec()) { it } +
+          enter =
+            if (!reduceMotion) {
+              slideInVertically(playerControlsEnterAnimationSpec()) { it } +
+                fadeIn(playerControlsEnterAnimationSpec())
+            } else {
               fadeIn(playerControlsEnterAnimationSpec())
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit = if (!reduceMotion) {
-            slideOutVertically(playerControlsExitAnimationSpec()) { it } +
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutVertically(playerControlsExitAnimationSpec()) { it } +
+                fadeOut(playerControlsExitAnimationSpec())
+            } else {
               fadeOut(playerControlsExitAnimationSpec())
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(seekbar) {
-            bottom.linkTo(parent.bottom, spacing.medium)
-          },
+            },
+          modifier = Modifier.constrainAs(seekbar) { bottom.linkTo(parent.bottom, spacing.medium) },
         ) {
           val invertDuration by playerPreferences.invertDuration.collectAsState()
           val readAhead by MPVLib.propFloat["demuxer-cache-time"].collectAsState()
@@ -406,49 +430,57 @@ fun PlayerControls(
         val mediaTitle by MPVLib.propString["media-title"].collectAsState()
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
-          enter = if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+          enter =
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+                fadeIn(playerControlsEnterAnimationSpec())
+            } else {
               fadeIn(playerControlsEnterAnimationSpec())
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit = if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+                fadeOut(playerControlsExitAnimationSpec())
+            } else {
               fadeOut(playerControlsExitAnimationSpec())
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(topLeftControls) {
-            top.linkTo(parent.top, spacing.medium)
-            start.linkTo(parent.start)
-            width = Dimension.fillToConstraints
-            end.linkTo(topRightControls.start)
-          },
+            },
+          modifier =
+            Modifier.constrainAs(topLeftControls) {
+              top.linkTo(parent.top, spacing.medium)
+              start.linkTo(parent.start)
+              width = Dimension.fillToConstraints
+              end.linkTo(topRightControls.start)
+            },
         ) {
           TopLeftPlayerControls(
-            mediaTitle = mediaTitle ?: "", // it'll be set when the video loads so no problem keeping it empty for now
+            mediaTitle =
+              mediaTitle
+                ?: "", // it'll be set when the video loads so no problem keeping it empty for now
             onBackClick = onBackPress,
           )
         }
         // Top right controls
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
-          enter = if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+          enter =
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+                fadeIn(playerControlsEnterAnimationSpec())
+            } else {
               fadeIn(playerControlsEnterAnimationSpec())
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit = if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+                fadeOut(playerControlsExitAnimationSpec())
+            } else {
               fadeOut(playerControlsExitAnimationSpec())
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(topRightControls) {
-            top.linkTo(parent.top, spacing.medium)
-            end.linkTo(parent.end)
-          },
+            },
+          modifier =
+            Modifier.constrainAs(topRightControls) {
+              top.linkTo(parent.top, spacing.medium)
+              end.linkTo(parent.end)
+            },
         ) {
           val showChaptersButton by playerPreferences.showChaptersButton.collectAsState()
           TopRightPlayerControls(
@@ -470,22 +502,25 @@ fun PlayerControls(
         val customButtonTitle by viewModel.primaryButtonTitle.collectAsState()
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
-          enter = if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+          enter =
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+                fadeIn(playerControlsEnterAnimationSpec())
+            } else {
               fadeIn(playerControlsEnterAnimationSpec())
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit = if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+                fadeOut(playerControlsExitAnimationSpec())
+            } else {
               fadeOut(playerControlsExitAnimationSpec())
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(bottomRightControls) {
-            bottom.linkTo(seekbar.top)
-            end.linkTo(seekbar.end)
-          },
+            },
+          modifier =
+            Modifier.constrainAs(bottomRightControls) {
+              bottom.linkTo(seekbar.top)
+              end.linkTo(seekbar.end)
+            },
         ) {
           val activity = LocalActivity.current!! as PlayerActivity
           BottomRightPlayerControls(
@@ -505,7 +540,7 @@ fun PlayerControls(
                   VideoAspect.Fit -> VideoAspect.Stretch
                   VideoAspect.Stretch -> VideoAspect.Crop
                   VideoAspect.Crop -> VideoAspect.Fit
-                },
+                }
               )
             },
           )
@@ -513,24 +548,27 @@ fun PlayerControls(
         // Bottom left controls
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
-          enter = if (!reduceMotion) {
-            slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+          enter =
+            if (!reduceMotion) {
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+                fadeIn(playerControlsEnterAnimationSpec())
+            } else {
               fadeIn(playerControlsEnterAnimationSpec())
-          } else {
-            fadeIn(playerControlsEnterAnimationSpec())
-          },
-          exit = if (!reduceMotion) {
-            slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+            },
+          exit =
+            if (!reduceMotion) {
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+                fadeOut(playerControlsExitAnimationSpec())
+            } else {
               fadeOut(playerControlsExitAnimationSpec())
-          } else {
-            fadeOut(playerControlsExitAnimationSpec())
-          },
-          modifier = Modifier.constrainAs(bottomLeftControls) {
-            bottom.linkTo(seekbar.top)
-            start.linkTo(seekbar.start)
-            width = Dimension.fillToConstraints
-            end.linkTo(bottomRightControls.start)
-          },
+            },
+          modifier =
+            Modifier.constrainAs(bottomLeftControls) {
+              bottom.linkTo(seekbar.top)
+              start.linkTo(seekbar.start)
+              width = Dimension.fillToConstraints
+              end.linkTo(bottomRightControls.start)
+            },
         ) {
           val showChapterIndicator by playerPreferences.currentChaptersIndicator.collectAsState()
           BottomLeftPlayerControls(
@@ -553,75 +591,99 @@ fun PlayerControls(
     val audioTracks by viewModel.audioTracks.collectAsState(persistentListOf())
     val sleepTimerTimeRemaining by viewModel.remainingTime.collectAsState()
     val speedPresets by playerPreferences.speedPresets.collectAsState()
-    val subtitlePreferences=koinInject<SubtitlesPreferences>()
+    val subtitlePreferences = koinInject<SubtitlesPreferences>()
     val subtitleReduceMotion by playerPreferences.reduceMotion.collectAsState()
     val subtitleMediaTitle by MPVLib.propString["media-title"].collectAsState()
-    val searchController=viewModel.subtitleSearch
+    val searchController = viewModel.subtitleSearch
     val searchState by searchController.state.collectAsState()
-    val searchPanel=panelPages.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true
-    LaunchedEffect(searchPanel) { if(!searchPanel) searchController.stop() }
-    LaunchedEffect(searchState.files) { if(searchPanel && searchState.files.isNotEmpty()) viewModel.panelNavigator.openPanel(Panels.SubtitleSearchFiles) }
+    val searchPanel = panelPages.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch") == true
+    LaunchedEffect(searchPanel) { if (!searchPanel) searchController.stop() }
+    LaunchedEffect(searchState.files) {
+      if (searchPanel && searchState.files.isNotEmpty())
+        viewModel.panelNavigator.openPanel(Panels.SubtitleSearchFiles)
+    }
     PlayerPane(
       pages = panelPages,
       onCloseStart = viewModel::closeSubtitleSearch,
-      onDismiss = { viewModel.panelNavigator.dismiss(); viewModel.showControls() },
+      onDismiss = {
+        viewModel.panelNavigator.dismiss()
+        viewModel.showControls()
+      },
       onBack = viewModel::backFromPlayerPanel,
     ) { page ->
-      if (page.sheet != Sheets.None) PlayerSheets(
-        sheetShown = page.sheet,
-        subtitles = subtitles,
-        onAddSubtitle = viewModel::addSubtitle,
-        onSelectSubtitle = viewModel::selectSub,
-        onSearchSubtitle = {slot -> viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(),slot)},
-        audioTracks = audioTracks,
-        onAddAudio = viewModel::addAudio,
-        onSelectAudio = { track ->
-          live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
-            if (track == null) MPVLib.setPropertyBoolean("aid", false) else MPVLib.setPropertyInt("aid", track.id)
-          }
-        },
-        chapter = chapters.getOrNull(currentChapter ?: 0),
-        chapters = chapters,
-        onSeekToChapter = {
-          MPVLib.setPropertyInt("chapter", it)
-          viewModel.unpause()
-        },
-        decoder = decoder,
-        onUpdateDecoder = viewModel::setDecoder,
-        speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
-        onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
-        onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },
-        onAddSpeedPreset = { playerPreferences.speedPresets += it.toFixed(2).toString() },
-        onRemoveSpeedPreset = { playerPreferences.speedPresets -= it.toFixed(2).toString() },
-        onResetSpeedPresets = playerPreferences.speedPresets::delete,
-        speedPresets = speedPresets.map { it.toFloat() }.sorted(),
-        onResetDefaultSpeed = {
-          MPVLib.setPropertyFloat("speed", playerPreferences.defaultSpeed.deleteAndGet().toFixed(2))
-        },
-
-        sleepTimerTimeRemaining = sleepTimerTimeRemaining,
-        buttons = customButtons.getButtons().toImmutableList(),
-        onOpenPanel = onOpenPanel,
-      )
-      else if(page.panel==Panels.SubtitleSearch) SubtitleSearchPanel(searchController,subtitlePreferences,onOpenPanel,viewModel::applyOnlineSubtitle,subtitleReduceMotion)
-      else if(page.panel==Panels.SubtitleSearchOptions) SubtitleSearchOptionsPanel(subtitlePreferences,koinInject(),koinInject())
-      else if(page.panel.name.startsWith("SubtitleSearch")) SubtitleSearchChoicePanel(page.panel,searchController,subtitlePreferences,viewModel::backFromPlayerPanel,viewModel::applyOnlineSubtitle)
-      else PlayerPanels(
-        panelShown = page.panel,
-        sleepTimerTimeRemaining = sleepTimerTimeRemaining,
-        onStartSleepTimer = viewModel::startTimer,
-        onNavigateBack = viewModel.panelNavigator::back,
-      )
+      if (page.sheet != Sheets.None)
+        PlayerSheets(
+          sheetShown = page.sheet,
+          subtitles = subtitles,
+          onAddSubtitle = viewModel::addSubtitle,
+          onSelectSubtitle = viewModel::selectSub,
+          onSearchSubtitle = { slot ->
+            viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(), slot)
+          },
+          audioTracks = audioTracks,
+          onAddAudio = viewModel::addAudio,
+          onSelectAudio = { track ->
+            live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
+              if (track == null) MPVLib.setPropertyBoolean("aid", false)
+              else MPVLib.setPropertyInt("aid", track.id)
+            }
+          },
+          chapter = chapters.getOrNull(currentChapter ?: 0),
+          chapters = chapters,
+          onSeekToChapter = {
+            MPVLib.setPropertyInt("chapter", it)
+            viewModel.unpause()
+          },
+          decoder = decoder,
+          onUpdateDecoder = viewModel::setDecoder,
+          speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
+          onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
+          onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },
+          onAddSpeedPreset = { playerPreferences.speedPresets += it.toFixed(2).toString() },
+          onRemoveSpeedPreset = { playerPreferences.speedPresets -= it.toFixed(2).toString() },
+          onResetSpeedPresets = playerPreferences.speedPresets::delete,
+          speedPresets = speedPresets.map { it.toFloat() }.sorted(),
+          onResetDefaultSpeed = {
+            MPVLib.setPropertyFloat(
+              "speed",
+              playerPreferences.defaultSpeed.deleteAndGet().toFixed(2),
+            )
+          },
+          sleepTimerTimeRemaining = sleepTimerTimeRemaining,
+          buttons = customButtons.getButtons().toImmutableList(),
+          onOpenPanel = onOpenPanel,
+        )
+      else if (page.panel == Panels.SubtitleSearch)
+        SubtitleSearchPanel(
+          searchController,
+          subtitlePreferences,
+          onOpenPanel,
+          viewModel::applyOnlineSubtitle,
+          subtitleReduceMotion,
+        )
+      else if (page.panel == Panels.SubtitleSearchOptions)
+        SubtitleSearchOptionsPanel(subtitlePreferences, koinInject(), koinInject())
+      else if (page.panel.name.startsWith("SubtitleSearch"))
+        SubtitleSearchChoicePanel(
+          page.panel,
+          searchController,
+          subtitlePreferences,
+          viewModel::backFromPlayerPanel,
+          viewModel::applyOnlineSubtitle,
+        )
+      else
+        PlayerPanels(
+          panelShown = page.panel,
+          sleepTimerTimeRemaining = sleepTimerTimeRemaining,
+          onStartSleepTimer = viewModel::startTimer,
+          onNavigateBack = viewModel.panelNavigator::back,
+        )
     }
   }
 }
 
-fun <T> playerControlsExitAnimationSpec(): FiniteAnimationSpec<T> = tween(
-  durationMillis = 300,
-  easing = FastOutSlowInEasing,
-)
+fun <T> playerControlsExitAnimationSpec(): FiniteAnimationSpec<T> =
+  tween(durationMillis = 300, easing = FastOutSlowInEasing)
 
-fun <T> playerControlsEnterAnimationSpec(): FiniteAnimationSpec<T> = tween(
-  durationMillis = 100,
-  easing = LinearOutSlowInEasing,
-)
+fun <T> playerControlsEnterAnimationSpec(): FiniteAnimationSpec<T> =
+  tween(durationMillis = 100, easing = LinearOutSlowInEasing)

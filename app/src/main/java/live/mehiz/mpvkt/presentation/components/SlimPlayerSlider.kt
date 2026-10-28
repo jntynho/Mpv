@@ -35,8 +35,6 @@ fun SlimPlayerSlider(
   colors: SliderColors = SliderDefaults.colors(),
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-  val hapticView = androidx.compose.ui.platform.LocalView.current
-  var lastHaptic by remember { mutableIntStateOf(-1) }
   val dragged by interactionSource.collectIsDraggedAsState()
   var editing by remember { mutableStateOf(false) }
   var pending by remember { mutableStateOf<Float?>(null) }
@@ -57,11 +55,6 @@ fun SlimPlayerSlider(
       editing = true
       pending = it
       onValueChange(it)
-      val tick = if (max > min) (((it - min) / (max - min)) * 20).toInt() else 0
-      if (tick != lastHaptic) {
-        lastHaptic = tick
-        live.mehiz.mpvkt.ui.utils.SoftHaptics.tick(hapticView)
-      }
     },
     modifier = modifier.heightIn(min = 48.dp),
     enabled = enabled && max > min,

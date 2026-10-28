@@ -49,6 +49,7 @@ internal fun LibraryHeader(
   viewMode: LibraryViewMode = LibraryViewMode.Folder,
   onViewMode: (LibraryViewMode) -> Unit = {},
 ) {
+  val preparing = live.mehiz.mpvkt.ui.startup.LocalInterfacePreparation.current
   val duration = if (reduceMotion) 0 else 260
   val headerHeight =
     with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() + 40.dp }
@@ -68,7 +69,7 @@ internal fun LibraryHeader(
   val focus = remember { FocusRequester() }
   val focusManager = LocalFocusManager.current
   val keyboard = LocalSoftwareKeyboardController.current
-  LaunchedEffect(searching) {
+  LaunchedEffect(searching, preparing) {
     if (!searching) {
       focusManager.clearFocus()
       keyboard?.hide()
@@ -94,7 +95,7 @@ internal fun LibraryHeader(
             if (back > 0f)
               IconButton(
                 onClick = onBack,
-                enabled = searching || inFolder,
+                enabled = !preparing && (searching || inFolder),
                 modifier =
                   Modifier.wrapContentSize(Alignment.CenterStart, unbounded = true)
                     .requiredSize(48.dp)
@@ -128,8 +129,8 @@ internal fun LibraryHeader(
             label = "header_search_content",
           ) { editing ->
             if (editing) {
-              LaunchedEffect(searching) {
-                if (!searching) return@LaunchedEffect
+              LaunchedEffect(searching, preparing) {
+                if (!searching || preparing) return@LaunchedEffect
                 // Let the header settle before the keyboard starts its own inset animation.
                 if (!reduceMotion) delay(260)
                 focus.requestFocus()
@@ -138,7 +139,7 @@ internal fun LibraryHeader(
                 query,
                 onQuery,
                 Modifier.fillMaxWidth().focusRequester(focus),
-                enabled = searching,
+                enabled = searching && !preparing,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge,
                 placeholder = { Text(stringResource(R.string.mpv_search)) },
@@ -179,7 +180,7 @@ internal fun LibraryHeader(
                   .requiredWidth(144.dp)
                   .graphicsLayer { alpha = 1f - search }
               ) {
-                IconButton(onClick = onSearch, enabled = !searching) {
+                IconButton(onClick = onSearch, enabled = !searching && !preparing) {
                   Icon(Icons.Search, stringResource(R.string.mpv_search))
                 }
                 LibrarySortButton(
@@ -188,12 +189,12 @@ internal fun LibraryHeader(
                     viewMode != LibraryViewMode.Videos &&
                       (!inFolder || viewMode == LibraryViewMode.Tree),
                   reduceMotion = reduceMotion,
-                  enabled = !searching,
+                  enabled = !searching && !preparing,
                   onSelect = onSort,
                   viewMode = viewMode,
                   onViewMode = onViewMode,
                 )
-                IconButton(onClick = onSettings, enabled = !searching) {
+                IconButton(onClick = onSettings, enabled = !searching && !preparing) {
                   Icon(Icons.Settings, stringResource(R.string.luma_settings))
                 }
               }
