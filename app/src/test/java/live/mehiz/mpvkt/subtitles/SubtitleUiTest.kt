@@ -182,7 +182,10 @@ class SubtitleUiTest {
     compose.waitUntil(5000) {
       controller.state.value.subtitles.size == 1 && !controller.state.value.loading
     }
-    compose.onNodeWithText("Season 1").assertExists()
+    compose.mainClock.advanceTimeBy(600)
+    compose.waitForIdle()
+    compose.onNodeWithText("English").assertIsDisplayed()
+    compose.onNodeWithText("Season 1").assertIsDisplayed()
     compose.onNodeWithText("Episode 2").assertExists()
     val bitmap = Bitmap.createBitmap(960, 540, Bitmap.Config.ARGB_8888)
     compose.runOnUiThread {

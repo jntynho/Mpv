@@ -26,8 +26,8 @@ android {
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     minSdk = 21
     targetSdk = 36
-    versionCode = 14
-    versionName = "0.12.0"
+    versionCode = 15
+    versionName = "0.12.1"
 
     vectorDrawables {
       useSupportLibrary = true
@@ -81,6 +81,7 @@ android {
     }
   }
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -171,6 +172,7 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.truetype.parser)
   implementation("org.jsoup:jsoup:1.18.3")
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(project(":third_party:fsaf"))
 }
 
