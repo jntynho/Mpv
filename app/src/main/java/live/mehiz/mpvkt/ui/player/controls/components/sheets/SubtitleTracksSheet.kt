@@ -22,7 +22,7 @@ import live.mehiz.mpvkt.ui.player.controls.components.*
 @Composable
 fun SubtitlesSheet(
   tracks: ImmutableList<TrackNode>, onSelect: (Int, Int) -> Unit,
-  onAddSubtitle: () -> Unit, onOpenSubtitleSettings: () -> Unit,
+  onAddSubtitle: () -> Unit, onSearchOnline: (Int) -> Unit, onOpenSubtitleSettings: () -> Unit,
   onOpenSubtitleDelay: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -41,6 +41,7 @@ fun SubtitlesSheet(
       }
     },
     beforeTracks = {
+      PlayerActionRow(stringResource(R.string.subtitle_open_online),Icons.Search,{onSearchOnline(slot)})
       PlayerPanelSection(stringResource(R.string.mpv_panel_tracks))
       AudioTrackRow(stringResource(R.string.player_sheets_tracks_off), tracks.none { it.mainSelection?.toInt() == slot }, { onSelect(-1, slot) })
     },

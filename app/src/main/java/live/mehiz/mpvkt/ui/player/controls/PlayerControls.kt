@@ -80,6 +80,8 @@ import live.mehiz.mpvkt.ui.player.controls.components.SeekbarWithTimers
 import live.mehiz.mpvkt.ui.player.controls.components.TextPlayerUpdate
 import live.mehiz.mpvkt.ui.player.controls.components.VolumeSlider
 import live.mehiz.mpvkt.ui.player.controls.components.sheets.toFixed
+import live.mehiz.mpvkt.ui.player.controls.components.panels.*
+import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.ui.theme.playerRippleConfiguration
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
@@ -127,6 +129,7 @@ fun PlayerControls(
     if (it == Sheets.None) viewModel.showControls() else viewModel.hideControls()
   }
   val onOpenPanel: (Panels) -> Unit = {
+    if(it.name.startsWith("SubtitleSearch") && it!=Panels.SubtitleSearchFiles) viewModel.subtitleSearch.stop()
     viewModel.panelNavigator.openPanel(it)
     if (it == Panels.None) viewModel.showControls() else viewModel.hideControls()
   }
@@ -547,16 +550,26 @@ fun PlayerControls(
     val audioTracks by viewModel.audioTracks.collectAsState(persistentListOf())
     val sleepTimerTimeRemaining by viewModel.remainingTime.collectAsState()
     val speedPresets by playerPreferences.speedPresets.collectAsState()
+    val subtitlePreferences=koinInject<SubtitlesPreferences>()
+    val subtitleReduceMotion by playerPreferences.reduceMotion.collectAsState()
+    val subtitleMediaTitle by MPVLib.propString["media-title"].collectAsState()
+    val searchController=viewModel.subtitleSearch
+    val searchState by searchController.state.collectAsState()
+    val searchPanel=panelPages.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true
+    LaunchedEffect(searchPanel) { if(!searchPanel) searchController.stop() }
+    LaunchedEffect(searchState.files) { if(searchPanel && searchState.files.isNotEmpty()) viewModel.panelNavigator.openPanel(Panels.SubtitleSearchFiles) }
     PlayerPane(
       pages = panelPages,
+      onCloseStart = viewModel::closeSubtitleSearch,
       onDismiss = { viewModel.panelNavigator.dismiss(); viewModel.showControls() },
-      onBack = { viewModel.panelNavigator.back() },
+      onBack = viewModel::backFromPlayerPanel,
     ) { page ->
       if (page.sheet != Sheets.None) PlayerSheets(
         sheetShown = page.sheet,
         subtitles = subtitles,
         onAddSubtitle = viewModel::addSubtitle,
         onSelectSubtitle = viewModel::selectSub,
+        onSearchSubtitle = {slot -> viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(),slot)},
         audioTracks = audioTracks,
         onAddAudio = viewModel::addAudio,
         onSelectAudio = { track ->
@@ -587,6 +600,9 @@ fun PlayerControls(
         buttons = customButtons.getButtons().toImmutableList(),
         onOpenPanel = onOpenPanel,
       )
+      else if(page.panel==Panels.SubtitleSearch) SubtitleSearchPanel(searchController,subtitlePreferences,onOpenPanel,viewModel::applyOnlineSubtitle,subtitleReduceMotion)
+      else if(page.panel==Panels.SubtitleSearchOptions) SubtitleSearchOptionsPanel(subtitlePreferences,koinInject(),koinInject())
+      else if(page.panel.name.startsWith("SubtitleSearch")) SubtitleSearchChoicePanel(page.panel,searchController,subtitlePreferences,viewModel::backFromPlayerPanel,viewModel::applyOnlineSubtitle)
       else PlayerPanels(
         panelShown = page.panel,
         sleepTimerTimeRemaining = sleepTimerTimeRemaining,

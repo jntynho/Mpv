@@ -47,6 +47,8 @@ internal class PlayerPanelNavigator {
   fun dismiss() { pages.value = emptyList() }
 
   private fun parentOf(panel: Panels): Sheets = when (panel) {
+    Panels.SubtitleSearch, Panels.SubtitleSearchOptions, Panels.SubtitleSearchLanguages,
+    Panels.SubtitleSearchSeason, Panels.SubtitleSearchEpisode, Panels.SubtitleSearchFiles,
     Panels.SubtitleSettings, Panels.SubtitleDelay -> Sheets.SubtitleTracks
     Panels.AudioDelay -> Sheets.AudioTracks
     Panels.VideoFilters, Panels.SleepTimer -> Sheets.More

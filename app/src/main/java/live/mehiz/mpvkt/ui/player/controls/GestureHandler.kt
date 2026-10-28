@@ -42,6 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.flow.map
+import live.mehiz.mpvkt.preferences.SubtitlesPreferences
+import live.mehiz.mpvkt.ui.player.PlaybackControl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import live.mehiz.mpvkt.R
@@ -64,6 +66,11 @@ fun GestureHandler(
   modifier: Modifier = Modifier
 ) {
   val playerPreferences = koinInject<PlayerPreferences>()
+  val subtitlePreferences = koinInject<SubtitlesPreferences>()
+  val linkedSecondary by subtitlePreferences.secondaryPinchZoom.collectAsState()
+  val secondaryScaleSupported by subtitlePreferences.secondaryScaleSupported.collectAsState()
+  val primaryText by MPVLib.propString["sub-text"].collectAsState()
+  val secondaryText by MPVLib.propString["secondary-sub-text"].collectAsState()
   val audioPreferences = koinInject<AudioPreferences>()
   val panelPages by viewModel.panelNavigator.state.collectAsState()
   val allowGesturesInPanels by playerPreferences.allowGesturesInPanels.collectAsState()
@@ -103,25 +110,58 @@ fun GestureHandler(
     modifier = modifier
       .fillMaxSize()
       .windowInsetsPadding(WindowInsets.safeGestures)
-      .pointerInput(areControlsLocked, panelPages, allowGesturesInPanels, pinchZoomGesture) {
+      .pointerInput(areControlsLocked, panelPages, allowGesturesInPanels, pinchZoomGesture, linkedSecondary, secondaryScaleSupported) {
         if (!pinchZoomGesture || areControlsLocked || (panelPages.isNotEmpty() && !allowGesturesInPanels)) return@pointerInput
-        awaitPointerEventScope {
-          var pinching = false
-          do {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            val count = event.changes.count { it.pressed }
-            if (count >= 2) {
-              pinching = true
-              val factor = event.calculateZoom()
-              if (factor.isFinite() && factor > 0f && factor != 1f) {
-                val current = MPVLib.getPropertyFloat("video-zoom") ?: 0f
-                MPVLib.setPropertyFloat("video-zoom", pinchZoom(current, factor))
+        var target = 0
+        var primaryScale = subtitlePreferences.subScale.get()
+        var secondaryScale = subtitlePreferences.secondaryScale.get()
+        var changedPrimary = false
+        var changedSecondary = false
+        try {
+          awaitPointerEventScope {
+            var pinching = false
+            do {
+              val event = awaitPointerEvent(PointerEventPass.Initial)
+              val fingers = event.changes.filter { it.pressed }
+              val count = fingers.size
+              if(count >= 2) {
+                if(!pinching) {
+                  val centerY = fingers.map { it.position.y }.average().toFloat() / size.height.coerceAtLeast(1)
+                  val centerX = fingers.map { it.position.x }.average().toFloat() / size.width.coerceAtLeast(1)
+                  target = subtitlePinchTarget(centerX,centerY,primaryText.orEmpty(),secondaryText.orEmpty(),subtitlePreferences.subPos.get(),secondaryScaleSupported)
+                  primaryScale=subtitlePreferences.subScale.get();secondaryScale=subtitlePreferences.secondaryScale.get()
+                }
+                pinching=true
+                val factor=event.calculateZoom()
+                if(factor.isFinite() && factor>0f && factor!=1f) {
+                  if(target!=0) {
+                    if(target==1 && "sub-scale" !in live.mehiz.mpvkt.subtitles.SubtitleConfig.active) {
+                      primaryScale=(primaryScale*factor).coerceIn(.1f,5f);changedPrimary=true
+                      val value=primaryScale
+                      PlaybackControl.enqueue("property:sub-scale") { MPVLib.setPropertyFloat("sub-scale",value) }
+                    }
+                    if((target==2 || linkedSecondary && secondaryScaleSupported && secondaryText?.isNotBlank()==true) && "secondary-sub-scale" !in live.mehiz.mpvkt.subtitles.SubtitleConfig.active) {
+                      secondaryScale=(secondaryScale*factor).coerceIn(.1f,5f);changedSecondary=true
+                      val value=secondaryScale
+                      PlaybackControl.enqueue("property:secondary-sub-scale") { MPVLib.setPropertyFloat("secondary-sub-scale",value) }
+                    }
+                  } else {
+                    val current=MPVLib.getPropertyFloat("video-zoom") ?: 0f
+                    MPVLib.setPropertyFloat("video-zoom",pinchZoom(current,factor))
+                  }
+                }
               }
-            }
-            // Consume remaining fingers until release so pinch cannot become a seek or volume swipe.
-            if (pinching) event.changes.forEach { it.consume() }
-            if (count == 0) pinching = false
-          } while (true)
+              if(pinching) event.changes.forEach { it.consume() }
+              if(count==0) {
+                if(changedPrimary) subtitlePreferences.subScale.set(primaryScale)
+                if(changedSecondary) subtitlePreferences.secondaryScale.set(secondaryScale)
+                changedPrimary=false;changedSecondary=false;pinching=false
+              }
+            } while(true)
+          }
+        } finally {
+          if(changedPrimary) subtitlePreferences.subScale.set(primaryScale)
+          if(changedSecondary) subtitlePreferences.secondaryScale.set(secondaryScale)
         }
       }
       .pointerInput(Unit) {
@@ -371,4 +411,15 @@ fun calculateNewHorizontalGestureValue(originalValue: Float, startingX: Float, n
 internal fun brightnessAfterDrag(original: Float, startY: Float, currentY: Float, height: Float): Float {
   if (!original.isFinite() || !startY.isFinite() || !currentY.isFinite() || !height.isFinite() || height <= 0f) return .5f
   return (original + (startY - currentY) / height).coerceIn(0f, 1f)
+}
+
+/** Conservative hit region: ordinary video pinches remain video zoom outside active subtitle text. */
+internal fun subtitlePinchTarget(x: Float, y: Float, primary: String, secondary: String, position: Int, secondarySupported: Boolean): Int {
+  if(!x.isFinite() || !y.isFinite() || x !in .12f.. .88f) return 0
+  val primaryY=.06f+.88f*(position.coerceIn(0,100)/100f)
+  return when {
+    secondarySupported && secondary.isNotBlank() && kotlin.math.abs(y-.1f)<.075f -> 2
+    primary.isNotBlank() && kotlin.math.abs(y-primaryY)<.075f -> 1
+    else -> 0
+  }
 }

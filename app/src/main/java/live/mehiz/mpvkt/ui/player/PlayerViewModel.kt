@@ -1,5 +1,9 @@
 package live.mehiz.mpvkt.ui.player
 
+import java.io.File
+import java.util.concurrent.atomic.AtomicLong
+import live.mehiz.mpvkt.subtitles.*
+import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import android.content.Context
 import android.media.AudioManager
 import android.net.Uri
@@ -65,6 +69,8 @@ class PlayerViewModel(
 
   private val playerPreferences: PlayerPreferences by inject(PlayerPreferences::class.java)
   private val gesturePreferences: GesturePreferences by inject(GesturePreferences::class.java)
+  private val subtitlesPreferences: SubtitlesPreferences by inject(SubtitlesPreferences::class.java)
+  private val subtitleService: SubtitleService by inject(SubtitleService::class.java)
   private val audioPreferences: AudioPreferences by inject(AudioPreferences::class.java)
   private val mpvKtDatabase: MpvKtDatabase by inject(MpvKtDatabase::class.java)
   private val json: Json by inject(Json::class.java)
@@ -115,6 +121,71 @@ class PlayerViewModel(
   )
 
   internal val panelNavigator = PlayerPanelNavigator()
+  internal val subtitleSearch by lazy { SubtitleSearchController(viewModelScope,subtitleService,subtitlesPreferences::searchOptions) }
+  private val subtitleVideoGeneration = AtomicLong()
+  private val subtitleNavigationGeneration = AtomicLong()
+  private var subtitleOwnerPath: String? = null
+  private var subtitleOwnerGeneration = -1L
+  internal fun subtitleMediaStarted() {
+    subtitleVideoGeneration.incrementAndGet()
+    subtitleSearch.stop()
+    if(panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true) panelNavigator.openSheet(Sheets.SubtitleTracks)
+  }
+  internal fun closeSubtitleSearch() { subtitleNavigationGeneration.incrementAndGet();subtitleSearch.stop() }
+  internal fun openSubtitleSearch(title: String, slot: Int) {
+    val navigation=subtitleNavigationGeneration.get()
+    val generation=subtitleVideoGeneration.get()
+    PlaybackControl.enqueue("subtitle-search-context") {
+      val path=MPVLib.getPropertyString("path") ?: return@enqueue
+      viewModelScope.launch {
+        if(navigation==subtitleNavigationGeneration.get() && generation==subtitleVideoGeneration.get() && panelNavigator.state.value.lastOrNull()?.sheet==Sheets.SubtitleTracks) {
+          subtitleOwnerGeneration=generation;subtitleOwnerPath=path
+          subtitleSearch.begin(title,slot,path);panelNavigator.openPanel(Panels.SubtitleSearch)
+        }
+      }
+    }
+  }
+  internal fun backFromPlayerPanel() {
+    val page=panelNavigator.state.value.lastOrNull()?.panel
+    if(page==Panels.SubtitleSearch) subtitleSearch.stop()
+    if(page==Panels.SubtitleSearchFiles) subtitleSearch.clearFiles()
+    panelNavigator.back()
+    if(page==Panels.SubtitleSearchOptions || page==Panels.SubtitleSearchLanguages) subtitleSearch.search()
+  }
+  internal fun applyOnlineSubtitle(file: File, slot: Int) {
+    val generation=subtitleOwnerGeneration;val path=subtitleOwnerPath
+    val folder=File(activity.filesDir,"subtitle-downloads")
+    if(file.parentFile?.canonicalFile!=folder.canonicalFile || !file.isFile) return
+    PlaybackControl.enqueue("online-subtitle-add") {
+      var success=false
+      try {
+        if(generation!=subtitleVideoGeneration.get() || MPVLib.getPropertyString("path")!=path || !file.isFile) return@enqueue
+        val oldPrimary=MPVLib.getPropertyInt("sid")
+        MPVLib.command("sub-add",file.absolutePath,"cached")
+        val tracks=MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
+        val added=tracks.lastOrNull { it.isSubtitle && it.externalFilename?.removePrefix("file://")==file.absolutePath } ?: return@enqueue
+        if(slot==1) {
+          if(oldPrimary!=null && oldPrimary!=added.id) MPVLib.setPropertyInt("sid",oldPrimary) else MPVLib.setPropertyBoolean("sid",false)
+          MPVLib.setPropertyInt("secondary-sid",added.id)
+        } else {
+          if(MPVLib.getPropertyInt("secondary-sid")==added.id) MPVLib.setPropertyBoolean("secondary-sid",false)
+          MPVLib.setPropertyInt("sid",added.id)
+        }
+        success=MPVLib.getPropertyInt(if(slot==1) "secondary-sid" else "sid")==added.id
+      } finally {
+        viewModelScope.launch { if(generation==subtitleVideoGeneration.get()) subtitleSearch.reportApplied(success) }
+      }
+    }
+  }
+
+  internal fun probeSubtitleFeatures() {
+    PlaybackControl.enqueue("subtitle-features") {
+      SubtitleConfig.active=runCatching { File(activity.filesDir,"mpv.conf").inputStream().use { SubtitleConfig.options(SubtitleConfig.read(it)) } }.getOrDefault(emptySet())
+      val supported=MPVLib.getPropertyDouble("secondary-sub-scale")!=null
+      subtitlesPreferences.secondaryScaleSupported.set(supported)
+      if(supported && "secondary-sub-scale" !in SubtitleConfig.active) MPVLib.setPropertyDouble("secondary-sub-scale",subtitlesPreferences.secondaryScale.get().toDouble())
+    }
+  }
 
   // Pair(startingPosition, seekAmount)
   val gestureSeekAmount = MutableStateFlow<Pair<Int, Int>?>(null)

@@ -27,6 +27,7 @@ fun PlayerSheets(
   subtitles: ImmutableList<TrackNode>,
   onAddSubtitle: (Uri) -> Unit,
   onSelectSubtitle: (Int, Int) -> Unit,
+  onSearchSubtitle: (Int) -> Unit,
   // audio sheet
   audioTracks: ImmutableList<TrackNode>,
   onAddAudio: (Uri) -> Unit,
@@ -65,6 +66,7 @@ fun PlayerSheets(
       SubtitlesSheet(
         tracks = subtitles.toImmutableList(),
         onSelect = onSelectSubtitle,
+        onSearchOnline = onSearchSubtitle,
         onAddSubtitle = { subtitlesPicker.launch(arrayOf("*/*")) },
         onOpenSubtitleSettings = { onOpenPanel(Panels.SubtitleSettings) },
         onOpenSubtitleDelay = { onOpenPanel(Panels.SubtitleDelay) },

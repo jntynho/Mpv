@@ -80,6 +80,12 @@ enum class Panels {
   AudioDelay,
   VideoFilters,
   SleepTimer,
+  SubtitleSearch,
+  SubtitleSearchOptions,
+  SubtitleSearchLanguages,
+  SubtitleSearchSeason,
+  SubtitleSearchEpisode,
+  SubtitleSearchFiles,
 }
 
 sealed class PlayerUpdates {
