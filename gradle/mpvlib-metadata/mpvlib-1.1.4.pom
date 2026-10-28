@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>app.gyrolet.mpvlib</groupId>
+  <artifactId>mpvlib</artifactId>
+  <version>1.1.4</version>
+  <packaging>aar</packaging>
+  <name>mpvlib Android</name>
+  <description>mpv Android JNI wrapper. Native components retain their upstream licenses.</description>
+  <url>https://github.com/Riteshp2001/mpvlibAndroid</url>
+  <licenses><license><name>MIT License</name><url>https://github.com/Riteshp2001/mpvlibAndroid/blob/v1.1.4/LICENSE</url></license></licenses>
+  <developers><developer><name>mpvlibAndroid contributors, Ilya Zhuravlev and sfan5</name></developer></developers>
+</project>
