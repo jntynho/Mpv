@@ -4,6 +4,7 @@ import live.mehiz.mpvkt.preferences.AdvancedPreferences
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.DecoderPreferences
+import live.mehiz.mpvkt.preferences.FoldersPreferences
 import live.mehiz.mpvkt.preferences.GesturePreferences
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
@@ -17,6 +18,7 @@ import org.koin.dsl.module
 val PreferencesModule = module {
   single { AndroidPreferenceStore(androidContext()) }.bind(PreferenceStore::class)
 
+  singleOf(::FoldersPreferences)
   singleOf(::AppearancePreferences)
   singleOf(::PlayerPreferences)
   singleOf(::GesturePreferences)

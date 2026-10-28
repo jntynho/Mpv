@@ -37,6 +37,7 @@ data class LibraryState(
   val loading: Boolean = false,
   val failed: Boolean = false,
   val loaded: Boolean = false,
+  val incomplete: Boolean = false,
 )
 
 internal val LocalMediaLibrary =
@@ -62,7 +63,17 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
     mutableState.value = LibraryState()
   }
 
-  fun reload(): Job {
+  fun clearPreparedCache() {
+    rootSource = null
+    rootListing = null
+  }
+
+  fun reload(force: Boolean = false): Job {
+    if (force) {
+      job?.cancel()
+      job = null
+    }
+
     job
       ?.takeIf { it.isActive }
       ?.let {
@@ -72,6 +83,7 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
       viewModelScope.launch {
         mutableState.value = mutableState.value.copy(loading = true, failed = false)
         try {
+          var indexFailed = false
           val videos =
             withContext(Dispatchers.IO) {
               val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
@@ -93,43 +105,68 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
                   arrayOf(MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns.SIZE)
               val addedIndex = projection.indexOf(MediaStore.MediaColumns.DATE_ADDED)
               val sizeIndex = projection.indexOf(MediaStore.MediaColumns.SIZE)
-              buildList {
-                getApplication<Application>()
-                  .contentResolver
-                  .query(collection, projection, null, null, "date_added DESC")
-                  ?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                      ensureActive()
-                      val name = cursor.getString(1) ?: "Video"
-                      val storedPath = cursor.getString(5).orEmpty()
-                      val indexedPath =
-                        if (Build.VERSION.SDK_INT >= 29) cursor.getString(7).orEmpty()
-                        else storedPath
-                      val parent =
-                        if (indexedPath.isNotBlank()) indexedPath.substringBeforeLast('/', "")
-                        else storedPath.trimEnd('/')
-                      val path =
-                        indexedPath.ifBlank {
-                          listOf(parent, name).filter { it.isNotBlank() }.joinToString("/")
-                        }
+              try {
+                buildList {
+                  getApplication<Application>()
+                    .contentResolver
+                    .query(collection, projection, null, null, "date_added DESC")
+                    ?.use { cursor ->
+                      while (cursor.moveToNext()) {
+                        ensureActive()
+                        val name = cursor.getString(1) ?: "Video"
+                        val storedPath = cursor.getString(5).orEmpty()
+                        val indexedPath =
+                          if (Build.VERSION.SDK_INT >= 29) cursor.getString(7).orEmpty()
+                          else storedPath
+                        val parent =
+                          if (indexedPath.isNotBlank()) indexedPath.substringBeforeLast('/', "")
+                          else storedPath.trimEnd('/')
+                        val path =
+                          indexedPath.ifBlank {
+                            listOf(parent, name).filter { it.isNotBlank() }.joinToString("/")
+                          }
 
-                      add(
-                        LibraryVideo(
-                          ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(),
-                          name,
-                          cursor.getString(2).orEmpty() + "|" + parent,
-                          cursor.getString(3) ?: "Videos",
-                          cursor.getLong(4).coerceAtLeast(0),
-                          path,
-                          parent,
-                          cursor.getLong(6),
-                          cursor.getLong(addedIndex).coerceAtLeast(0),
-                          cursor.getLong(sizeIndex).coerceAtLeast(0),
+                        add(
+                          LibraryVideo(
+                            ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(),
+                            name,
+                            cursor.getString(2).orEmpty() + "|" + parent,
+                            cursor.getString(3) ?: "Videos",
+                            cursor.getLong(4).coerceAtLeast(0),
+                            path,
+                            parent,
+                            cursor.getLong(6),
+                            cursor.getLong(addedIndex).coerceAtLeast(0),
+                            cursor.getLong(sizeIndex).coerceAtLeast(0),
+                          )
                         )
-                      )
+                      }
                     }
-                  }
+                }
+              } catch (cancelled: CancellationException) {
+                throw cancelled
+              } catch (_: SecurityException) {
+                emptyList<LibraryVideo>()
+              } catch (_: Exception) {
+                indexFailed = true
+                emptyList<LibraryVideo>()
               }
+            }
+          val folderPreferences =
+            live.mehiz.mpvkt.preferences.FoldersPreferences(
+              live.mehiz.mpvkt.preferences.preference.AndroidPreferenceStore(getApplication())
+            )
+          val selected =
+            withContext(Dispatchers.IO) {
+              if (folderPreferences.includeHidden.get())
+                SelectedFolderScanner.scan(getApplication(), folderPreferences.hiddenTrees.get())
+              else SelectedFolderScanner.Result(emptyList(), false)
+            }
+          val completeVideos =
+            if (selected.videos.isEmpty()) videos
+            else {
+              val existing = videos.mapTo(hashSetOf()) { it.path }
+              videos + selected.videos.filter { it.path !in existing }
             }
           val prepared =
             withContext(Dispatchers.Default) {
@@ -142,11 +179,17 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
                   saved.getBoolean("sort_ascending", true),
                   if (saved.contains("sort")) saved.getInt("sort", 0) else null,
                 )
-              buildLibraryListing(videos, null, "", sort)
+              buildLibraryListing(completeVideos, null, "", sort)
             }
-          rootSource = videos
+          rootSource = completeVideos
           rootListing = prepared
-          mutableState.value = LibraryState(videos, loaded = true)
+          mutableState.value =
+            LibraryState(
+              completeVideos,
+              failed = indexFailed,
+              loaded = true,
+              incomplete = selected.incomplete,
+            )
         } catch (cancelled: CancellationException) {
           throw cancelled
         } catch (_: Exception) {

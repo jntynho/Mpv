@@ -5,9 +5,7 @@ import live.mehiz.mpvkt.preferences.preference.getEnum
 import live.mehiz.mpvkt.ui.player.PlayerOrientation
 import live.mehiz.mpvkt.ui.player.VideoAspect
 
-class PlayerPreferences(
-  preferenceStore: PreferenceStore
-) {
+class PlayerPreferences(preferenceStore: PreferenceStore) {
   val orientation = preferenceStore.getEnum("player_orientation", PlayerOrientation.SensorLandscape)
   val invertDuration = preferenceStore.getBoolean("invert_duration")
   val drawOverDisplayCutout = preferenceStore.getBoolean("draw_over_cutout", true)
@@ -29,10 +27,11 @@ class PlayerPreferences(
   val showChaptersButton = preferenceStore.getBoolean("show_video_chapters_button")
 
   val defaultSpeed = preferenceStore.getFloat("default_speed", 1f)
-  val speedPresets = preferenceStore.getStringSet(
-    "default_speed_presets",
-    setOf("0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75", "2.0", "2.5", "3.0", "3.5", "4.0")
-  )
+  val speedPresets =
+    preferenceStore.getStringSet(
+      "default_speed_presets",
+      setOf("0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75", "2.0", "2.5", "3.0", "3.5", "4.0"),
+    )
   val displayVolumeAsPercentage = preferenceStore.getBoolean("display_volume_as_percentage", true)
   val swapVolumeAndBrightness = preferenceStore.getBoolean("display_volume_on_right")
   val showLoadingCircle = preferenceStore.getBoolean("show_loading_circle", true)
@@ -52,5 +51,24 @@ class PlayerPreferences(
 
   val panelTransparency = preferenceStore.getFloat("panel_transparency", 0.6f)
 
+  val landscapeLayout =
+    preferenceStore.getObject(
+      "landscape_layout",
+      live.mehiz.mpvkt.ui.player.controls.LandscapeLayout().let { layout ->
+        var migrated = layout
+        if (showChaptersButton.get())
+          migrated =
+            migrated.assign(
+              live.mehiz.mpvkt.ui.player.controls.LandscapeControl.Chapters,
+              live.mehiz.mpvkt.ui.player.controls.ControlRegion.TopRight,
+            )
+        if (!currentChaptersIndicator.get())
+          migrated =
+            migrated.assign(live.mehiz.mpvkt.ui.player.controls.LandscapeControl.ChapterTitle, null)
+        migrated
+      },
+      serializer = { it.serialize() },
+      deserializer = live.mehiz.mpvkt.ui.player.controls.LandscapeLayout::restore,
+    )
   val primaryCustomButtonId = preferenceStore.getInt("player_custom_button_id", 0)
 }

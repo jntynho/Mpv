@@ -28,6 +28,7 @@ import live.mehiz.mpvkt.presentation.preferences.MultiChoiceSegmentedButton
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.IconStyle
 import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Image
 import live.mehiz.mpvkt.ui.icons.Palette
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold as Scaffold
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsTopAppBar as TopAppBar
@@ -79,6 +80,7 @@ object AppearancePreferencesScreen : Screen {
                 summary = { Text(stringResource(iconStyle.titleRes)) },
                 icon = { Icon(Icons.Palette, null) },
               )
+              ColourAccentPreference(preferences)
               val oledBlack by preferences.oledBlack.collectAsState()
               SwitchPreference(
                 value = oledBlack,
@@ -116,6 +118,14 @@ object AppearancePreferencesScreen : Screen {
                 },
                 enabled = isMaterialYouAvailable,
               )
+            }
+            PreferenceCategory(title = { Text(stringResource(R.string.mpv_thumbnails)) })
+            SettingsGroup {
+              androidx.compose.runtime.CompositionLocalProvider(
+                LocalSettingsIcon provides { Icon(Icons.Image, null) }
+              ) {
+                ThumbnailPreferences(preferences)
+              }
             }
           }
         }

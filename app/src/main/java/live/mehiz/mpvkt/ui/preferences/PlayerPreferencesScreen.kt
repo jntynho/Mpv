@@ -197,6 +197,13 @@ object PlayerPreferencesScreen : Screen {
             }
             PreferenceCategory(title = { Text(stringResource(R.string.pref_player_controls)) })
             SettingsGroup {
+              val stack = live.mehiz.mpvkt.ui.utils.LocalBackStack.current
+              SettingsRow(
+                { Text(stringResource(R.string.mpv_landscape_controls)) },
+                { Text(stringResource(R.string.mpv_landscape_controls_summary)) },
+              ) {
+                stack.add(LandscapeControlsScreen)
+              }
               val allowGesturesInPanels by preferences.allowGesturesInPanels.collectAsState()
               SwitchPreference(
                 value = allowGesturesInPanels,
@@ -233,9 +240,7 @@ object PlayerPreferencesScreen : Screen {
               SwitchPreference(
                 value = showChaptersButton,
                 onValueChange = preferences.showChaptersButton::set,
-                title = {
-                  Text(stringResource(R.string.pref_player_controls_show_chapters_button))
-                },
+                title = { Text(stringResource(R.string.mpv_portrait_chapters)) },
                 summary = {
                   Text(stringResource(R.string.pref_player_controls_show_chapters_summary))
                 },
@@ -244,9 +249,7 @@ object PlayerPreferencesScreen : Screen {
               SwitchPreference(
                 value = showChapterIndicator,
                 onValueChange = preferences.currentChaptersIndicator::set,
-                title = {
-                  Text(stringResource(R.string.pref_player_controls_show_chapter_indicator))
-                },
+                title = { Text(stringResource(R.string.mpv_portrait_chapter_title)) },
                 summary = {
                   Text(stringResource(R.string.pref_player_controls_show_chapters_summary))
                 },

@@ -25,6 +25,7 @@ import live.mehiz.mpvkt.ui.custombuttons.CustomButtonsScreen
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Audiotrack
 import live.mehiz.mpvkt.ui.icons.Code
+import live.mehiz.mpvkt.ui.icons.Folder
 import live.mehiz.mpvkt.ui.icons.Gesture
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Info
@@ -71,6 +72,14 @@ object PreferencesScreen : Screen {
             summary = { Text(text = stringResource(id = R.string.pref_appearance_summary)) },
             icon = { Icon(Icons.Palette, null) },
             onClick = { backstack.add(AppearancePreferencesScreen) },
+          )
+          preference(
+            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            key = "folders",
+            title = { Text(stringResource(R.string.mpv_folders)) },
+            summary = { Text(stringResource(R.string.mpv_folders_summary)) },
+            icon = { Icon(live.mehiz.mpvkt.ui.icons.Icons.Folder, null) },
+            onClick = { backstack.add(FoldersPreferencesScreen) },
           )
           preference(
             modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),

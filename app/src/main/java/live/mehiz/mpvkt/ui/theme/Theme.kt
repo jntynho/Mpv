@@ -14,6 +14,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -113,7 +114,14 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val reduceMotion by
     koinInject<live.mehiz.mpvkt.preferences.PlayerPreferences>().reduceMotion.collectAsState()
 
-  val colorScheme =
+  val accent by preferences.colourAccent.collectAsState()
+  val isDark = darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme)
+  val thumbnails by preferences.showThumbnails.collectAsState()
+  val generator by preferences.thumbnailGenerator.collectAsState()
+  val quality by preferences.thumbnailQuality.collectAsState()
+  val position by preferences.thumbnailPosition.collectAsState()
+  val thumbnailEpoch by live.mehiz.mpvkt.ui.home.Thumbnails.epoch.collectAsState()
+  val baseScheme =
     when {
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
         when (darkMode) {
@@ -129,9 +137,21 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
       else -> if (darkTheme) darkScheme else lightScheme
     }
 
+  val colorScheme =
+    if (dynamicColor && Build.VERSION.SDK_INT >= 31) baseScheme
+    else accent.applyTo(baseScheme, isDark)
+
   CompositionLocalProvider(
     androidx.compose.foundation.LocalOverscrollFactory provides
       if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
+    live.mehiz.mpvkt.ui.home.LocalThumbnailOptions provides
+      live.mehiz.mpvkt.ui.home.ThumbnailOptions(
+        thumbnails,
+        generator,
+        quality,
+        position.coerceIn(0, 100),
+      ),
+    live.mehiz.mpvkt.ui.home.LocalThumbnailEpoch provides thumbnailEpoch,
     LocalSpacing provides Spacing(),
     LocalIconStyle provides iconStyle,
     live.mehiz.mpvkt.ui.motion.LocalReduceMotion provides reduceMotion,
