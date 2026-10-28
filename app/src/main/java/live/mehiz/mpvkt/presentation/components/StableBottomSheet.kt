@@ -36,6 +36,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.utils.softTapFeedback
 
 /** One expanded height; Back, scrim, drag and selection all share the same exit. */
 @Composable
@@ -91,7 +92,7 @@ internal fun StableBottomSheet(
         position.animateTo(0f, tween(if (reduceMotion) 0 else 320))
       }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().imePadding()) {
+    BoxWithConstraints(Modifier.fillMaxSize().imePadding().softTapFeedback()) {
       Box(
         Modifier.fillMaxSize()
           .drawBehind {

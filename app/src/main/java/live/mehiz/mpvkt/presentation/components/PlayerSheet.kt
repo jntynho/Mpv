@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateTo
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -57,16 +58,13 @@ internal class PaneMotion {
           position = 0f
           return@launch
         }
-        AnimationState(position).animateTo(-reboundFraction, tween(320, easing = paneEasing)) {
+        // A single analytical spring has continuous velocity, including at its overshoot.
+        AnimationState(position).animateTo(
+          0f,
+          spring(dampingRatio = .72f, stiffness = 320f, visibilityThreshold = .0005f),
+        ) {
           position = value
         }
-        SpringEngine()
-          .runSettleAnimation(
-            -rebound,
-            initialVelocity = 0f,
-            onFrame = { position = it / distance },
-            onSettle = {},
-          )
         position = 0f
       }
   }
@@ -131,9 +129,7 @@ fun PlayerSheet(
   val motion = remember { PaneMotion() }
   val dismissVelocity = with(LocalDensity.current) { 550.dp.toPx() }
   var widthPx by remember { mutableFloatStateOf(0f) }
-  var heightPx by remember { mutableFloatStateOf(0f) }
-  var opened by remember { mutableStateOf(false) }
-  val reboundPx = with(LocalDensity.current) { 8.dp.toPx() }
+  val reboundPx = with(LocalDensity.current) { 24.dp.toPx() }
   val extraPx = with(LocalDensity.current) { 24.dp.toPx() }
   var laidOut by remember { mutableStateOf(false) }
   var closing by remember { mutableStateOf(false) }
@@ -144,15 +140,12 @@ fun PlayerSheet(
       motion.animate(scope, 1f, if (reduceMotion) 0 else 320) { latestDismiss() }
     }
   }
-  LaunchedEffect(widthPx, heightPx, reduceMotion) {
-    if (laidOut && !closing) {
-      if (!opened) {
-        opened = true
-        if (!reduceMotion) withFrameNanos {}
-        if (!closing) motion.open(scope, widthPx + extraPx, reboundPx, reduceMotion)
-      } else motion.finishOpen() // Rotation/IME resize must not replay or rescale an entrance.
-    }
+  // Geometry/inset updates during first layout must not cancel the entrance and snap it open.
+  // Position is normalized, so resizing while moving keeps one animation and one surface.
+  LaunchedEffect(laidOut) {
+    if (laidOut && !closing) motion.open(scope, widthPx + extraPx, reboundPx, reduceMotion)
   }
+  LaunchedEffect(reduceMotion) { if (reduceMotion && laidOut && !closing) motion.finishOpen() }
   DisposableEffect(motion) { onDispose(motion::stop) }
   BackHandler { if (!closing) latestBack?.invoke() ?: close() }
   val closeLabel = stringResource(R.string.generic_close)
@@ -196,7 +189,6 @@ fun PlayerSheet(
             .fillMaxHeight()
             .onSizeChanged {
               widthPx = it.width.toFloat().coerceAtLeast(1f)
-              heightPx = it.height.toFloat()
               laidOut = true
             }
             .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }

@@ -17,7 +17,7 @@ import org.robolectric.annotation.GraphicsMode
 class SubtitlePosterTest {
   @Test
   fun posterMetadataNormalizesOnlySupportedTmdbAddresses() = runBlocking {
-    assertEquals("https://image.tmdb.org/t/p/w185/test.jpg", subtitlePosterUrl("/test.jpg"))
+    assertEquals("https://image.tmdb.org/t/p/w342/test.jpg", subtitlePosterUrl("/test.jpg"))
     assertEquals(
       subtitlePosterUrl("/test.jpg"),
       subtitlePosterUrl("https://image.tmdb.org/t/p/original/test.jpg"),
@@ -63,9 +63,10 @@ class SubtitlePosterTest {
       )
     val first = loader.load("https://image.tmdb.org/t/p/w185/test.jpg")
     assertNotNull(first)
-    assertTrue(first!!.width <= 240 && first.height <= 360)
+    assertTrue(first!!.width <= 384 && first.height <= 576)
     assertSame(first, loader.load("https://image.tmdb.org/t/p/w185/test.jpg"))
     assertEquals(2, calls)
+    assertSame(first, loader.peek("https://image.tmdb.org/t/p/original/test.jpg"))
     assertNull(loader.load(null))
   }
 }

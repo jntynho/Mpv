@@ -40,7 +40,8 @@ assert {p.stem for p in res.glob('iconsax_*.xml')} == regular | rtl
 folder = res/'library_folder.xml'
 assert hashlib.sha256(folder.read_bytes()).hexdigest() == '3a38cf0350069410870c3fbe51314d4e4f6c6cb2de1beaecf3f2e0c530f786b4', 'The home folder must remain unchanged'
 home = (ROOT/'app/src/main/java/live/mehiz/mpvkt/ui/home/HomeScreen.kt').read_text()
-assert 'Image(painterResource(R.drawable.library_folder), null, Modifier.size(width = 88.dp, height = 76.dp))' in home
+# Formatting changes must not masquerade as an artwork/geometry change.
+assert re.search(r'Image\(\s*painterResource\(R\.drawable\.library_folder\),\s*null,\s*Modifier\.size\(width = 88\.dp, height = 76\.dp\),?\s*\)', home)
 assert not list(res.glob('fa_*.xml'))
 assert not list((ROOT/'app/src/main/java').rglob('FontAwesomeIcons.kt'))
 assert not (ROOT/'app/src/main/assets/licenses/fontawesome.txt').exists()

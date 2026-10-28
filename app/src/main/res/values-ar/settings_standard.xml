@@ -1,0 +1,9 @@
+<resources>
+    <string name="mpv_setting_save_failed">تعذر حفظ الإعداد. تحقق من المجلد المحدد وحاول مجددًا.</string>
+    <string name="mpv_view_mode">نوع العرض</string>
+    <string name="mpv_view_folders">المجلدات</string>
+    <string name="mpv_view_tree">الشجرة</string>
+    <string name="mpv_view_videos">الفيديوهات</string>
+    <string name="mpv_loading_interface">جارٍ تجهيز مكتبتك</string>
+    <string name="mpv_loading_detail">نجهز العناصر لبداية أكثر سلاسة</string>
+</resources>

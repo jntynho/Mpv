@@ -196,7 +196,11 @@ class SubtitleUiTest {
       .apply { parentFile?.mkdirs() }
       .outputStream()
       .use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-    compose.onNodeWithText("Show.S01E02.srt").performScrollTo().assertIsDisplayed()
+    compose
+      .onAllNodes(hasScrollToIndexAction())
+      .onLast()
+      .performScrollToNode(hasText("Show.S01E02.srt"))
+    compose.onNodeWithText("Show.S01E02.srt").assertIsDisplayed()
     compose.mainClock.autoAdvance = false
     compose.onAllNodesWithContentDescription("Close").onLast().performClick()
     compose.runOnIdle {
