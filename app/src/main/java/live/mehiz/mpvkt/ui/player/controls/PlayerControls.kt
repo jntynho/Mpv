@@ -1,6 +1,7 @@
 // Modified for Luma: guard the API 24 PiP entry point.
 package live.mehiz.mpvkt.ui.player.controls
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -122,10 +123,10 @@ fun PlayerControls(
   val paused = playback.displayPaused
   val pausedForCache = playback.isBuffering
   val duration by
-    remember { MPVLib.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
+    remember { MpvProperties.propDouble["duration"].map { it?.toInt() } }.collectAsState(initial = null)
   val position by
-    remember { MPVLib.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
-  val playbackSpeed by MPVLib.propFloat["speed"].collectAsState()
+    remember { MpvProperties.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
+  val playbackSpeed by MpvProperties.propFloat["speed"].collectAsState()
   val gestureSeekAmount by viewModel.gestureSeekAmount.collectAsState()
   val doubleTapSeekAmount by viewModel.doubleTapSeekAmount.collectAsState()
   val showDoubleTapOvals by playerPreferences.showDoubleTapOvals.collectAsState()
@@ -134,8 +135,8 @@ fun PlayerControls(
   var isSeeking by remember { mutableStateOf(false) }
   var resetControls by remember { mutableStateOf(true) }
   val seekText by viewModel.seekText.collectAsState()
-  val currentChapter by MPVLib.propInt["chapter"].collectAsState()
-  val mpvDecoder by MPVLib.propString["hwdec-current"].collectAsState()
+  val currentChapter by MpvProperties.propInt["chapter"].collectAsState()
+  val mpvDecoder by MpvProperties.propString["hwdec-current"].collectAsState()
   var decoder by remember { mutableStateOf(getDecoderFromValue(mpvDecoder ?: "auto")) }
   LaunchedEffect(mpvDecoder) {
     if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!)
@@ -275,7 +276,7 @@ fun PlayerControls(
         val isVolumeSliderShown by viewModel.isVolumeSliderShown.collectAsState()
         val brightness by viewModel.currentBrightness.collectAsState()
         val volume by viewModel.currentVolume.collectAsState()
-        val mpvVolume by MPVLib.propInt["volume"].collectAsState()
+        val mpvVolume by MpvProperties.propInt["volume"].collectAsState()
         val swapVolumeAndBrightness by playerPreferences.swapVolumeAndBrightness.collectAsState()
         val reduceMotion by playerPreferences.reduceMotion.collectAsState()
 
@@ -474,8 +475,8 @@ fun PlayerControls(
           modifier = Modifier.constrainAs(seekbar) { bottom.linkTo(parent.bottom, spacing.medium) },
         ) {
           val invertDuration by playerPreferences.invertDuration.collectAsState()
-          val readAhead by MPVLib.propFloat["demuxer-cache-time"].collectAsState()
-          val remaining by MPVLib.propFloat["playtime-remaining"].collectAsState()
+          val readAhead by MpvProperties.propFloat["demuxer-cache-time"].collectAsState()
+          val remaining by MpvProperties.propFloat["playtime-remaining"].collectAsState()
           val preciseSeeking by playerPreferences.preciseSeeking.collectAsState()
           SeekbarWithTimers(
             position = position?.toFloat() ?: 0f,
@@ -493,7 +494,7 @@ fun PlayerControls(
             chapters = chapters,
           )
         }
-        val mediaTitle by MPVLib.propString["media-title"].collectAsState()
+        val mediaTitle by MpvProperties.propString["media-title"].collectAsState()
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
           enter =
@@ -664,7 +665,7 @@ fun PlayerControls(
     val speedPresets by playerPreferences.speedPresets.collectAsState()
     val subtitlePreferences = koinInject<SubtitlesPreferences>()
     val subtitleReduceMotion by playerPreferences.reduceMotion.collectAsState()
-    val subtitleMediaTitle by MPVLib.propString["media-title"].collectAsState()
+    val subtitleMediaTitle by MpvProperties.propString["media-title"].collectAsState()
     val searchController = viewModel.subtitleSearch
     val searchState by searchController.state.collectAsState()
     val searchPanel = panelPages.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch") == true

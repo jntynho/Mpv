@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -56,11 +57,11 @@ fun SubtitleDelayPanel(
 
   PlayerScrollArea(modifier.fillMaxSize()) {
     var affectedSubtitle by remember { mutableStateOf(SubtitleDelayType.Primary) }
-    val delay by MPVLib.propDouble["sub-delay"].collectAsState()
+    val delay by MpvProperties.propDouble["sub-delay"].collectAsState()
     val delayInt by remember { derivedStateOf { ((delay ?: 0.0) * 1000).toInt() } }
-    val secondaryDelay by MPVLib.propDouble["secondary-sub-delay"].collectAsState()
+    val secondaryDelay by MpvProperties.propDouble["secondary-sub-delay"].collectAsState()
     val secondaryDelayInt by remember { derivedStateOf { ((secondaryDelay ?: 0.0) * 1000).toInt() } }
-    val speed by MPVLib.propFloat["sub-speed"].collectAsState()
+    val speed by MpvProperties.propFloat["sub-speed"].collectAsState()
     SubtitleDelayCard(
       delayMs = if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelayInt else delayInt,
       onDelayChange = {

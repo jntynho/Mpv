@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.sheets
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -39,7 +40,7 @@ fun AudioTracksSheet(
     footer = {
       PlayerPanelSection(stringResource(R.string.mpv_panel_output))
       AudioVolumeControl()
-      val delay by MPVLib.propDouble["audio-delay"].collectAsState()
+      val delay by MpvProperties.propDouble["audio-delay"].collectAsState()
       PlayerActionRow(stringResource(R.string.player_sheets_audio_delay_card_title), Icons.MoreTime,
         onOpenDelayPanel, value = "${((delay ?: 0.0) * 1000).roundToInt()} ms")
       AudioChannelsControl()
@@ -61,7 +62,7 @@ fun AudioTracksSheet(
 private fun AudioVolumeControl() {
   val preferences = koinInject<AudioPreferences>()
   val boost by preferences.volumeBoostCap.collectAsState()
-  val native by MPVLib.propInt["volume"].collectAsState()
+  val native by MpvProperties.propInt["volume"].collectAsState()
   var requested by remember { mutableStateOf<Float?>(null) }
   val interaction = remember { MutableInteractionSource() }
   val dragging by interaction.collectIsDraggedAsState()

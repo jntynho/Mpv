@@ -21,3 +21,7 @@
 #-renamesourcefileattribute SourceFile
 -dontobfuscate
 -keep,allowoptimization class is.xyz.mpv.** { public protected *; }
+# mpvlib 1.1.4 includes a private destroyNative JNI entrypoint.
+-keepclassmembers,includedescriptorclasses class is.xyz.mpv.MPVLib {
+    native <methods>;
+}

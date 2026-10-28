@@ -1,4 +1,7 @@
 // Modified for Luma Player: interface, appearance, or build configuration.
+import java.security.MessageDigest
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import com.android.build.api.variant.FilterConfiguration
 import io.gitlab.arturbosch.detekt.Detekt
 import org.apache.commons.io.output.ByteArrayOutputStream
@@ -24,10 +27,10 @@ android {
   defaultConfig {
     applicationId = "io.github.jntynho.luma"
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
-    minSdk = 21
+    minSdk = 24
     targetSdk = 36
-    versionCode = 19
-    versionName = "0.15.0"
+    versionCode = 20
+    versionName = "0.16.0"
 
     vectorDrawables {
       useSupportLibrary = true
@@ -85,9 +88,6 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
-  kotlinOptions {
-    jvmTarget = "17"
-  }
   buildFeatures {
     compose = true
     viewBinding = true
@@ -97,6 +97,8 @@ android {
     includeSourceInformation = true
   }
   packaging {
+    // Retain compressed downloads when raising minSdk; installers extract the native libraries.
+    jniLibs.useLegacyPackaging = true
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
@@ -122,6 +124,7 @@ android {
 
 kotlin {
   compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     freeCompilerArgs.addAll("-Xwhen-guards", "-Xcontext-parameters")
   }
 }
@@ -152,7 +155,7 @@ dependencies {
   implementation(libs.mediasession)
   implementation(libs.saveable)
 
-  implementation(libs.mpv.lib)
+  implementation(variantOf(libs.mpv.lib) { artifactType("aar") })
 
   implementation(platform(libs.koin.bom))
   implementation(libs.bundles.koin)
@@ -207,4 +210,37 @@ fun runCommand(command: String): String {
 
 aboutLibraries {
   excludeFields = arrayOf("generated")
+}
+
+// The producer publishes an AAR without Maven metadata. Verify the exact native artifact
+// and reject an accidental reintroduction of the previous runtime before release validation.
+tasks.register("verifyMpvRuntime") {
+  group = "verification"
+  doLast {
+    val configuration = configurations.getByName("debugRuntimeClasspath")
+    val modules = configuration.incoming.resolutionResult.allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
+    check(modules.none { it.group == "io.github.abdallahmehiz" && it.module == "mpv-android-lib" }) {
+      "The replaced mpv runtime is still present"
+    }
+    val runtime = modules.single { it.group == "app.gyrolet.mpvlib" && it.module == "mpvlib" }
+    check(runtime.version == "1.1.4")
+    val artifact = configuration.incoming.artifactView {
+      componentFilter { it is ModuleComponentIdentifier && it.group == "app.gyrolet.mpvlib" && it.module == "mpvlib" }
+      attributes.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "aar")
+    }.files.singleFile
+    val digest = MessageDigest.getInstance("SHA-256")
+    artifact.inputStream().use { input ->
+      val buffer = ByteArray(1024 * 1024)
+      while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        digest.update(buffer, 0, count)
+      }
+    }
+    val actual = digest.digest().joinToString("") { "%02x".format(it) }
+    check(actual == "4abc71bfc1a0e0c8d5008e8fb3a8ccf83f3ced6e430a04b51156f75ae53bb285") {
+      "mpvlib 1.1.4 artifact changed: $actual"
+    }
+    logger.lifecycle("Verified app.gyrolet.mpvlib:mpvlib:1.1.4; previous runtime absent")
+  }
 }

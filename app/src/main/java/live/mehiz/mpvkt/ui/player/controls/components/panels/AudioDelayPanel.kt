@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,7 @@ fun AudioDelayPanel(
   val preferences = koinInject<AudioPreferences>()
 
   PlayerScrollArea(modifier.fillMaxSize()) {
-    val delay by MPVLib.propDouble["audio-delay"].collectAsState()
+    val delay by MpvProperties.propDouble["audio-delay"].collectAsState()
     DelayCard(
       delayMs = ((delay ?: 0.0) * 1000).toInt(),
       onDelayChange = { value -> live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-delay") { MPVLib.setPropertyDouble("audio-delay", value / 1000.0) } },
