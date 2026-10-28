@@ -75,6 +75,7 @@ internal class SubtitleService(
             .text("imdbId")
             .ifBlank { it.text("imdb_id") }
             .takeIf { value -> value.matches(Regex("tt\\d+")) },
+          subtitlePosterUrl(it.text("poster").ifBlank { it.text("poster_path") }.ifBlank { it.text("posterUrl") }),
         )
       }
       .distinctBy { it.id to it.television }

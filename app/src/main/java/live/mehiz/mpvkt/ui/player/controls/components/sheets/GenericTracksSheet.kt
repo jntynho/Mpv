@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,9 +48,13 @@ fun <T> GenericTracksSheet(
 @Composable
 fun AudioTrackRow(title: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
   subtitle: String? = null, badge: String? = null,
+  animateSelection: Boolean = false, reduceMotion: Boolean = false,
 ) {
+  val selectionColor by animateColorAsState(
+    if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .55f) else Color.Transparent,
+    tween(if (animateSelection && !reduceMotion) 220 else 0), label = "decoder_selection")
   Row(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp).clip(RoundedCornerShape(14.dp))
-    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .55f) else Color.Transparent)
+    .background(selectionColor)
     .selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick)
     .padding(horizontal = 10.dp, vertical = 10.dp),
     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

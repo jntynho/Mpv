@@ -98,13 +98,22 @@ internal fun SubtitleSearchPanel(
         verticalAlignment = Alignment.CenterVertically,
       ) {
         if (state.media != null) {
-          Text(
-            (if (state.series) stringResource(R.string.subtitle_series)
-            else stringResource(R.string.subtitle_movie)) + " · " + state.media!!.year,
-            Modifier.weight(1f),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
+          SubtitlePoster(state.media!!.posterUrl, reduceMotion)
+          Spacer(Modifier.width(12.dp))
+          Column(Modifier.weight(1f)) {
+            Text(
+              state.media!!.title,
+              style = MaterialTheme.typography.titleSmall,
+              maxLines = 2,
+              overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+              (if (state.series) stringResource(R.string.subtitle_series)
+              else stringResource(R.string.subtitle_movie)) + " · " + state.media!!.year,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
           TextButton(onClick = { controller.editQuery(state.query) }) {
             Text(stringResource(R.string.subtitle_change_title))
           }
@@ -205,14 +214,10 @@ internal fun SubtitleSearchPanel(
     if (state.matches.isNotEmpty())
       item("matches-title") { PlayerPanelSection(stringResource(R.string.subtitle_choose_title)) }
     items(state.matches, key = { "media:${it.id}:${it.television}" }) { match ->
-      PlayerActionRow(
-        match.title,
-        Icons.Movie,
-        { controller.selectMedia(match) },
-        subtitle =
-          (if (match.television) stringResource(R.string.subtitle_series)
-          else stringResource(R.string.subtitle_movie)) + " · " + match.year,
-      )
+      SubtitleMediaRow(match, reduceMotion) {
+        keyboard?.hide()
+        controller.selectMedia(match)
+      }
     }
     if (state.media == null && !state.loading && mode != "wyzie")
       item("direct") {

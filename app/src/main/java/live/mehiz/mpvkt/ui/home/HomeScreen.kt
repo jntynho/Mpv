@@ -116,10 +116,7 @@ object HomeScreen : Screen {
             val listing = destination.listing
             savedLists.SaveableStateProvider(folder ?: "root") {
               val listState = rememberLazyListState()
-              var appliedSort by remember { mutableStateOf(listing.sort) }
-              LaunchedEffect(listing.sort) {
-                if (appliedSort != listing.sort) { listState.requestScrollToItem(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset); appliedSort = listing.sort }
-              }
+              ResetScrollOnLibrarySort(listState, listing.sort)
               LazyColumn(Modifier.fillMaxSize(), state = listState,
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
