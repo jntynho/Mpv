@@ -62,15 +62,26 @@ class SortMenuRenderTest {
     assertNull(chosen)
   }
 
-  @Test fun sheetStaysOpenWhileBothSelectionsChange() {
+  @Test fun choosingSortClosesAfterItsExitAndOrderCanBeChangedOnReopen() {
+    var selected = LibrarySort()
     compose.setContent {
-      var sort by remember { mutableStateOf(LibrarySort()) }
-      MaterialTheme { LibrarySortButton(sort, true, false) { sort = it } }
+      var sort by remember { mutableStateOf(selected) }
+      MaterialTheme { LibrarySortButton(sort, true, false) { sort = it; selected = it } }
     }
     compose.onNodeWithContentDescription("Sort by").performClick()
+    compose.mainClock.advanceTimeBy(600)
+    compose.waitForIdle()
+    compose.mainClock.autoAdvance = false
     compose.onNodeWithText("Size").performClick()
+    assertEquals(LibrarySortKey.Size, selected.key)
+    compose.onNodeWithText("Z-A").assertExists()
+    compose.mainClock.advanceTimeBy(500)
+    compose.onNodeWithText("Z-A").assertDoesNotExist()
+    compose.mainClock.autoAdvance = true
+    compose.onNodeWithContentDescription("Sort by").performClick()
     compose.onNodeWithText("Z-A").performClick()
-    compose.onNodeWithText("Size").assertIsSelected()
-    compose.onNodeWithText("Z-A").assertIsSelected()
+    compose.waitForIdle()
+    assertFalse(selected.ascending)
+    compose.onNodeWithText("Z-A").assertDoesNotExist()
   }
 }

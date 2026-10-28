@@ -121,7 +121,9 @@ fun PlayerControls(
   val seekText by viewModel.seekText.collectAsState()
   val currentChapter by MPVLib.propInt["chapter"].collectAsState()
   val mpvDecoder by MPVLib.propString["hwdec-current"].collectAsState()
-  val decoder by remember { derivedStateOf { getDecoderFromValue(mpvDecoder ?: "auto") } }
+  var decoder by remember { mutableStateOf(getDecoderFromValue(mpvDecoder ?: "auto")) }
+  LaunchedEffect(mpvDecoder) { if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!) }
+  val decoderReduceMotion by playerPreferences.reduceMotion.collectAsState()
   val playerTimeToDisappear by playerPreferences.playerTimeToDisappear.collectAsState()
   val chapters by viewModel.chapters.collectAsState(persistentListOf())
   val onOpenSheet: (Sheets) -> Unit = {
@@ -451,7 +453,8 @@ fun PlayerControls(
           val showChaptersButton by playerPreferences.showChaptersButton.collectAsState()
           TopRightPlayerControls(
             decoder = decoder,
-            onDecoderClick = { viewModel.cycleDecoders() },
+            onDecoderClick = { viewModel.cycleDecoders(decoder) },
+            reduceMotion = decoderReduceMotion,
             onDecoderLongClick = { onOpenSheet(Sheets.Decoders) },
             isChaptersVisible = showChaptersButton && chapters.isNotEmpty(),
             onChaptersClick = { onOpenSheet(Sheets.Chapters) },
@@ -584,7 +587,7 @@ fun PlayerControls(
           viewModel.unpause()
         },
         decoder = decoder,
-        onUpdateDecoder = { MPVLib.setPropertyString("hwdec", it.value) },
+        onUpdateDecoder = viewModel::setDecoder,
         speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
         onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
         onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },

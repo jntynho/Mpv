@@ -65,6 +65,7 @@ internal data class MediaMatch(
   val television: Boolean,
   val year: String = "",
   val imdb: String? = null,
+  val posterUrl: String? = null,
 )
 
 internal data class Season(val number: Int, val title: String = "", val episodes: Int = 0)

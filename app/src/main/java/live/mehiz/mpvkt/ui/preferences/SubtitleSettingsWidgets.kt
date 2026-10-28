@@ -22,6 +22,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import live.mehiz.mpvkt.presentation.components.StableBottomSheet
+import live.mehiz.mpvkt.preferences.PlayerPreferences
+import live.mehiz.mpvkt.preferences.preference.collectAsState
+import org.koin.compose.koinInject
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.ui.icons.*
 
@@ -134,6 +138,9 @@ internal fun toggleSubtitleChoice(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
+  var closing by remember(choice) { mutableStateOf(false) }
+  val close = { closing = true }
+  val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   var selection by remember(choice) { mutableStateOf(choice.selected) }
   var query by remember { mutableStateOf("") }
   val filtered =
@@ -142,12 +149,7 @@ internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
         it.value.contains(query, true) || it.key.contains(query, true)
       }
     }
-  ModalBottomSheet(
-    onDismissRequest = dismiss,
-    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-  ) {
+  StableBottomSheet(onDismissRequest = dismiss, dismissRequested = closing, reduceMotion = reduceMotion, title = choice.title) {
     Text(
       choice.title,
       Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
@@ -178,12 +180,12 @@ internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
               else MaterialTheme.colorScheme.surfaceContainer
             )
             .semantics { selected = checked }
-            .clickable {
+            .clickable(enabled = !closing) {
               if (choice.multiple)
                 selection = toggleSubtitleChoice(selection, entry.key, choice.additiveAll)
               else {
                 choice.apply(setOf(entry.key))
-                dismiss()
+                close()
               }
             }
             .padding(18.dp),
@@ -202,10 +204,10 @@ internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
       Button(
         onClick = {
           choice.apply(selection)
-          dismiss()
+          close()
         },
         Modifier.fillMaxWidth().padding(20.dp),
-        enabled = selection.isNotEmpty(),
+        enabled = selection.isNotEmpty() && !closing,
         shape = RoundedCornerShape(18.dp),
       ) {
         Text(stringResource(R.string.subtitle_done))

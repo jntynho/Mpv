@@ -25,33 +25,59 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.presentation.components.StableBottomSheet
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Sort
 import live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun LibrarySortButton(sort: LibrarySort, countEnabled: Boolean, reduceMotion: Boolean, enabled: Boolean = true, onSelect: (LibrarySort) -> Unit) {
+internal fun LibrarySortButton(
+  sort: LibrarySort,
+  countEnabled: Boolean,
+  reduceMotion: Boolean,
+  enabled: Boolean = true,
+  onSelect: (LibrarySort) -> Unit,
+) {
   var expanded by remember { mutableStateOf(false) }
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  IconButton(onClick = { expanded = true }, enabled = enabled) {
+  var closing by remember { mutableStateOf(false) }
+  IconButton(
+    onClick = {
+      closing = false
+      expanded = true
+    },
+    enabled = enabled,
+  ) {
     Icon(Icons.Sort, stringResource(R.string.mpv_sort))
   }
   if (expanded) {
-    ModalBottomSheet(onDismissRequest = { expanded = false }, sheetState = sheetState,
-      sheetMaxWidth = 504.dp, shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-      containerColor = MaterialTheme.colorScheme.surfaceContainer,
-      // Sheet motion owns the surface; Miuix owns unconsumed scrolling inside it.
-      dragHandle = { BottomSheetDefaults.DragHandle() }) {
-      CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else LibraryOverscrollFactory) {
-        LibrarySortMenuContent(sort, countEnabled, reduceMotion = reduceMotion,
-          modifier = Modifier.fillMaxWidth().weight(1f, fill = false), onSelect = onSelect)
+    StableBottomSheet(
+      onDismissRequest = { expanded = false },
+      dismissRequested = closing,
+      reduceMotion = reduceMotion,
+      title = stringResource(R.string.mpv_sort),
+    ) {
+      CompositionLocalProvider(
+        LocalOverscrollFactory provides if (reduceMotion) null else LibraryOverscrollFactory
+      ) {
+        LibrarySortMenuContent(
+          sort,
+          countEnabled,
+          reduceMotion = reduceMotion,
+          modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+          onSelect = { choice ->
+            if (!closing) {
+              onSelect(choice)
+              closing = true
+            }
+          },
+        )
       }
     }
   }
 }
 
-/** Selection stays visible while sorting; only the backdrop, Back or sheet drag dismisses it. */
+/** Fixed row geometry keeps selection movement independent from dismissal. */
 @Composable
 internal fun LibrarySortMenuContent(
   sort: LibrarySort,
@@ -62,52 +88,129 @@ internal fun LibrarySortMenuContent(
 ) {
   val colors = MaterialTheme.colorScheme
   val duration = if (reduceMotion) 0 else 240
-  val rowHeight = with(LocalDensity.current) { MaterialTheme.typography.titleMedium.lineHeight.toDp() + 24.dp }.coerceAtLeast(52.dp)
+  val rowHeight =
+    with(LocalDensity.current) { MaterialTheme.typography.titleMedium.lineHeight.toDp() + 24.dp }
+      .coerceAtLeast(52.dp)
   val selected = colors.primaryContainer
-  val index by animateFloatAsState(sort.key.ordinal.toFloat(), tween(duration, easing = FastOutSlowInEasing), label = "sort_selection")
-  Column(modifier.verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-    Text(stringResource(R.string.mpv_sort), style = MaterialTheme.typography.titleLarge,
-      modifier = Modifier.padding(start = 12.dp, bottom = 16.dp))
+  val index by
+    animateFloatAsState(
+      sort.key.ordinal.toFloat(),
+      tween(duration, easing = FastOutSlowInEasing),
+      label = "sort_selection",
+    )
+  Column(
+    modifier
+      .verticalScroll(rememberScrollState())
+      .padding(start = 20.dp, end = 20.dp, bottom = 24.dp)
+  ) {
+    Text(
+      stringResource(R.string.mpv_sort),
+      style = MaterialTheme.typography.titleLarge,
+      modifier = Modifier.padding(start = 12.dp, bottom = 16.dp),
+    )
     Box(Modifier.fillMaxWidth().selectableGroup()) {
-      Box(Modifier.fillMaxWidth().height(rowHeight).graphicsLayer { translationY = index * rowHeight.toPx() }
-        .background(selected, RoundedCornerShape(20.dp)))
+      Box(
+        Modifier.fillMaxWidth()
+          .height(rowHeight)
+          .graphicsLayer { translationY = index * rowHeight.toPx() }
+          .background(selected, RoundedCornerShape(20.dp))
+      )
       Column {
         LibrarySortKey.entries.forEach { key ->
           val enabled = key != LibrarySortKey.Count || countEnabled
           val disabledDescription = stringResource(R.string.mpv_sort_count_folders)
-          SortChoice(stringResource(when (key) {
-            LibrarySortKey.Title -> R.string.mpv_sort_title
-            LibrarySortKey.Date -> R.string.mpv_sort_date
-            LibrarySortKey.Size -> R.string.mpv_sort_size
-            LibrarySortKey.Count -> R.string.mpv_sort_count
-          }), sort.key == key, enabled, Modifier.fillMaxWidth().height(rowHeight)
-            .semantics { if (!enabled) stateDescription = disabledDescription }, duration = duration) { onSelect(sort.copy(key = key)) }
+          SortChoice(
+            stringResource(
+              when (key) {
+                LibrarySortKey.Title -> R.string.mpv_sort_title
+                LibrarySortKey.Date -> R.string.mpv_sort_date
+                LibrarySortKey.Size -> R.string.mpv_sort_size
+                LibrarySortKey.Count -> R.string.mpv_sort_count
+              }
+            ),
+            sort.key == key,
+            enabled,
+            Modifier.fillMaxWidth().height(rowHeight).semantics {
+              if (!enabled) stateDescription = disabledDescription
+            },
+            duration = duration,
+          ) {
+            onSelect(sort.copy(key = key))
+          }
         }
       }
     }
-    Text(stringResource(R.string.mpv_sort_order), style = MaterialTheme.typography.labelLarge,
-      color = colors.onSurfaceVariant, modifier = Modifier.padding(start = 12.dp, top = 20.dp, bottom = 12.dp))
-    Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-      SortChoice(stringResource(R.string.mpv_sort_ascending), sort.ascending, true,
-        Modifier.weight(1f).height(rowHeight), tonal = true, duration = duration) { onSelect(sort.copy(ascending = true)) }
-      SortChoice(stringResource(R.string.mpv_sort_descending), !sort.ascending, true,
-        Modifier.weight(1f).height(rowHeight), tonal = true, duration = duration) { onSelect(sort.copy(ascending = false)) }
+    Text(
+      stringResource(R.string.mpv_sort_order),
+      style = MaterialTheme.typography.labelLarge,
+      color = colors.onSurfaceVariant,
+      modifier = Modifier.padding(start = 12.dp, top = 20.dp, bottom = 12.dp),
+    )
+    Row(
+      Modifier.fillMaxWidth().selectableGroup(),
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+      SortChoice(
+        stringResource(R.string.mpv_sort_ascending),
+        sort.ascending,
+        true,
+        Modifier.weight(1f).height(rowHeight),
+        tonal = true,
+        duration = duration,
+      ) {
+        onSelect(sort.copy(ascending = true))
+      }
+      SortChoice(
+        stringResource(R.string.mpv_sort_descending),
+        !sort.ascending,
+        true,
+        Modifier.weight(1f).height(rowHeight),
+        tonal = true,
+        duration = duration,
+      ) {
+        onSelect(sort.copy(ascending = false))
+      }
     }
   }
 }
 
 @Composable
-private fun SortChoice(title: String, selected: Boolean, enabled: Boolean, modifier: Modifier,
-  tonal: Boolean = false, duration: Int, onClick: () -> Unit) {
+private fun SortChoice(
+  title: String,
+  selected: Boolean,
+  enabled: Boolean,
+  modifier: Modifier,
+  tonal: Boolean = false,
+  duration: Int,
+  onClick: () -> Unit,
+) {
   val colors = MaterialTheme.colorScheme
-  val background by animateColorAsState(if (!tonal) Color.Transparent else if (selected) colors.primaryContainer else colors.surfaceContainerHighest,
-    tween(duration), label = "sort_order_selection")
-  val foreground by animateColorAsState(if (selected) colors.onPrimaryContainer else colors.onSurface,
-    tween(duration), label = "sort_text")
-  Box(modifier.clip(RoundedCornerShape(20.dp)).background(background)
-    .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-    .padding(horizontal = 20.dp), contentAlignment = if (tonal) Alignment.Center else Alignment.CenterStart) {
-    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium,
-      color = foreground.copy(alpha = if (enabled) 1f else .38f))
+  val background by
+    animateColorAsState(
+      if (!tonal) Color.Transparent
+      else if (selected) colors.primaryContainer else colors.surfaceContainerHighest,
+      tween(duration),
+      label = "sort_order_selection",
+    )
+  val foreground by
+    animateColorAsState(
+      if (selected) colors.onPrimaryContainer else colors.onSurface,
+      tween(duration),
+      label = "sort_text",
+    )
+  Box(
+    modifier
+      .clip(RoundedCornerShape(20.dp))
+      .background(background)
+      .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+      .padding(horizontal = 20.dp),
+    contentAlignment = if (tonal) Alignment.Center else Alignment.CenterStart,
+  ) {
+    Text(
+      title,
+      style = MaterialTheme.typography.titleMedium,
+      fontWeight = FontWeight.Medium,
+      color = foreground.copy(alpha = if (enabled) 1f else .38f),
+    )
   }
 }
