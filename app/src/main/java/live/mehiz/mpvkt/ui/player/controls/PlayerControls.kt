@@ -82,6 +82,8 @@ import live.mehiz.mpvkt.ui.player.controls.components.TextPlayerUpdate
 import live.mehiz.mpvkt.ui.player.controls.components.VolumeSlider
 import live.mehiz.mpvkt.ui.player.controls.components.panels.*
 import live.mehiz.mpvkt.ui.player.controls.components.sheets.toFixed
+import live.mehiz.mpvkt.ui.player.execute
+import live.mehiz.mpvkt.ui.player.executeLongClick
 import live.mehiz.mpvkt.ui.theme.playerRippleConfiguration
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
@@ -175,6 +177,71 @@ fun PlayerControls(
     showSeekTime,
     interactionSource,
   )
+  val isLandscape =
+    androidx.compose.ui.platform.LocalConfiguration.current.orientation ==
+      android.content.res.Configuration.ORIENTATION_LANDSCAPE
+  val landscapeLayout by playerPreferences.landscapeLayout.collectAsState()
+  val aspectRatio by playerPreferences.videoAspect.collectAsState()
+  val customButtonTitle by viewModel.primaryButtonTitle.collectAsState()
+  val playerActivity = LocalActivity.current as? PlayerActivity
+  val controlClick: (LandscapeControl) -> Unit = { button ->
+    when (button) {
+      LandscapeControl.Decoder -> viewModel.cycleDecoders(decoder)
+      LandscapeControl.Chapters,
+      LandscapeControl.ChapterTitle -> onOpenSheet(Sheets.Chapters)
+      LandscapeControl.Subtitles -> onOpenSheet(Sheets.SubtitleTracks)
+      LandscapeControl.Audio -> onOpenSheet(Sheets.AudioTracks)
+      LandscapeControl.More -> onOpenSheet(Sheets.More)
+      LandscapeControl.Custom -> customButton?.execute()
+      LandscapeControl.Pip ->
+        if (playerActivity?.isPipSupported == true) {
+          if (Build.VERSION.SDK_INT >= 26)
+            playerActivity.enterPictureInPictureMode(playerActivity.createPipParams())
+          else if (Build.VERSION.SDK_INT >= 24) playerActivity.enterPictureInPictureMode()
+        }
+      LandscapeControl.Aspect ->
+        viewModel.changeVideoAspect(
+          when (aspectRatio) {
+            VideoAspect.Fit -> VideoAspect.Stretch
+            VideoAspect.Stretch -> VideoAspect.Crop
+            VideoAspect.Crop -> VideoAspect.Fit
+          }
+        )
+      LandscapeControl.Lock -> viewModel.lockControls()
+      LandscapeControl.Rotation -> viewModel.cycleScreenRotations()
+      LandscapeControl.Speed -> {
+        val speed = playbackSpeed ?: playerPreferences.defaultSpeed.get()
+        val next = if (speed >= 2) .25f else speed + .25f
+        live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("speed") {
+          MPVLib.setPropertyFloat("speed", next)
+        }
+        playerPreferences.defaultSpeed.set(next)
+      }
+    }
+  }
+  val landscapeStrip: @Composable (ControlRegion) -> Unit = { region ->
+    LandscapeControlStrip(
+      landscapeLayout.buttons(region),
+      decoder,
+      playbackSpeed ?: playerPreferences.defaultSpeed.get(),
+      chapters.getOrNull(currentChapter ?: 0),
+      if (customButton != null) customButtonTitle else null,
+      playerActivity?.isPipSupported == true,
+      decoderReduceMotion,
+      onClick = controlClick,
+      onLongClick = { button ->
+        when (button) {
+          LandscapeControl.Decoder -> onOpenSheet(Sheets.Decoders)
+          LandscapeControl.Subtitles -> onOpenPanel(Panels.SubtitleSettings)
+          LandscapeControl.Audio -> onOpenPanel(Panels.AudioDelay)
+          LandscapeControl.More -> onOpenPanel(Panels.VideoFilters)
+          LandscapeControl.Speed -> onOpenSheet(Sheets.PlaybackSpeed)
+          LandscapeControl.Custom -> customButton?.executeLongClick()
+          else -> Unit
+        }
+      },
+    )
+  }
   CompositionLocalProvider(
     LocalRippleConfiguration provides playerRippleConfiguration,
     LocalPlayerButtonsClickEvent provides { resetControls = !resetControls },
@@ -294,7 +361,6 @@ fun PlayerControls(
         }
         val holdForMultipleSpeed by playerPreferences.holdForMultipleSpeed.collectAsState()
         val currentPlayerUpdate by viewModel.playerUpdate.collectAsState()
-        val aspectRatio by playerPreferences.videoAspect.collectAsState()
         LaunchedEffect(currentPlayerUpdate, aspectRatio) {
           if (
             currentPlayerUpdate is PlayerUpdates.MultipleSpeed ||
@@ -483,23 +549,24 @@ fun PlayerControls(
             },
         ) {
           val showChaptersButton by playerPreferences.showChaptersButton.collectAsState()
-          TopRightPlayerControls(
-            decoder = decoder,
-            onDecoderClick = { viewModel.cycleDecoders(decoder) },
-            reduceMotion = decoderReduceMotion,
-            onDecoderLongClick = { onOpenSheet(Sheets.Decoders) },
-            isChaptersVisible = showChaptersButton && chapters.isNotEmpty(),
-            onChaptersClick = { onOpenSheet(Sheets.Chapters) },
-            onSubtitlesClick = { onOpenSheet(Sheets.SubtitleTracks) },
-            onSubtitlesLongClick = { onOpenPanel(Panels.SubtitleSettings) },
-            onAudioClick = { onOpenSheet(Sheets.AudioTracks) },
-            onAudioLongClick = { onOpenPanel(Panels.AudioDelay) },
-            onMoreClick = { onOpenSheet(Sheets.More) },
-            onMoreLongClick = { onOpenPanel(Panels.VideoFilters) },
-          )
+          if (isLandscape) landscapeStrip(ControlRegion.TopRight)
+          else
+            TopRightPlayerControls(
+              decoder = decoder,
+              onDecoderClick = { viewModel.cycleDecoders(decoder) },
+              reduceMotion = decoderReduceMotion,
+              onDecoderLongClick = { onOpenSheet(Sheets.Decoders) },
+              isChaptersVisible = showChaptersButton && chapters.isNotEmpty(),
+              onChaptersClick = { onOpenSheet(Sheets.Chapters) },
+              onSubtitlesClick = { onOpenSheet(Sheets.SubtitleTracks) },
+              onSubtitlesLongClick = { onOpenPanel(Panels.SubtitleSettings) },
+              onAudioClick = { onOpenSheet(Sheets.AudioTracks) },
+              onAudioLongClick = { onOpenPanel(Panels.AudioDelay) },
+              onMoreClick = { onOpenSheet(Sheets.More) },
+              onMoreLongClick = { onOpenPanel(Panels.VideoFilters) },
+            )
         }
         // Bottom right controls
-        val customButtonTitle by viewModel.primaryButtonTitle.collectAsState()
         AnimatedVisibility(
           controlsShown && !areControlsLocked,
           enter =
@@ -523,27 +590,29 @@ fun PlayerControls(
             },
         ) {
           val activity = LocalActivity.current!! as PlayerActivity
-          BottomRightPlayerControls(
-            customButton = customButton,
-            customButtonTitle = customButtonTitle,
-            isPipAvailable = activity.isPipSupported,
-            onPipClick = {
-              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                activity.enterPictureInPictureMode(activity.createPipParams())
-              } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                activity.enterPictureInPictureMode()
-              }
-            },
-            onAspectClick = {
-              viewModel.changeVideoAspect(
-                when (aspectRatio) {
-                  VideoAspect.Fit -> VideoAspect.Stretch
-                  VideoAspect.Stretch -> VideoAspect.Crop
-                  VideoAspect.Crop -> VideoAspect.Fit
+          if (isLandscape) landscapeStrip(ControlRegion.BottomRight)
+          else
+            BottomRightPlayerControls(
+              customButton = customButton,
+              customButtonTitle = customButtonTitle,
+              isPipAvailable = activity.isPipSupported,
+              onPipClick = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                  activity.enterPictureInPictureMode(activity.createPipParams())
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                  activity.enterPictureInPictureMode()
                 }
-              )
-            },
-          )
+              },
+              onAspectClick = {
+                viewModel.changeVideoAspect(
+                  when (aspectRatio) {
+                    VideoAspect.Fit -> VideoAspect.Stretch
+                    VideoAspect.Stretch -> VideoAspect.Crop
+                    VideoAspect.Crop -> VideoAspect.Fit
+                  }
+                )
+              },
+            )
         }
         // Bottom left controls
         AnimatedVisibility(
@@ -571,18 +640,20 @@ fun PlayerControls(
             },
         ) {
           val showChapterIndicator by playerPreferences.currentChaptersIndicator.collectAsState()
-          BottomLeftPlayerControls(
-            playbackSpeed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
-            showChapterIndicator = showChapterIndicator,
-            currentChapter = chapters.getOrNull(currentChapter ?: 0),
-            onLockControls = viewModel::lockControls,
-            onCycleRotation = viewModel::cycleScreenRotations,
-            onPlaybackSpeedChange = {
-              MPVLib.setPropertyFloat("speed", it)
-              playerPreferences.defaultSpeed.set(it)
-            },
-            onOpenSheet = onOpenSheet,
-          )
+          if (isLandscape) landscapeStrip(ControlRegion.BottomLeft)
+          else
+            BottomLeftPlayerControls(
+              playbackSpeed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
+              showChapterIndicator = showChapterIndicator,
+              currentChapter = chapters.getOrNull(currentChapter ?: 0),
+              onLockControls = viewModel::lockControls,
+              onCycleRotation = viewModel::cycleScreenRotations,
+              onPlaybackSpeedChange = {
+                MPVLib.setPropertyFloat("speed", it)
+                playerPreferences.defaultSpeed.set(it)
+              },
+              onOpenSheet = onOpenSheet,
+            )
         }
       }
     }

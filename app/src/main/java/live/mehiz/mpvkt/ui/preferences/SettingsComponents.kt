@@ -195,7 +195,7 @@ internal fun <T> ListPreference(
             val selected = choice == value
             Row(
               Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(
                   if (selected) MaterialTheme.colorScheme.primaryContainer
                   else
@@ -209,7 +209,7 @@ internal fun <T> ListPreference(
                   onValueChange(choice)
                   showing = false
                 }
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
               verticalAlignment = Alignment.CenterVertically,
             ) {
               Text(

@@ -41,15 +41,7 @@ fun TopRightPlayerControls(
   reduceMotion: Boolean = false,
   modifier: Modifier = Modifier,
 ) {
-  val measurer = rememberTextMeasurer()
-  val style = MaterialTheme.typography.bodyMedium
-  val labelWidth =
-    remember(measurer, style) {
-      Decoder.entries.maxOf { measurer.measure(AnnotatedString(it.title), style).size.width }
-    }
-  val decoderWidth =
-    (with(LocalDensity.current) { labelWidth.toDp() } + MaterialTheme.spacing.medium * 2)
-      .coerceAtLeast(48.dp)
+  val decoderWidth = rememberDecoderButtonWidth()
   Row(modifier, verticalAlignment = Alignment.CenterVertically) {
     ControlsButton(
       decoder.title,
@@ -66,4 +58,16 @@ fun TopRightPlayerControls(
     ControlsButton(Icons.Audiotrack, onClick = onAudioClick, onLongClick = onAudioLongClick)
     ControlsButton(Icons.MoreVert, onClick = onMoreClick, onLongClick = onMoreLongClick)
   }
+}
+
+@Composable
+internal fun rememberDecoderButtonWidth(): androidx.compose.ui.unit.Dp {
+  val measurer = rememberTextMeasurer()
+  val style = MaterialTheme.typography.bodyMedium
+  val labelWidth =
+    remember(measurer, style) {
+      Decoder.entries.maxOf { measurer.measure(AnnotatedString(it.title), style).size.width }
+    }
+  return (with(LocalDensity.current) { labelWidth.toDp() } + MaterialTheme.spacing.medium * 2)
+    .coerceAtLeast(48.dp)
 }

@@ -1,7 +1,5 @@
 package live.mehiz.mpvkt.presentation.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -17,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -46,21 +43,13 @@ internal fun AppDialog(
   icon: (@Composable () -> Unit)? = null,
 ) {
   val reduceMotion = LocalReduceMotion.current
-  var entered by remember { mutableStateOf(false) }
-  LaunchedEffect(Unit) { entered = true }
-  val progress by
-    animateFloatAsState(
-      if (entered) 1f else 0f,
-      tween(if (reduceMotion) 0 else 240),
-      label = "dialog_enter",
-    )
   Dialog(onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
     val window =
       (androidx.compose.ui.platform.LocalView.current.parent
           as? androidx.compose.ui.window.DialogWindowProvider)
         ?.window
-    DisposableEffect(window) {
-      window?.setWindowAnimations(0)
+    DisposableEffect(window, reduceMotion) {
+      window?.setWindowAnimations(if (reduceMotion) 0 else R.style.MpvDialogMotion)
       onDispose {}
     }
     BoxWithConstraints(
@@ -76,16 +65,10 @@ internal fun AppDialog(
           )
       )
       Surface(
-        modifier
-          .widthIn(max = 420.dp)
-          .fillMaxWidth()
-          .heightIn(max = maxHeight)
-          .pointerInput(Unit) { detectTapGestures(onTap = {}) }
-          .graphicsLayer {
-            alpha = progress
-            translationY = (1f - progress) * 12.dp.toPx()
-          },
-        shape = RoundedCornerShape(36.dp),
+        modifier.widthIn(max = 420.dp).fillMaxWidth().heightIn(max = maxHeight).pointerInput(Unit) {
+          detectTapGestures(onTap = {})
+        },
+        shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 0.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .45f)),
@@ -96,7 +79,7 @@ internal fun AppDialog(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
           ) {
             Surface(
-              shape = RoundedCornerShape(18.dp),
+              shape = RoundedCornerShape(14.dp),
               color =
                 lerp(
                   MaterialTheme.colorScheme.surfaceContainer,
@@ -161,7 +144,7 @@ internal fun DialogButton(
   else
     OutlinedButton(
       onClick,
-      modifier.fillMaxWidth().heightIn(min = 52.dp).fillMaxHeight(),
+      modifier.fillMaxWidth().heightIn(min = 48.dp).fillMaxHeight(),
       enabled = enabled,
       shape = RoundedCornerShape(50),
       border =
@@ -183,7 +166,7 @@ internal fun DialogButton(
             if (primary) MaterialTheme.colorScheme.onPrimary
             else MaterialTheme.colorScheme.onSurface,
         ),
-      contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+      contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp),
       content = content,
     )
 }
@@ -208,7 +191,7 @@ internal fun RoundedTextField(
   singleLine: Boolean = false,
   maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
   minLines: Int = 1,
-  shape: Shape = RoundedCornerShape(20.dp),
+  shape: Shape = RoundedCornerShape(16.dp),
 ) {
   OutlinedTextField(
     value,

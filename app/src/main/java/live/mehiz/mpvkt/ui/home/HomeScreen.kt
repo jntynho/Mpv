@@ -35,6 +35,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
+import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.motion.ElasticRefreshBox
 import live.mehiz.mpvkt.ui.player.PlayerActivity
@@ -65,6 +66,23 @@ object HomeScreen : Screen {
     var selectedFolder by rememberSaveable { mutableStateOf<String?>(null) }
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
+    val folders = koinInject<live.mehiz.mpvkt.preferences.FoldersPreferences>()
+    val excluded by folders.excluded.collectAsState()
+    val included by folders.included.collectAsState()
+    val includeOnly by folders.includeOnly.collectAsState()
+    val minimumDuration by folders.minimumDuration.collectAsState()
+    val minimumSize by folders.minimumSizeMb.collectAsState()
+    val policy = FolderPolicy(excluded, included, includeOnly, minimumDuration, minimumSize)
+    // Keep the prepared root fast path free of another cold asynchronous filtering pass.
+    val visibleVideos =
+      if (policy.unrestricted) state.videos
+      else {
+        val filtered by
+          produceState(emptyList<LibraryVideo>(), state.videos, policy) {
+            value = withContext(Dispatchers.Default) { policy.apply(state.videos) }
+          }
+        filtered
+      }
     val savedSort = remember { context.getSharedPreferences("library_ui", Context.MODE_PRIVATE) }
     var viewMode by rememberSaveable {
       mutableStateOf(LibraryViewMode.restore(savedSort.getString("view_mode", null)))
@@ -156,7 +174,7 @@ object HomeScreen : Screen {
         ) {
           if (state.loading && state.videos.isEmpty())
             CircularProgressIndicator(Modifier.align(Alignment.Center), strokeWidth = 2.dp)
-          val sourceVideos = state.videos
+          val sourceVideos = visibleVideos
           val searchQuery = query
           val requestedFolder = selectedFolder
           val initialListing =
@@ -245,6 +263,13 @@ object HomeScreen : Screen {
                     listing.videos.isEmpty()
                 )
                   item { Text(stringResource(R.string.mpv_empty)) }
+                if (state.incomplete)
+                  item {
+                    Text(
+                      stringResource(R.string.mpv_folder_scan_incomplete),
+                      color = colors.onSurfaceVariant,
+                    )
+                  }
                 if (listing.folders.isNotEmpty()) {
                   items(listing.folders, key = { it.id }) { entry ->
                     Row(

@@ -118,7 +118,18 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     owner.lifecycle.addObserver(observer)
     onDispose { owner.lifecycle.removeObserver(observer) }
   }
-  LaunchedEffect(access) { if (access) library.reload() else library.clearAccess() }
+  val folderPreferences =
+    remember(app) {
+      live.mehiz.mpvkt.preferences.FoldersPreferences(
+        live.mehiz.mpvkt.preferences.preference.AndroidPreferenceStore(app)
+      )
+    }
+  val selectedScan by folderPreferences.includeHidden.collectAsState()
+  val selectedTrees by folderPreferences.hiddenTrees.collectAsState()
+  val hasSelectedAccess = selectedScan && selectedTrees.isNotEmpty()
+  LaunchedEffect(access, hasSelectedAccess, selectedTrees) {
+    if (access || hasSelectedAccess) library.reload(force = true) else library.clearAccess()
+  }
   LaunchedEffect(database) {
     try {
       withContext(Dispatchers.IO) { database.openHelper.writableDatabase }
@@ -144,17 +155,18 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     }
     prepared = true
   }
-  LaunchedEffect(state.videos) {
+  val thumbnailOptions = live.mehiz.mpvkt.ui.home.LocalThumbnailOptions.current
+  LaunchedEffect(state.videos, thumbnailOptions) {
     // A small, bounded prefetch, not a decode of the whole library and not a startup gate.
     thumbnails = emptyList()
-    if (library.enteredHome) return@LaunchedEffect
+    if (library.enteredHome || !thumbnailOptions.enabled) return@LaunchedEffect
     state.videos.take(3).forEach { video ->
-      Thumbnails.load(app, video.uri, video.revision)?.let {
+      Thumbnails.load(app, video.uri, video.revision, thumbnailOptions)?.let {
         if (!library.enteredHome) thumbnails = thumbnails + it
       }
     }
   }
-  val dataReady = !access || state.loaded
+  val dataReady = (!access && !hasSelectedAccess) || state.loaded
   val ready =
     introduced &&
       prepared &&

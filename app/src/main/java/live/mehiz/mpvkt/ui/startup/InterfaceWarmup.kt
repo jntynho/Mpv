@@ -95,6 +95,14 @@ internal fun InterfaceWarmup(
                 } while (drawn != revision)
               } ?: error("Warmup view did not draw")
               withFrameNanos {}
+              // Exercise forward and reverse frames. Animation time is real work, not an empty
+              // hold.
+              val until =
+                withFrameNanos { it } +
+                  (if (reduceMotion) 32 else if (firstRun) 280 else 140) * 1_000_000L
+              do {
+                val now = withFrameNanos { it }
+              } while (now < until)
               try {
                 captureFrame(layer)
                 captures++
@@ -107,14 +115,6 @@ internal fun InterfaceWarmup(
                 healthy = false
                 failure = "OutOfMemoryError"
               }
-              // Exercise forward and reverse frames. Animation time is real work, not an empty
-              // hold.
-              val until =
-                withFrameNanos { it } +
-                  (if (reduceMotion) 32 else if (firstRun) 280 else 140) * 1_000_000L
-              do {
-                val now = withFrameNanos { it }
-              } while (now < until)
             }
             completeScenes++
             progress(completeScenes / 6f)
