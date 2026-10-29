@@ -351,9 +351,6 @@ enum class ColourAccent(val label: String, private vararg val tones: Long) {
     0xFF0A0A0A,
   );
 
-  fun preview(dark: Boolean) =
-    if (tones.isEmpty()) Color(0xFF9CD6C5) else Color(tones[if (dark) 1 else 0])
-
   fun applyTo(base: ColorScheme, dark: Boolean): ColorScheme {
     if (tones.isEmpty()) return base
     val p = Color(tones[if (dark) 1 else 0])

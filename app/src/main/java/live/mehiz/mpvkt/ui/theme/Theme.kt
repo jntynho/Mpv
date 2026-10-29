@@ -102,6 +102,10 @@ private val darkScheme =
     surfaceContainerHighest = surfaceContainerHighestDark,
   )
 
+// Use the actual static theme as the swatch base, independent of wallpaper colours.
+internal fun ColourAccent.previewScheme(dark: Boolean) =
+  applyTo(if (dark) darkScheme else lightScheme, dark)
+
 @Composable
 fun MpvKtTheme(content: @Composable () -> Unit) {
   val preferences = koinInject<AppearancePreferences>()
