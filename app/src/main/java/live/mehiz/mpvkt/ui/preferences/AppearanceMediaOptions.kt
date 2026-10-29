@@ -62,8 +62,8 @@ internal fun ColourAccentPreference(preferences: AppearancePreferences) {
     LazyRow(
       modifier = Modifier.fillMaxWidth().selectableGroup(),
       state = listState,
-      contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
       items(ColourAccent.entries, key = { it.name }) { choice ->
         ColourAccentSwatch(choice, dark, selected = choice == accent && !dynamic) {
@@ -90,20 +90,20 @@ private fun ColourAccentSwatch(
       label = "accent_selection",
     )
   Box(
-    Modifier.size(76.dp)
+    Modifier.size(56.dp)
       .clip(CircleShape)
       .selectable(selected, role = Role.RadioButton, onClick = onClick)
       .semantics { contentDescription = accent.label }
   ) {
     Canvas(Modifier.fillMaxSize()) {
-      val stroke = 3.dp.toPx()
+      val stroke = 2.dp.toPx()
       drawCircle(
         scheme.primary.copy(alpha = ringAlpha),
         radius = (size.minDimension - stroke) / 2f,
         style = Stroke(stroke),
       )
     }
-    Canvas(Modifier.fillMaxSize().padding(7.dp).clip(CircleShape)) {
+    Canvas(Modifier.fillMaxSize().padding(5.dp).clip(CircleShape)) {
       drawRect(scheme.surface)
       drawRect(
         scheme.primary,
