@@ -30,7 +30,7 @@ val originalMpvRuntime = configurations.create("originalMpvRuntime") {
   isTransitive = false
   attributes.attribute(org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE, objects.named(org.gradle.api.attributes.Usage.JAVA_RUNTIME))
 }
-val patchedMpvAar = layout.buildDirectory.file("generated/mpv-runtime/mpv-android-lib-0.1.9-pause1.aar")
+val patchedMpvAar = layout.buildDirectory.file("generated/mpv-runtime/mpv-android-lib-0.1.9-pause2.aar")
 val nativePauseDirectory = rootProject.file("third_party/mpv-pause")
 
 fun sha256Of(file: File): String {
@@ -103,8 +103,8 @@ android {
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     minSdk = 21
     targetSdk = 36
-    versionCode = 21
-    versionName = "0.17.0"
+    versionCode = 22
+    versionName = "0.17.1"
 
     vectorDrawables {
       useSupportLibrary = true

@@ -29,7 +29,7 @@ for abi, entry in provenance['binaries'].items():
     assert data[:4] == b'\x7fELF' and data[5] == 1
     assert struct.unpack_from('<H', data, 16)[0] == 3
     assert struct.unpack_from('<H', data, 18)[0] == (183 if abi == 'arm64-v8a' else 40)
-    assert b'mpvkt-pause1' in data and b'Failed to change native pause state' in data
+    assert provenance['nativeVersion'].encode() in data and b'Failed to change native pause state' in data
     if abi == 'arm64-v8a':
         offset = struct.unpack_from('<Q', data, 32)[0]
         size, count = struct.unpack_from('<HH', data, 54)
@@ -158,6 +158,25 @@ int main(void) {
                 ao_set_paused(&a,false,false);
                 assert(fabs(ao_get_delay(&a)-initial)<1e-9);
             }
+            // Pause during an output underrun. If data returns after logical unpause,
+            // resume the preserved device buffer/clock instead of priming it a second time.
+            p.playing=false;
+            ao_set_paused(&a,true,false);
+            now+=20000000000LL;
+            assert(fabs(ao_get_delay(&a)-initial)<1e-9);
+            ao_set_paused(&a,false,false);
+            assert(hardware_state==SL_PLAYSTATE_PAUSED);
+            ao_start(&a);
+            assert(hardware_state==SL_PLAYSTATE_PLAYING && hardware_samples==6000);
+            assert(!p.hw_paused && fabs(ao_get_delay(&a)-initial)<1e-9);
+            // The opposite ordering: decoded data becomes ready before the user resumes.
+            p.playing=false;
+            ao_set_paused(&a,true,false);now+=20000000000LL;
+            ao_start(&a);
+            assert(p.hw_paused && hardware_state==SL_PLAYSTATE_PAUSED && hardware_samples==6000);
+            ao_set_paused(&a,false,false);
+            assert(!p.hw_paused && hardware_state==SL_PLAYSTATE_PLAYING && hardware_samples==6000);
+            assert(fabs(ao_get_delay(&a)-initial)<1e-9);
             // Seek while paused: real AO reset clears the old samples and hw_paused flag.
             // Starting it in paused mode must wait, then resume the OpenSL device and prime it.
             ao_set_paused(&a,true,false);
@@ -201,4 +220,4 @@ with tempfile.TemporaryDirectory(prefix='mpv-native-pause-') as tmp:
         exe = path.with_suffix('.test')
         subprocess.run(['cc','-std=c11','-O0','-pthread',str(path),'-o',str(exe)],check=True)
         subprocess.run([str(exe)],check=True)
-print('PASS: upstream loss reproduced; patched queue/clock preserved, repeated toggles, paused/playing seeks, reset and error handling checked.')
+print('PASS: upstream loss reproduced; patched queue/clock preserved, repeated toggles, underrun resume ordering, paused/playing seeks, reset and error handling checked.')

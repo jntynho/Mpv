@@ -52,7 +52,41 @@
      }
  
      int64_t pending = mp_async_queue_get_samples(p->queue);
-@@ -414,6 +415,8 @@
+@@ -364,6 +365,7 @@
+ {
+     struct buffer_state *p = ao->buffer_state;
+     bool do_start = false;
++    bool resume_hw = false;
+ 
+     mp_mutex_lock(&p->lock);
+ 
+@@ -371,13 +373,23 @@
+ 
+     if (!ao->driver->write && !p->paused && !p->streaming) {
+         p->streaming = true;
+-        do_start = true;
++        // An underrun can require a fresh start after logical unpause. Keep the
++        // preserved device buffer and its clock instead of priming it again.
++        if (p->hw_paused) {
++            p->end_time_ns = p->queued_time_ns + mp_time_ns();
++            p->hw_paused = false;
++            resume_hw = true;
++        } else {
++            do_start = true;
++        }
+     }
+ 
+     mp_mutex_unlock(&p->lock);
+ 
+     // Pull AOs might call ao_read_data() so do this outside the lock.
+-    if (do_start)
++    if (resume_hw)
++        ao->driver->set_pause(ao, false);
++    else if (do_start)
+         ao->driver->start(ao);
+ 
+     ao_wakeup(ao);
+@@ -414,6 +426,8 @@
                  do_change_state = true;
                  p->streaming = false;
                  is_hw_paused = p->hw_paused = !!ao->driver->set_pause;
@@ -61,7 +95,7 @@
              }
          }
          wakeup = true;
-@@ -439,9 +442,13 @@
+@@ -439,9 +453,13 @@
          if (is_hw_paused) {
              if (paused) {
                  ao->driver->set_pause(ao, true);

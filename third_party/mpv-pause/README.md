@@ -6,7 +6,7 @@ The app resolves `io.github.abdallahmehiz:mpv-android-lib:0.1.9` from Maven Cent
 
 The upstream OpenSLES output has `reset` and `start` but no `set_pause`. The generic audio buffer therefore clears the hardware queue on pause. Samples already removed from mpv's queue can be discarded before being heard. A `pause=true` acknowledgement and frozen video `time-pos` do not establish that those samples survived.
 
-`opensles-pause.patch` adds native `SL_PLAYSTATE_PAUSED` / `SL_PLAYSTATE_PLAYING` transitions, preserving queued samples. Explicit seeks/stops still call the original `reset` and clear stale audio. A fresh start explicitly restores `PLAYING`, including after a seek made while paused; clearing `hw_paused` during reset must not leave the OpenSL device paused. Failed state transitions request audio-output reload. Callback output's reported delay also freezes while hardware is paused; its pause/resume timestamps are accessed under the existing mutex. No fixed backwards seek, global mute, arbitrary delay or reduced audio buffer is used.
+`opensles-pause.patch` adds native `SL_PLAYSTATE_PAUSED` / `SL_PLAYSTATE_PLAYING` transitions, preserving queued samples. Explicit seeks/stops still call the original `reset` and clear stale audio. A fresh start explicitly restores `PLAYING`, including after a seek made while paused; clearing `hw_paused` during reset must not leave the OpenSL device paused. Failed state transitions request audio-output reload. If decoded audio returns after an underrun and logical unpause, generic AO start resumes the preserved hardware queue/clock without priming it twice. Both data-before-Play and Play-before-data orderings have regression coverage. Callback output's reported delay also freezes while hardware is paused; its pause/resume timestamps are accessed under the existing mutex. No fixed backwards seek, global mute, arbitrary delay or reduced audio buffer is used.
 
 The callback's internal mutex is released before calling the Android API, so a synchronous state change can finish a callback without waiting on a lock held by that caller.
 
@@ -14,11 +14,11 @@ The callback's internal mutex is released before calling the Android API, so a s
 
 `provenance.json` records the original AAR checksum, source revisions, patched binary checksums, API level and NDK version. `buildscripts/sources.lock.json` records archive checksums. The source revisions for mpv, FFmpeg headers, libass and libplacebo match the versions embedded in the original AAR; FFmpeg binaries themselves are reused unmodified. Lua keeps the producer's Android portability flags, including the old Android 32-bit file-seek fallback.
 
-Both binaries retain all 54 public `mpv_*` entrypoints from the original library and the same required shared-library names. Codec binaries and formats are not removed. The native marker is `mpvkt-pause1`. API 21 is the minimum, and ARM64 load segments are aligned to 16 KB.
+Both binaries retain all 54 public `mpv_*` entrypoints from the original library and the same required shared-library names. Codec binaries and formats are not removed. The native marker is `mpvkt-pause2`. API 21 is the minimum, and ARM64 load segments are aligned to 16 KB.
 
 ## Tests and their limits
 
-Run `python3 scripts/check-native-pause.py` from the repository root. It extracts the actual upstream and patched C functions, compiles them with a simulated OpenSL device and clock, reproduces the old queue loss, and verifies preserved samples/delay after short and long pauses, repeated toggles, seeking/resetting while paused and playing, and native state errors. Original source fixtures retain their upstream copyright and GPL terms.
+Run `python3 scripts/check-native-pause.py` from the repository root. It extracts the actual upstream and patched C functions, compiles them with a simulated OpenSL device and clock, reproduces the old queue loss, and verifies preserved samples/delay after short and long pauses, repeated toggles, seeking/resetting while paused and playing, resumption around audio underruns, and native state errors. Original source fixtures retain their upstream copyright and GPL terms.
 
 The harness is not Android playback or a physical audio/GPU measurement. The complete modified mpv source is separately cross-compiled for both ARM ABIs. Device validation of sound, frame presentation, routes/headphones, rotation, seeking and background playback remains required before claiming hardware-wide stability.
 
