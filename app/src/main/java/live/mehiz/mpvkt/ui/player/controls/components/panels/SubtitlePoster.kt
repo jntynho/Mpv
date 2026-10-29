@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,14 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 
@@ -42,7 +35,7 @@ internal fun SubtitlePoster(url: String?, reduceMotion: Boolean, modifier: Modif
       )
     Box(
       modifier
-        .size(76.dp, 114.dp)
+        .defaultMinSize(minWidth = 76.dp, minHeight = 114.dp)
         .clip(RoundedCornerShape(6.dp))
         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
       contentAlignment = Alignment.Center,
@@ -62,46 +55,5 @@ internal fun SubtitlePoster(url: String?, reduceMotion: Boolean, modifier: Modif
         )
       }
     }
-  }
-}
-
-@Composable
-internal fun SubtitleMediaRow(media: MediaMatch, reduceMotion: Boolean, select: () -> Unit) {
-  val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-  Row(
-    Modifier.fillMaxWidth()
-      .padding(horizontal = 12.dp, vertical = 4.dp)
-      .clip(RoundedCornerShape(18.dp))
-      .clickable(onClick = select)
-      .padding(8.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    SubtitlePoster(media.posterUrl, reduceMotion)
-    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Text(
-        media.title,
-        style = MaterialTheme.typography.titleSmall,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-      )
-      Text(
-        listOf(
-            if (media.television) stringResource(R.string.subtitle_series)
-            else stringResource(R.string.subtitle_movie),
-            media.year,
-          )
-          .filter(String::isNotBlank)
-          .joinToString(" · "),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-    }
-    Icon(
-      Icons.ArrowDropDown,
-      null,
-      Modifier.size(18.dp).graphicsLayer { rotationZ = if (rtl) 90f else -90f },
-      tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
   }
 }
