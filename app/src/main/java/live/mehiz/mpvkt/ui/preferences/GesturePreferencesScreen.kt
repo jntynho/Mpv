@@ -24,6 +24,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.GesturePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Gesture
 import live.mehiz.mpvkt.ui.icons.Icons
@@ -79,6 +80,7 @@ object GesturePreferencesScreen : Screen {
                   Text(text = stringResource(id = R.string.pref_player_double_tap_seek_duration))
                 },
                 summary = { Text(text = "${doubleTapSeekDuration}s") },
+                icon = { Icon(optionIcon(R.string.pref_player_double_tap_seek_duration), null) },
               )
 
               val leftDoubleTap by preferences.leftSingleActionGesture.collectAsState()
@@ -91,6 +93,7 @@ object GesturePreferencesScreen : Screen {
                   Text(text = stringResource(R.string.pref_gesture_double_tap_left_title))
                 },
                 summary = { Text(text = stringResource(leftDoubleTap.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_double_tap_left_title), null) },
               )
 
               val centerDoubleTap by preferences.centerSingleActionGesture.collectAsState()
@@ -108,6 +111,7 @@ object GesturePreferencesScreen : Screen {
                   Text(text = stringResource(R.string.pref_gesture_double_tap_center_title))
                 },
                 summary = { Text(text = stringResource(centerDoubleTap.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_double_tap_center_title), null) },
               )
 
               val rightDoubleTap by preferences.rightSingleActionGesture.collectAsState()
@@ -120,6 +124,7 @@ object GesturePreferencesScreen : Screen {
                   Text(text = stringResource(R.string.pref_gesture_double_tap_right_title))
                 },
                 summary = { Text(text = stringResource(rightDoubleTap.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_double_tap_right_title), null) },
               )
 
               val doubleTapKeyCodes =
@@ -165,6 +170,7 @@ object GesturePreferencesScreen : Screen {
                 valueToText = { AnnotatedString(context.getString(it.titleRes)) },
                 title = { Text(text = stringResource(R.string.pref_gesture_media_previous)) },
                 summary = { Text(text = stringResource(mediaPreviousGesture.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_media_previous), null) },
               )
               val mediaPlayGesture by preferences.mediaPlayGesture.collectAsState()
               ListPreference(
@@ -179,6 +185,7 @@ object GesturePreferencesScreen : Screen {
                 valueToText = { AnnotatedString(context.getString(it.titleRes)) },
                 title = { Text(text = stringResource(R.string.pref_gesture_media_play)) },
                 summary = { Text(text = stringResource(mediaPlayGesture.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_media_play), null) },
               )
               val mediaNextGesture by preferences.mediaNextGesture.collectAsState()
               ListPreference(
@@ -188,6 +195,7 @@ object GesturePreferencesScreen : Screen {
                 valueToText = { AnnotatedString(context.getString(it.titleRes)) },
                 title = { Text(text = stringResource(R.string.pref_gesture_media_next)) },
                 summary = { Text(text = stringResource(mediaNextGesture.titleRes)) },
+                icon = { Icon(optionIcon(R.string.pref_gesture_media_next), null) },
               )
 
               val mediaKeyCodes =

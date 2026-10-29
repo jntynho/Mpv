@@ -7,6 +7,9 @@ import live.mehiz.mpvkt.ui.icons.IconStyle
 import live.mehiz.mpvkt.ui.theme.DarkMode
 
 class AppearancePreferences(preferenceStore: PreferenceStore) {
+  val libraryFields = preferenceStore.getStringSet("library_fields", setOf("Path", "Thumbnails", "Extension", "Duration"))
+  val libraryGrid = preferenceStore.getBoolean("library_grid", false)
+  val libraryGridColumns = preferenceStore.getInt("library_grid_columns", 0)
   val colourAccent =
     preferenceStore.getEnum("colour_accent", live.mehiz.mpvkt.ui.theme.ColourAccent.Original)
   val showThumbnails = preferenceStore.getBoolean("show_video_thumbnails", true)

@@ -234,7 +234,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_preferred),
               preferred.ifBlank { stringResource(R.string.subtitle_not_set) },
-              Icons.Subtitles,
+              optionIcon(R.string.subtitle_preferred),
               enabled = configReady && "slang" !in owned,
             ) {
               editLanguages = true
@@ -243,7 +243,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_autoload),
               stringResource(R.string.subtitle_autoload_summary),
-              Icons.InsertDriveFile,
+              optionIcon(R.string.subtitle_autoload),
               enabled = configReady && "sub-auto" !in owned,
               toggle = auto,
             ) {
@@ -254,7 +254,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_ass),
               stringResource(R.string.subtitle_ass_summary),
-              Icons.FormatColorText,
+              optionIcon(R.string.subtitle_ass),
               enabled =
                 configReady &&
                   setOf("sub-ass-override", "secondary-sub-ass-override").none { it in owned },
@@ -271,7 +271,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_scale),
               stringResource(R.string.subtitle_scale_summary),
-              Icons.AspectRatio,
+              optionIcon(R.string.subtitle_scale),
               enabled =
                 configReady && setOf("sub-scale-by-window", "sub-use-margins").none { it in owned },
               toggle = windowScale,
@@ -287,7 +287,7 @@ internal fun SubtitleSettingsPage(
                 if (secondarySupported) R.string.subtitle_secondary_summary
                 else R.string.subtitle_unsupported
               ),
-              Icons.FormatSize,
+              optionIcon(R.string.subtitle_secondary),
               enabled =
                 configReady &&
                   secondarySupported &&
@@ -305,7 +305,7 @@ internal fun SubtitleSettingsPage(
               stringResource(R.string.subtitle_fonts_dir),
               if (fontsFolder.isBlank()) stringResource(R.string.subtitle_fonts_hint)
               else runCatching { getSimplifiedPathFromUri(fontsFolder) }.getOrDefault(fontsFolder),
-              Icons.Folder,
+              optionIcon(R.string.subtitle_fonts_dir),
               enabled = configReady && "sub-fonts-dir" !in owned,
             ) {
               chooseDirectory()
@@ -315,7 +315,7 @@ internal fun SubtitleSettingsPage(
               stringResource(R.string.subtitle_font),
               if (fontLoading) stringResource(R.string.subtitle_loading)
               else currentFont + "\n" + stringResource(R.string.subtitle_font_count, fonts.size),
-              Icons.FormatColorText,
+              optionIcon(R.string.subtitle_font),
               enabled = configReady && "sub-font" !in owned,
             ) {
               val choices =
@@ -333,7 +333,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_reload_fonts),
               stringResource(R.string.subtitle_reload_summary),
-              Icons.Refresh,
+              optionIcon(R.string.subtitle_reload_fonts),
               enabled = fontsFolder.isNotBlank() && !fontLoading,
             ) {
               refresh++
@@ -342,7 +342,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_clear_fonts),
               stringResource(R.string.subtitle_clear_fonts_summary),
-              Icons.FormatClear,
+              optionIcon(R.string.subtitle_clear_fonts),
               enabled = fontsFolder.isNotBlank(),
               danger = true,
             ) {
@@ -383,7 +383,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_mode),
               SubtitleCatalog.modes[mode].orEmpty(),
-              Icons.Search,
+              optionIcon(R.string.subtitle_mode),
             ) {
               choose(
                 context.getString(R.string.subtitle_mode),
@@ -398,7 +398,7 @@ internal fun SubtitleSettingsPage(
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_hub),
                 summary(SubtitleCatalog.hub, hub),
-                Icons.Link,
+                optionIcon(R.string.subtitle_hub),
               ) {
                 choose(
                   context.getString(R.string.subtitle_hub),
@@ -416,7 +416,7 @@ internal fun SubtitleSettingsPage(
                 stringResource(R.string.subtitle_wyzie),
                 if (sourcesLoading) stringResource(R.string.subtitle_loading)
                 else summary(wyzieValues, wyzie),
-                Icons.Link,
+                optionIcon(R.string.subtitle_wyzie),
                 enabled = !sourcesLoading,
               ) {
                 scope.launch {
@@ -446,7 +446,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_languages),
               summary(SubtitleCatalog.languages, languages),
-              Icons.Subtitles,
+              optionIcon(R.string.subtitle_languages),
             ) {
               choose(
                 context.getString(R.string.subtitle_languages),
@@ -460,7 +460,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_filters),
               "",
-              Icons.Tune,
+              optionIcon(R.string.subtitle_filters),
               expanded = advanced,
             ) {
               advanced = !advanced
@@ -470,7 +470,7 @@ internal fun SubtitleSettingsPage(
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_hearing),
                 stringResource(R.string.subtitle_hearing_summary),
-                Icons.Headset,
+                optionIcon(R.string.subtitle_hearing),
                 toggle = hearing,
               ) {
                 preferences.hearingImpaired.set(!hearing)
@@ -485,7 +485,7 @@ internal fun SubtitleSettingsPage(
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_ai),
                 aiValues[ai].orEmpty(),
-                Icons.Memory,
+                optionIcon(R.string.subtitle_ai),
               ) {
                 choose(context.getString(R.string.subtitle_ai), aiValues, setOf(ai)) {
                   preferences.aiResults.set(it.first())
@@ -495,7 +495,7 @@ internal fun SubtitleSettingsPage(
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_formats),
                 summary(SubtitleCatalog.formats, formats),
-                Icons.InsertDriveFile,
+                optionIcon(R.string.subtitle_formats),
               ) {
                 choose(
                   context.getString(R.string.subtitle_formats),
@@ -509,7 +509,7 @@ internal fun SubtitleSettingsPage(
               SubtitleSettingRow(
                 stringResource(R.string.subtitle_encodings),
                 summary(SubtitleCatalog.encodings, encodings),
-                Icons.Code,
+                optionIcon(R.string.subtitle_encodings),
               ) {
                 choose(
                   context.getString(R.string.subtitle_encodings),
@@ -547,7 +547,7 @@ internal fun SubtitleSettingsPage(
             SubtitleSettingRow(
               stringResource(R.string.subtitle_clear_downloads),
               stringResource(R.string.subtitle_clear_downloads_summary),
-              Icons.Delete,
+              optionIcon(R.string.subtitle_clear_downloads),
               danger = true,
             ) {
               confirmClear = true

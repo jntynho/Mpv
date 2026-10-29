@@ -25,6 +25,7 @@ import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.preferences.MultiChoiceSegmentedButton
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.IconStyle
 import live.mehiz.mpvkt.ui.icons.Icons
@@ -78,7 +79,7 @@ object AppearancePreferencesScreen : Screen {
                 valueToText = { AnnotatedString(context.getString(it.titleRes)) },
                 title = { Text(stringResource(R.string.mpv_icons_style_title)) },
                 summary = { Text(stringResource(iconStyle.titleRes)) },
-                icon = { Icon(Icons.Palette, null) },
+                icon = { Icon(optionIcon(R.string.mpv_icons_style_title), null) },
               )
               ColourAccentPreference(preferences)
               val oledBlack by preferences.oledBlack.collectAsState()
@@ -87,6 +88,7 @@ object AppearancePreferencesScreen : Screen {
                 onValueChange = { preferences.oledBlack.set(it) },
                 title = { Text(stringResource(R.string.luma_oled)) },
                 summary = { Text(stringResource(R.string.luma_oled_summary)) },
+                icon = { Icon(optionIcon(R.string.luma_oled), null) },
               )
               val darkMode by preferences.darkMode.collectAsState()
 
@@ -117,6 +119,7 @@ object AppearancePreferencesScreen : Screen {
                   )
                 },
                 enabled = isMaterialYouAvailable,
+                icon = { Icon(optionIcon(R.string.pref_appearance_material_you_title), null) },
               )
             }
             PreferenceCategory(title = { Text(stringResource(R.string.mpv_thumbnails)) })

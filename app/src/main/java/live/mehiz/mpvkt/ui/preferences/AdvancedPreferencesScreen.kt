@@ -48,6 +48,7 @@ import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.ConfirmDialog
 import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.presentation.crash.CrashActivity
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Clear
 import live.mehiz.mpvkt.ui.icons.Code
@@ -162,6 +163,7 @@ object AdvancedPreferencesScreen : Screen {
                   it
                 },
                 summary = { if (mpvConf.isNotBlank()) Text(mpvConf.lines()[0]) },
+                icon = { Icon(optionIcon(R.string.pref_advanced_mpv_conf), null) },
               )
               val inputConf by preferences.inputConf.collectAsState()
               LaunchedEffect(mpvConfStorageLocation) {
@@ -215,6 +217,7 @@ object AdvancedPreferencesScreen : Screen {
                   it
                 },
                 summary = { if (inputConf.isNotBlank()) Text(inputConf.lines()[0]) },
+                icon = { Icon(optionIcon(R.string.pref_advanced_input_conf), null) },
               )
               val activity = LocalActivity.current!!
               val clipboard = LocalClipboardManager.current
@@ -232,6 +235,7 @@ object AdvancedPreferencesScreen : Screen {
                     CrashActivity.shareLogs(deviceInfo, null, logcat, activity)
                   }
                 },
+                icon = { Icon(optionIcon(R.string.pref_advanced_dump_logs_title), null) },
               )
               val verboseLogging by preferences.verboseLogging.collectAsState()
               SwitchPreference(
@@ -239,12 +243,14 @@ object AdvancedPreferencesScreen : Screen {
                 onValueChange = preferences.verboseLogging::set,
                 title = { Text(stringResource(R.string.pref_advanced_verbose_logging_title)) },
                 summary = { Text(stringResource(R.string.pref_advanced_verbose_logging_summary)) },
+                icon = { Icon(optionIcon(R.string.pref_advanced_verbose_logging_title), null) },
               )
               var isConfirmDialogShown by remember { mutableStateOf(false) }
               val mpvKtDatabase = koinInject<MpvKtDatabase>()
               Preference(
                 title = { Text(stringResource(R.string.pref_advanced_clear_playback_history)) },
                 onClick = { isConfirmDialogShown = true },
+                icon = { Icon(optionIcon(R.string.pref_advanced_clear_playback_history), null) },
               )
               if (isConfirmDialogShown) {
                 ConfirmDialog(
@@ -256,6 +262,7 @@ object AdvancedPreferencesScreen : Screen {
                       try {
                         withContext(Dispatchers.IO) {
                           mpvKtDatabase.videoDataDao().clearAllPlaybackStates()
+                          live.mehiz.mpvkt.ui.home.RecentMedia.clear(context)
                         }
                         Toast.makeText(
                             context,
@@ -296,6 +303,7 @@ object AdvancedPreferencesScreen : Screen {
                     }
                   }
                 },
+                icon = { Icon(optionIcon(R.string.pref_advanced_clear_mpv_conf_cache), null) },
               )
               Preference(
                 title = {
@@ -319,6 +327,7 @@ object AdvancedPreferencesScreen : Screen {
                     }
                   }
                 },
+                icon = { Icon(optionIcon(R.string.pref_advanced_clear_fonts_cache), null) },
               )
             }
           }

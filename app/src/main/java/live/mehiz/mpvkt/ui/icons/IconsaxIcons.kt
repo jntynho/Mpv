@@ -247,3 +247,63 @@ val IconScope.Backward: ImageVector
 val IconScope.Forward: ImageVector
   @Composable get() = appIcon(IconKey.Forward, mirrored)
 
+val IconScope.Download: ImageVector
+  @Composable get() = appIcon(IconKey.Download, mirrored)
+
+val IconScope.Upload: ImageVector
+  @Composable get() = appIcon(IconKey.Upload, mirrored)
+
+val IconScope.Language: ImageVector
+  @Composable get() = appIcon(IconKey.Language, mirrored)
+
+val IconScope.Speed: ImageVector
+  @Composable get() = appIcon(IconKey.Speed, mirrored)
+
+val IconScope.Calendar: ImageVector
+  @Composable get() = appIcon(IconKey.Calendar, mirrored)
+
+val IconScope.Layers: ImageVector
+  @Composable get() = appIcon(IconKey.Layers, mirrored)
+
+val IconScope.Ruler: ImageVector
+  @Composable get() = appIcon(IconKey.Ruler, mirrored)
+
+val IconScope.Repeat: ImageVector
+  @Composable get() = appIcon(IconKey.Repeat, mirrored)
+
+val IconScope.Monitor: ImageVector
+  @Composable get() = appIcon(IconKey.Monitor, mirrored)
+
+val IconScope.Eye: ImageVector
+  @Composable get() = appIcon(IconKey.Eye, mirrored)
+
+val IconScope.FolderOpen: ImageVector
+  @Composable get() = appIcon(IconKey.FolderOpen, mirrored)
+
+val IconScope.Data: ImageVector
+  @Composable get() = appIcon(IconKey.Data, mirrored)
+
+val IconScope.History: ImageVector
+  @Composable get() = appIcon(IconKey.History, mirrored)
+
+val IconScope.Network: ImageVector
+  @Composable get() = appIcon(IconKey.Network, mirrored)
+
+val IconScope.Touch: ImageVector
+  @Composable get() = appIcon(IconKey.Touch, mirrored)
+
+val IconScope.List: ImageVector
+  @Composable get() = appIcon(IconKey.List, mirrored)
+
+val IconScope.Grid: ImageVector
+  @Composable get() = appIcon(IconKey.Grid, mirrored)
+
+val IconScope.Resolution: ImageVector
+  @Composable get() = appIcon(IconKey.Resolution, mirrored)
+
+val IconScope.Audio: ImageVector
+  @Composable get() = appIcon(IconKey.Audio, mirrored)
+
+val IconScope.Save: ImageVector
+  @Composable get() = appIcon(IconKey.Save, mirrored)
+

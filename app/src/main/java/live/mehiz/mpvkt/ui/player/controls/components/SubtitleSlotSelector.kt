@@ -36,7 +36,7 @@ internal fun SubtitleSlotSelector(
     modifier
       .fillMaxWidth()
       .height(48.dp)
-      .clip(RoundedCornerShape(16.dp))
+      .clip(RoundedCornerShape(24.dp))
       .background(MaterialTheme.colorScheme.surfaceContainerHighest)
       .padding(4.dp)
   ) {
@@ -45,7 +45,7 @@ internal fun SubtitleSlotSelector(
       Modifier.offset { IntOffset((width * position).roundToPx(), 0) }
         .width(width)
         .fillMaxHeight()
-        .clip(RoundedCornerShape(12.dp))
+        .clip(RoundedCornerShape(20.dp))
         .background(MaterialTheme.colorScheme.primaryContainer)
     )
     Row(Modifier.fillMaxSize().selectableGroup()) {
@@ -62,7 +62,7 @@ internal fun SubtitleSlotSelector(
         Box(
           Modifier.weight(1f)
             .fillMaxHeight()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(20.dp))
             .selectable(slot == index, role = Role.Tab, onClick = { onSelect(index) }),
           contentAlignment = Alignment.Center,
         ) {

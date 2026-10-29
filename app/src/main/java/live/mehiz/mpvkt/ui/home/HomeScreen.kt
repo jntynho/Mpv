@@ -5,16 +5,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,11 +19,9 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -107,6 +102,18 @@ object HomeScreen : Screen {
           if (viewMode == LibraryViewMode.Tree) selectedFolder?.let(::parentTreeFolder) else null
     }
     BackHandler(searching || selectedFolder != null, onBack = goBack)
+    val appearance = koinInject<live.mehiz.mpvkt.preferences.AppearancePreferences>()
+    val fields by appearance.libraryFields.collectAsState()
+    val grid by appearance.libraryGrid.collectAsState()
+    val columns by appearance.libraryGridColumns.collectAsState()
+    val display = LibraryDisplayOptions(fields, grid, columns.coerceIn(0, 5))
+    val positions =
+      if (fields.has(LibraryField.Progress)) {
+        val dao = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>().videoDataDao()
+        val flow = remember(dao) { dao.observeAll() }
+        val records by flow.collectAsState(initial = emptyList())
+        remember(records) { records.associate { it.mediaTitle to it.lastPosition } }
+      } else emptyMap()
     val colors = MaterialTheme.colorScheme
     val title =
       remember(state.videos, selectedFolder, viewMode) {
@@ -115,6 +122,7 @@ object HomeScreen : Screen {
         else state.videos.firstOrNull { it.folderId == selectedFolder }?.folder ?: "MPV"
       }
     Scaffold(
+      floatingActionButton = { HomeQuickActions(reduceMotion) },
       topBar = {
         LibraryHeader(
           title,
@@ -141,13 +149,19 @@ object HomeScreen : Screen {
           },
           onSettings = { backstack.add(PreferencesScreen) },
           viewMode = viewMode,
+          display = display,
+          onDisplay = { choice ->
+            appearance.libraryFields.set(choice.fields)
+            appearance.libraryGrid.set(choice.grid)
+            appearance.libraryGridColumns.set(choice.columns)
+          },
           onViewMode = { mode ->
             viewMode = mode
             selectedFolder = null
             savedSort.edit { putString("view_mode", mode.storedName) }
           },
         )
-      }
+      },
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
         if (!access) {
@@ -245,14 +259,20 @@ object HomeScreen : Screen {
             savedLists.SaveableStateProvider(
               destination.mode.storedName + ":" + (folder ?: "root")
             ) {
-              val listState = rememberLazyListState()
+              val listState = rememberLazyGridState()
+              LaunchedEffect(display.grid, display.columns) { listState.requestScrollToItem(0) }
               ResetScrollOnLibrarySort(listState, listing.sort)
-              LazyColumn(
-                Modifier.fillMaxSize(),
+              LazyVerticalGrid(
+                columns =
+                  if (!display.grid) GridCells.Fixed(1)
+                  else if (display.columns in 2..5) GridCells.Fixed(display.columns)
+                  else GridCells.Adaptive(160.dp),
+                modifier = Modifier.fillMaxSize(),
                 state = listState,
                 contentPadding =
-                  PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 64.dp),
+                  PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
               ) {
                 if (state.failed) item { Text(stringResource(R.string.mpv_library_error)) }
                 else if (
@@ -270,102 +290,31 @@ object HomeScreen : Screen {
                       color = colors.onSurfaceVariant,
                     )
                   }
-                if (listing.folders.isNotEmpty()) {
-                  items(listing.folders, key = { it.id }) { entry ->
-                    Row(
-                      Modifier.animateItem(
-                          fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                          placementSpec =
-                            tween(if (reduceMotion) 0 else 320, easing = FastOutSlowInEasing),
-                          fadeOutSpec = tween(if (reduceMotion) 0 else 120),
-                        )
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { selectedFolder = entry.id }
-                        .padding(vertical = 12.dp),
-                      horizontalArrangement = Arrangement.spacedBy(16.dp),
-                      verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                      Image(
-                        painterResource(R.drawable.library_folder),
-                        null,
-                        Modifier.size(width = 88.dp, height = 76.dp),
-                      )
-                      Column(
-                        Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                      ) {
-                        Text(
-                          entry.name,
-                          maxLines = 2,
-                          overflow = TextOverflow.Ellipsis,
-                          style = MaterialTheme.typography.titleMedium,
-                        )
-                        if (entry.path.isNotBlank())
-                          Text(
-                            entry.path,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.onSurfaceVariant,
-                          )
-                      }
-                    }
+                items(listing.folders, key = { "folder:" + it.id }) { entry ->
+                  LibraryFolderItem(
+                    entry,
+                    display,
+                    Modifier.animateItem(
+                      fadeInSpec = tween(if (reduceMotion) 0 else 180),
+                      placementSpec = tween(if (reduceMotion) 0 else 320),
+                      fadeOutSpec = tween(if (reduceMotion) 0 else 120),
+                    ),
+                  ) {
+                    selectedFolder = entry.id
                   }
                 }
-                if (listing.videos.isNotEmpty()) {
-                  items(listing.videos, key = { it.uri }) { video ->
-                    Row(
-                      Modifier.animateItem(
-                          fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                          placementSpec =
-                            tween(if (reduceMotion) 0 else 320, easing = FastOutSlowInEasing),
-                          fadeOutSpec = tween(if (reduceMotion) 0 else 120),
-                        )
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { playFile(video.uri, context) }
-                        .padding(vertical = 8.dp),
-                      horizontalArrangement = Arrangement.spacedBy(14.dp),
-                      verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                      val coverRadius = 12.dp
-                      val badgeInset = 4.dp
-                      Box(
-                        Modifier.width(136.dp).height(88.dp).clip(RoundedCornerShape(coverRadius))
-                      ) {
-                        VideoThumbnail(context, video.uri, Modifier.fillMaxSize(), video.revision)
-                        Text(
-                          formatDuration(video.duration),
-                          Modifier.align(Alignment.BottomEnd)
-                            .padding(badgeInset)
-                            .clip(RoundedCornerShape(coverRadius - badgeInset))
-                            .background(Color.Black.copy(alpha = .75f))
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                          color = Color.White,
-                          style = MaterialTheme.typography.labelSmall,
-                        )
-                      }
-                      Column(
-                        Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                      ) {
-                        Text(
-                          video.name,
-                          maxLines = 2,
-                          overflow = TextOverflow.Ellipsis,
-                          style = MaterialTheme.typography.titleSmall,
-                        )
-                        if (video.path.isNotBlank())
-                          Text(
-                            video.path,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            color = colors.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                          )
-                      }
-                    }
+                items(listing.videos, key = { "video:" + it.uri }) { video ->
+                  LibraryVideoItem(
+                    video,
+                    display,
+                    positions[video.name] ?: 0,
+                    Modifier.animateItem(
+                      fadeInSpec = tween(if (reduceMotion) 0 else 180),
+                      placementSpec = tween(if (reduceMotion) 0 else 320),
+                      fadeOutSpec = tween(if (reduceMotion) 0 else 120),
+                    ),
+                  ) {
+                    playFile(video.uri, context)
                   }
                 }
               }
@@ -388,4 +337,14 @@ internal fun formatDuration(milliseconds: Long): String {
   return if (seconds >= 3600)
     "%d:%02d:%02d".format(java.util.Locale.ROOT, seconds / 3600, seconds / 60 % 60, seconds % 60)
   else "%d:%02d".format(java.util.Locale.ROOT, seconds / 60, seconds % 60)
+}
+
+/** Frozen home folder artwork; all view modes reuse the same original shape and dimensions. */
+@Composable
+internal fun LibraryFolderArtwork() {
+  Image(
+    painterResource(R.drawable.library_folder),
+    null,
+    Modifier.size(width = 88.dp, height = 76.dp),
+  )
 }

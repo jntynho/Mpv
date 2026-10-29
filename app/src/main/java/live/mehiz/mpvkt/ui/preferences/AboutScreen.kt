@@ -37,6 +37,7 @@ import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.AppDialog
 import live.mehiz.mpvkt.presentation.components.DialogButton
 import live.mehiz.mpvkt.presentation.crash.CrashActivity.Companion.collectDeviceInfo
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Code
 import live.mehiz.mpvkt.ui.icons.Icons
@@ -107,10 +108,12 @@ object AboutScreen : Screen {
               )
             },
             onClick = { clipboard.setText(AnnotatedString(collectDeviceInfo())) },
+            icon = { Icon(optionIcon(R.string.pref_about_app_version), null) },
           )
           Preference(
             title = { Text(text = stringResource(id = R.string.pref_about_oss_libraries)) },
             onClick = { backstack.add(LibrariesScreen) },
+            icon = { Icon(optionIcon(R.string.pref_about_oss_libraries), null) },
           )
           Preference(
             title = { Text(text = stringResource(id = R.string.pref_about_privacy_policy)) },
@@ -119,6 +122,7 @@ object AboutScreen : Screen {
                 Intent(Intent.ACTION_VIEW, context.getString(R.string.privacy_policy_url).toUri())
               )
             },
+            icon = { Icon(optionIcon(R.string.pref_about_privacy_policy), null) },
           )
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {

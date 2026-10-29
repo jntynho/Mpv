@@ -30,6 +30,9 @@ data class LibraryVideo(
   val revision: Long,
   val dateAdded: Long = 0,
   val sizeBytes: Long = 0,
+  val width: Int = 0,
+  val height: Int = 0,
+  val mimeType: String = "",
 )
 
 data class LibraryState(
@@ -102,7 +105,13 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
                 ) +
                   (if (Build.VERSION.SDK_INT >= 29) arrayOf(MediaStore.Video.Media.DATA)
                   else emptyArray()) +
-                  arrayOf(MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns.SIZE)
+                  arrayOf(
+                    MediaStore.MediaColumns.DATE_ADDED,
+                    MediaStore.MediaColumns.SIZE,
+                    MediaStore.MediaColumns.WIDTH,
+                    MediaStore.MediaColumns.HEIGHT,
+                    MediaStore.MediaColumns.MIME_TYPE,
+                  )
               val addedIndex = projection.indexOf(MediaStore.MediaColumns.DATE_ADDED)
               val sizeIndex = projection.indexOf(MediaStore.MediaColumns.SIZE)
               try {
@@ -138,6 +147,11 @@ class MediaLibrary(application: Application) : AndroidViewModel(application) {
                             cursor.getLong(6),
                             cursor.getLong(addedIndex).coerceAtLeast(0),
                             cursor.getLong(sizeIndex).coerceAtLeast(0),
+                            cursor.getInt(projection.indexOf(MediaStore.MediaColumns.WIDTH)),
+                            cursor.getInt(projection.indexOf(MediaStore.MediaColumns.HEIGHT)),
+                            cursor
+                              .getString(projection.indexOf(MediaStore.MediaColumns.MIME_TYPE))
+                              .orEmpty(),
                           )
                         )
                       }

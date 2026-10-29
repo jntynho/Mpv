@@ -18,6 +18,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.DecoderPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Memory
@@ -62,6 +63,7 @@ object DecoderPreferencesScreen : Screen {
                 value = tryHWDecoding,
                 onValueChange = { preferences.tryHWDecoding.set(it) },
                 title = { Text(stringResource(R.string.pref_decoder_try_hw_dec_title)) },
+                icon = { Icon(optionIcon(R.string.pref_decoder_try_hw_dec_title), null) },
               )
               val gpuNext by preferences.gpuNext.collectAsState()
               SwitchPreference(
@@ -69,6 +71,7 @@ object DecoderPreferencesScreen : Screen {
                 onValueChange = { preferences.gpuNext.set(it) },
                 title = { Text(stringResource(R.string.pref_decoder_gpu_next_title)) },
                 summary = { Text(stringResource(R.string.pref_decoder_gpu_next_summary)) },
+                icon = { Icon(optionIcon(R.string.pref_decoder_gpu_next_title), null) },
               )
               val debanding by preferences.debanding.collectAsState()
               ListPreference(
@@ -77,6 +80,7 @@ object DecoderPreferencesScreen : Screen {
                 values = Debanding.entries,
                 title = { Text(stringResource(R.string.pref_decoder_debanding_title)) },
                 summary = { Text(debanding.name) },
+                icon = { Icon(optionIcon(R.string.pref_decoder_debanding_title), null) },
               )
               val useYUV420p by preferences.useYUV420P.collectAsState()
               SwitchPreference(
@@ -84,6 +88,7 @@ object DecoderPreferencesScreen : Screen {
                 onValueChange = { preferences.useYUV420P.set(it) },
                 title = { Text(stringResource(R.string.pref_decoder_yuv420p_title)) },
                 summary = { Text(stringResource(R.string.pref_decoder_yuv420p_summary)) },
+                icon = { Icon(optionIcon(R.string.pref_decoder_yuv420p_title), null) },
               )
             }
           }

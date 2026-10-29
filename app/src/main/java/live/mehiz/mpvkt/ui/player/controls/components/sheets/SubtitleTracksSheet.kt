@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -43,40 +42,23 @@ fun SubtitlesSheet(
       stringResource(R.string.subtitle_secondary_track),
     )
   Column(modifier.fillMaxSize()) {
+    SubtitleSlotSelector(slot, { slot = it }, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
     Row(
-      Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 4.dp),
+      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+      horizontalArrangement = Arrangement.SpaceEvenly,
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      Text(
-        stringResource(R.string.mpv_panel_adjustments),
-        Modifier.weight(1f),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-      IconButton(onClick = onOpenSubtitleDelay) {
-        Icon(Icons.MoreTime, stringResource(R.string.player_sheets_sub_delay_card_title))
-      }
       IconButton(onClick = onOpenSubtitleSettings) {
         Icon(Icons.Palette, stringResource(R.string.player_sheets_subtitles_settings_title))
       }
-    }
-    SubtitleSlotSelector(slot, { slot = it }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-    Row(
-      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-      TextButton(onClick = { onSearchOnline(slot) }, modifier = Modifier.weight(1f)) {
-        Icon(Icons.Search, null, Modifier.size(20.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(
-          stringResource(R.string.subtitle_open_online),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+      IconButton(onClick = onOpenSubtitleDelay) {
+        Icon(Icons.MoreTime, stringResource(R.string.player_sheets_sub_delay_card_title))
       }
-      FilledTonalIconButton(onClick = onAddSubtitle, modifier = Modifier.size(48.dp)) {
-        Icon(Icons.Add, stringResource(R.string.player_sheets_add_ext_sub))
+      IconButton(onClick = onAddSubtitle) {
+        Icon(Icons.Upload, stringResource(R.string.player_sheets_add_ext_sub))
+      }
+      IconButton(onClick = { onSearchOnline(slot) }) {
+        Icon(Icons.Search, stringResource(R.string.subtitle_open_online))
       }
     }
     AnimatedContent(

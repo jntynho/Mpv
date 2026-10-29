@@ -48,6 +48,8 @@ internal fun LibraryHeader(
   onSettings: () -> Unit,
   viewMode: LibraryViewMode = LibraryViewMode.Folder,
   onViewMode: (LibraryViewMode) -> Unit = {},
+  display: LibraryDisplayOptions = LibraryDisplayOptions(),
+  onDisplay: (LibraryDisplayOptions) -> Unit = {},
 ) {
   val preparing = live.mehiz.mpvkt.ui.startup.LocalInterfacePreparation.current
   val duration = if (reduceMotion) 0 else 260
@@ -193,6 +195,8 @@ internal fun LibraryHeader(
                   onSelect = onSort,
                   viewMode = viewMode,
                   onViewMode = onViewMode,
+                  display = display,
+                  onDisplay = onDisplay,
                 )
                 IconButton(onClick = onSettings, enabled = !searching && !preparing) {
                   Icon(Icons.Settings, stringResource(R.string.luma_settings))

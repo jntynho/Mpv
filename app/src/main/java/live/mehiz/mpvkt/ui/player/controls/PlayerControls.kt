@@ -141,6 +141,7 @@ fun PlayerControls(
   LaunchedEffect(mpvDecoder) {
     if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!)
   }
+  val seekbarStyle by playerPreferences.seekbarStyle.collectAsState()
   val decoderReduceMotion by playerPreferences.reduceMotion.collectAsState()
   val playerTimeToDisappear by playerPreferences.playerTimeToDisappear.collectAsState()
   val chapters by viewModel.chapters.collectAsState(persistentListOf())
@@ -479,6 +480,9 @@ fun PlayerControls(
           val remaining by MpvProperties.propFloat["playtime-remaining"].collectAsState()
           val preciseSeeking by playerPreferences.preciseSeeking.collectAsState()
           SeekbarWithTimers(
+            style = seekbarStyle,
+            paused = paused != false,
+            reduceMotion = decoderReduceMotion,
             position = position?.toFloat() ?: 0f,
             duration = duration?.toFloat() ?: 0f,
             remaining = remaining?.toFloat() ?: 0f,

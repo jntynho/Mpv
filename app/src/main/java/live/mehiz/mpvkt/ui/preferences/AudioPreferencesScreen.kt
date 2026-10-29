@@ -23,6 +23,7 @@ import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.RoundedTextField as TextField
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Audiotrack
 import live.mehiz.mpvkt.ui.icons.Icons
@@ -76,6 +77,7 @@ object AudioPreferencesScreen : Screen {
                     TextField(value, onValueChange, modifier = Modifier.fillMaxWidth())
                   }
                 },
+                icon = { Icon(optionIcon(R.string.pref_preferred_languages), null) },
               )
               val audioPitchCorrection by preferences.audioPitchCorrection.collectAsState()
               SwitchPreference(
@@ -83,6 +85,7 @@ object AudioPreferencesScreen : Screen {
                 onValueChange = { preferences.audioPitchCorrection.set(it) },
                 title = { Text(stringResource(R.string.pref_audio_pitch_correction_title)) },
                 summary = { Text(stringResource(R.string.pref_audio_pitch_correction_summary)) },
+                icon = { Icon(optionIcon(R.string.pref_audio_pitch_correction_title), null) },
               )
               val audioChannel by preferences.audioChannels.collectAsState()
               ListPreference(
@@ -92,6 +95,7 @@ object AudioPreferencesScreen : Screen {
                 valueToText = { AnnotatedString(context.getString(it.title)) },
                 title = { Text(text = stringResource(id = R.string.pref_audio_channels)) },
                 summary = { Text(text = context.getString(audioChannel.title)) },
+                icon = { Icon(optionIcon(R.string.pref_audio_channels), null) },
               )
               val volumeBoostCap by preferences.volumeBoostCap.collectAsState()
               SliderPreference(
@@ -109,6 +113,7 @@ object AudioPreferencesScreen : Screen {
                 },
                 onSliderValueChange = { preferences.volumeBoostCap.set(it.toInt()) },
                 sliderValue = volumeBoostCap.toFloat(),
+                icon = { Icon(optionIcon(R.string.pref_audio_volume_boost_cap), null) },
               )
             }
           }
