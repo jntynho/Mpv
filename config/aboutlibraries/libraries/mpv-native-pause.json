@@ -1,6 +1,6 @@
 {
   "uniqueId": "mpv-player:mpv-native-pause",
-  "artifactVersion": "0.40.0-276-g7653cc8f0-mpvkt-pause1",
+  "artifactVersion": "0.40.0-276-g7653cc8f0-mpvkt-pause2",
   "name": "mpv native runtime — OpenSLES pause correction",
   "description": "Modified mpv native runtime. Patch, corresponding source inputs, checksums and rebuild instructions are included in third_party/mpv-pause in the application repository.",
   "website": "https://github.com/jntynho/Mpv/tree/main/third_party/mpv-pause",

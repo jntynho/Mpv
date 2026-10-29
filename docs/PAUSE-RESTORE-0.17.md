@@ -1,4 +1,4 @@
-# MPV 0.17 — restore mpv-android-lib and preserve paused audio
+# MPV 0.17.1 — restore mpv-android-lib and preserve paused audio
 
 The runtime source dependency is again `io.github.abdallahmehiz:mpv-android-lib:0.1.9`. `app.gyrolet.mpvlib:mpvlib`, its exclusive repository and supplemental POM are removed. Kotlin/Compose compiler 2.2.20, KSP 2.2.20-2.0.3 and AGP's bundled R8 are restored. Minimum Android is API 21 / Android 5.0 again.
 
@@ -17,6 +17,7 @@ The previous simulated PlaybackEngine test assumed that confirmed Pause froze pl
 - A fresh start sets the OpenSL device back to PLAYING. This matters after seeking while paused: generic AO reset clears `hw_paused`, but the physical player can still be paused. A targeted regression test exposed this extra case during review, and the final implementation fixes it.
 - Callback output reports a frozen delay while hardware is paused, and accesses pause/resume timestamps under the existing mutex.
 - Android state changes run outside the generic buffer mutex to avoid blocking a callback that needs that mutex. Failed state changes request AO reload.
+- An output underrun can leave the hardware paused even after logical unpause. A subsequent AO start now restores the preserved clock and resumes hardware instead of re-priming an existing buffer. Both orderings of data readiness versus Play are regression-tested.
 - No fixed backwards seek, fabricated time, added delay, global mute or arbitrary buffer reduction is used.
 
 Both ARM libmpv binaries were rebuilt from the old engine revision with matching libass, libplacebo and Lua versions. FFmpeg shared libraries, the Kotlin classes, JNI wrapper, resources and manifest are copied byte-for-byte from the original AAR. All 54 public mpv API entrypoints and the original shared-library dependency names remain available.
@@ -39,9 +40,9 @@ All three APKs passed signature verification and ZIP alignment checks. APK inspe
 
 | APK | Version code | Local bytes |
 | --- | ---: | ---: |
-| arm64-v8a | 212 | 20,784,607 |
-| armeabi-v7a | 211 | 20,145,297 |
-| universal (both ARM ABIs only) | 210 | 32,949,636 |
+| arm64-v8a | 222 | 20,784,823 |
+| armeabi-v7a | 221 | 20,145,333 |
+| universal (both ARM ABIs only) | 220 | 32,949,929 |
 
 CI reruns the native regression, dependency/provenance check, application tests, Lint, build, APK signatures/alignment and native packaging checks before publication. Commit metadata and automatic signing may cause slight final size differences.
 
@@ -50,5 +51,7 @@ CI reruns the native regression, dependency/provenance check, application tests,
 The full modified native library is cross-compiled and linked for ARM64/ARMv7, and the application is built and checked separately. The native regression harness uses simulated hardware; Robolectric application tests do not execute the ARM decoder or measure a phone's sound/video presentation. There is no connected Android device or emulator. Playback on a real device, especially speaker/headphone/Bluetooth routes, decoder modes, long pauses, seek while paused, rotation, PiP and focus changes still requires confirmation. The change fixes the identified reset/queue-loss path; it is not a claim of zero latency on every device.
 
 ## Release
+
+0.17.1 supersedes the first 0.17.0 build with the underrun-resume guard. It preserves the hardware queue and clock whether decoded data becomes ready before or after Play, rather than re-priming a preserved buffer.
 
 Release assets remain exactly `arm64-v8a.apk`, `armeabi-v7a.apk` and `universal.apk`. No custom ZIP or SHA256SUMS asset is published. Automatic test signing is unchanged.
