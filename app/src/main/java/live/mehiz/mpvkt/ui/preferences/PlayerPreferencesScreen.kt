@@ -219,11 +219,10 @@ object PlayerPreferencesScreen : Screen {
             SettingsGroup {
               val stack = live.mehiz.mpvkt.ui.utils.LocalBackStack.current
               SettingsRow(
-                { Text(stringResource(R.string.mpv_landscape_controls)) },
-                { Text(stringResource(R.string.mpv_landscape_controls_summary)) },
-                icon = { Icon(optionIcon(R.string.mpv_landscape_controls), null) },
+                { Text(stringResource(R.string.mpv_seekbar_style)) },
+                icon = { Icon(Icons.DoubleArrow, null) },
               ) {
-                stack.add(LandscapeControlsScreen)
+                stack.add(SeekbarStylesScreen)
               }
               val allowGesturesInPanels by preferences.allowGesturesInPanels.collectAsState()
               SwitchPreference(

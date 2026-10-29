@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="update_backup">النسخ الاحتياطي والاستعادة</string>
+  <string name="update_export">تصدير الإعدادات</string>
+  <string name="update_export_summary">تصدير الإعدادات إلى ملف XML</string>
+  <string name="update_import">استيراد الإعدادات</string>
+  <string name="update_import_summary">استعادة الإعدادات من نسخة XML</string>
+  <string name="update_backup_detail">احفظ إعدادات الواجهة والتشغيل. لا تشمل النسخة مفاتيح API أو بيانات الدخول أو محتويات المجلد الآمن.</string>
+  <string name="update_import_confirm">سيستبدل الاستيراد الإعدادات المطابقة. يتم رفض الملفات غير الصالحة أو غير المتوافقة قبل تغيير أي إعداد.</string>
+  <string name="update_operation_done">اكتملت العملية بنجاح</string>
+  <string name="update_operation_failed">تعذر إكمال العملية. تحقق من الملف وصلاحية الوصول إلى التخزين.</string>
+  <string name="update_secure">المجلد الآمن</string>
+  <string name="update_secure_summary">مساحة مقفلة ومشفرة لفيديوهاتك الخاصة</string>
+  <string name="update_secure_setup">إنشاء المجلد الآمن</string>
+  <string name="update_secure_detail">استخدم رمزًا من 6 أرقام. تُشفّر الملفات على هذا الجهاز ويُقفل المجلد عند مغادرته. احفظ الرمز: لا توجد استعادة للرمز أو نسخة سحابية.</string>
+  <string name="update_secure_requires">يتطلب المجلد الآمن Android 6.0 أو أحدث للتشفير المرتبط بالجهاز.</string>
+  <string name="update_unlock">فتح القفل</string>
+  <string name="update_lock">قفل</string>
+  <string name="update_pin">رمز من 6 أرقام</string>
+  <string name="update_pin_confirm">تأكيد الرمز</string>
+  <string name="update_secure_failed">تعذر فتح القفل أو إكمال العملية. تحقق من الرمز أو أعد المحاولة بعد 30 ثانية.</string>
+  <string name="update_secure_add">إضافة ملفات خاصة</string>
+  <string name="update_secure_copy">يُنشئ نسخًا مشفرة. تبقى الملفات الأصلية في مكانها الحالي.</string>
+  <string name="update_secure_empty">ستظهر ملفاتك الخاصة هنا.</string>
+  <string name="update_secure_delete">حذف النسخة المشفرة</string>
+  <string name="update_reset_controls_confirm">هل تريد استعادة الترتيب الافتراضي لجميع أزرار الوضع الأفقي؟</string>
+  <string name="update_drag_controls">اضغط مطولًا على المقبض لإعادة الترتيب، أو استخدم الأسهم للتحريك الدقيق. اضغط + لإضافة زر.</string>
+  <string name="update_remove_control">إزالة الزر</string>
+  <string name="update_live_preview">معاينة مباشرة</string>
+  <string name="update_instagram">Instagram</string>
+  <string name="update_about_tagline">فيديوهاتك، بتجربة مشاهدة أكثر هدوءًا.</string>
+  <string name="update_about_credits">التصميم والشكر</string>
+  <string name="update_loading_status">نجهز مساحة المشاهدة لك</string>
+  <string name="update_loading_hint">المكتبة وأزرار التحكم والانتقالات</string>
+  <string name="update_card">بطاقات</string>
+</resources>

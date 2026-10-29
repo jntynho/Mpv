@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.presentation.components.horizontalEdgeMask
 import live.mehiz.mpvkt.ui.home.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.Icons
@@ -43,6 +44,9 @@ internal fun ColourAccentPreference(preferences: AppearancePreferences) {
   val dynamic by preferences.materialYou.collectAsState()
   val darkMode by preferences.darkMode.collectAsState()
   val dark = darkMode == DarkMode.Dark || (darkMode == DarkMode.System && isSystemInDarkTheme())
+  val rtl =
+    androidx.compose.ui.platform.LocalLayoutDirection.current ==
+      androidx.compose.ui.unit.LayoutDirection.Rtl
   val listState = rememberLazyListState(initialFirstVisibleItemIndex = accent.ordinal)
   Column {
     Row(
@@ -61,7 +65,13 @@ internal fun ColourAccentPreference(preferences: AppearancePreferences) {
       }
     }
     LazyRow(
-      modifier = Modifier.fillMaxWidth().selectableGroup(),
+      modifier =
+        Modifier.fillMaxWidth()
+          .horizontalEdgeMask(
+            start = { if (rtl) listState.canScrollForward else listState.canScrollBackward },
+            end = { if (rtl) listState.canScrollBackward else listState.canScrollForward },
+          )
+          .selectableGroup(),
       state = listState,
       contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
       horizontalArrangement = Arrangement.spacedBy(10.dp),

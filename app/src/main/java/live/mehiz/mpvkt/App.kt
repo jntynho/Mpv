@@ -17,17 +17,14 @@ import org.koin.dsl.koinConfiguration
 class App : Application(), KoinStartup {
   override fun onCreate() {
     super.onCreate()
-    Thread.setDefaultUncaughtExceptionHandler(GlobalExceptionHandler(applicationContext, CrashActivity::class.java))
+    live.mehiz.mpvkt.ui.secure.SecureVault.clearPlaybackCache(this)
+    Thread.setDefaultUncaughtExceptionHandler(
+      GlobalExceptionHandler(applicationContext, CrashActivity::class.java)
+    )
   }
 
   override fun onKoinStartup() = koinConfiguration {
     androidContext(this@App)
-    modules(
-      AppModule,
-      PreferencesModule,
-      DatabaseModule,
-      FileManagerModule,
-      ViewModelModule,
-    )
+    modules(AppModule, PreferencesModule, DatabaseModule, FileManagerModule, ViewModelModule)
   }
 }

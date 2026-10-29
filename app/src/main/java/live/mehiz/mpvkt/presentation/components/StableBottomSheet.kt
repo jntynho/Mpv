@@ -45,6 +45,7 @@ internal fun StableBottomSheet(
   title: String? = null,
   dismissRequested: Boolean = false,
   reduceMotion: Boolean = false,
+  fixedHeight: Boolean = false,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -106,6 +107,13 @@ internal fun StableBottomSheet(
           .fillMaxWidth()
           .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
           .heightIn(max = (maxHeight - 32.dp).coerceAtLeast(1.dp))
+          .then(
+            if (fixedHeight)
+              Modifier.height(
+                (maxHeight * .85f).coerceAtMost((maxHeight - 32.dp).coerceAtLeast(1.dp))
+              )
+            else Modifier
+          )
           .onSizeChanged {
             height = it.height.toFloat().coerceAtLeast(1f)
             measured = true

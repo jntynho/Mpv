@@ -103,10 +103,15 @@ object HomeScreen : Screen {
     }
     BackHandler(searching || selectedFolder != null, onBack = goBack)
     val appearance = koinInject<live.mehiz.mpvkt.preferences.AppearancePreferences>()
-    val fields by appearance.libraryFields.collectAsState()
+    val listFields by appearance.libraryFields.collectAsState()
+    val cardFields by appearance.libraryCardFields.collectAsState()
     val grid by appearance.libraryGrid.collectAsState()
     val columns by appearance.libraryGridColumns.collectAsState()
-    val display = LibraryDisplayOptions(fields, grid, columns.coerceIn(0, 5))
+    val fields = if (grid) cardFields else listFields
+    val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+    val maximumColumns = ((screenWidth - 40) / 144).coerceIn(1, 5)
+    val effectiveColumns = if (columns in 2..5) columns.coerceAtMost(maximumColumns) else 0
+    val display = LibraryDisplayOptions(fields, grid, effectiveColumns)
     val positions =
       if (fields.has(LibraryField.Progress)) {
         val dao = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>().videoDataDao()
@@ -123,6 +128,7 @@ object HomeScreen : Screen {
       }
     Scaffold(
       floatingActionButton = { HomeQuickActions(reduceMotion) },
+      contentWindowInsets = WindowInsets.safeDrawing,
       topBar = {
         LibraryHeader(
           title,
@@ -151,7 +157,11 @@ object HomeScreen : Screen {
           viewMode = viewMode,
           display = display,
           onDisplay = { choice ->
-            appearance.libraryFields.set(choice.fields)
+            // Layout changes keep the independent field profile for each view.
+            if (choice.grid == grid) {
+              if (grid) appearance.libraryCardFields.set(choice.fields)
+              else appearance.libraryFields.set(choice.fields)
+            }
             appearance.libraryGrid.set(choice.grid)
             appearance.libraryGridColumns.set(choice.columns)
           },
@@ -262,59 +272,63 @@ object HomeScreen : Screen {
               val listState = rememberLazyGridState()
               LaunchedEffect(display.grid, display.columns) { listState.requestScrollToItem(0) }
               ResetScrollOnLibrarySort(listState, listing.sort)
-              LazyVerticalGrid(
-                columns =
-                  if (!display.grid) GridCells.Fixed(1)
-                  else if (display.columns in 2..5) GridCells.Fixed(display.columns)
-                  else GridCells.Adaptive(160.dp),
-                modifier = Modifier.fillMaxSize(),
-                state = listState,
-                contentPadding =
-                  PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-              ) {
-                if (state.failed) item { Text(stringResource(R.string.mpv_library_error)) }
-                else if (
-                  access &&
-                    !state.loading &&
-                    listing.ready &&
-                    listing.folders.isEmpty() &&
-                    listing.videos.isEmpty()
-                )
-                  item { Text(stringResource(R.string.mpv_empty)) }
-                if (state.incomplete)
-                  item {
-                    Text(
-                      stringResource(R.string.mpv_folder_scan_incomplete),
-                      color = colors.onSurfaceVariant,
-                    )
+              BoxWithConstraints(Modifier.fillMaxSize()) {
+                val maxColumns = ((maxWidth - 40.dp) / 144.dp).toInt().coerceAtLeast(1)
+                LazyVerticalGrid(
+                  columns =
+                    if (!display.grid) GridCells.Fixed(1)
+                    else if (display.columns in 2..5)
+                      GridCells.Fixed(display.columns.coerceAtMost(maxColumns))
+                    else GridCells.Adaptive(160.dp),
+                  modifier = Modifier.fillMaxSize(),
+                  state = listState,
+                  contentPadding =
+                    PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 96.dp),
+                  verticalArrangement = Arrangement.spacedBy(8.dp),
+                  horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                  if (state.failed) item { Text(stringResource(R.string.mpv_library_error)) }
+                  else if (
+                    access &&
+                      !state.loading &&
+                      listing.ready &&
+                      listing.folders.isEmpty() &&
+                      listing.videos.isEmpty()
+                  )
+                    item { Text(stringResource(R.string.mpv_empty)) }
+                  if (state.incomplete)
+                    item {
+                      Text(
+                        stringResource(R.string.mpv_folder_scan_incomplete),
+                        color = colors.onSurfaceVariant,
+                      )
+                    }
+                  items(listing.folders, key = { "folder:" + it.id }) { entry ->
+                    LibraryFolderItem(
+                      entry,
+                      display,
+                      Modifier.animateItem(
+                        fadeInSpec = tween(if (reduceMotion) 0 else 180),
+                        placementSpec = tween(if (reduceMotion) 0 else 320),
+                        fadeOutSpec = tween(if (reduceMotion) 0 else 120),
+                      ),
+                    ) {
+                      selectedFolder = entry.id
+                    }
                   }
-                items(listing.folders, key = { "folder:" + it.id }) { entry ->
-                  LibraryFolderItem(
-                    entry,
-                    display,
-                    Modifier.animateItem(
-                      fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                      placementSpec = tween(if (reduceMotion) 0 else 320),
-                      fadeOutSpec = tween(if (reduceMotion) 0 else 120),
-                    ),
-                  ) {
-                    selectedFolder = entry.id
-                  }
-                }
-                items(listing.videos, key = { "video:" + it.uri }) { video ->
-                  LibraryVideoItem(
-                    video,
-                    display,
-                    positions[video.name] ?: 0,
-                    Modifier.animateItem(
-                      fadeInSpec = tween(if (reduceMotion) 0 else 180),
-                      placementSpec = tween(if (reduceMotion) 0 else 320),
-                      fadeOutSpec = tween(if (reduceMotion) 0 else 120),
-                    ),
-                  ) {
-                    playFile(video.uri, context)
+                  items(listing.videos, key = { "video:" + it.uri }) { video ->
+                    LibraryVideoItem(
+                      video,
+                      display,
+                      positions[video.name] ?: 0,
+                      Modifier.animateItem(
+                        fadeInSpec = tween(if (reduceMotion) 0 else 180),
+                        placementSpec = tween(if (reduceMotion) 0 else 320),
+                        fadeOutSpec = tween(if (reduceMotion) 0 else 120),
+                      ),
+                    ) {
+                      playFile(video.uri, context)
+                    }
                   }
                 }
               }

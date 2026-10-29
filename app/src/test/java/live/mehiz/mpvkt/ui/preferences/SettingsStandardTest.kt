@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
@@ -161,8 +162,19 @@ class SettingsStandardTest {
       }
     }
     repeat(40) { pumpWarmupFrame() }
-    compose.onNodeWithText("Preparing your library").assertIsDisplayed()
+    compose.onNodeWithText("Preparing your viewing space").assertIsDisplayed()
     compose.onNodeWithText("Actual home").assertDoesNotExist()
+    val textLayouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+    compose.onNodeWithText("MPV").performSemanticsAction(
+      androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult
+    ) {
+      it(textLayouts)
+    }
+    assertTrue(
+      "Startup title must be readable on the dark preparation surface",
+      textLayouts.single().layoutInput.style.color.luminance() > .2f,
+    )
+    compose.runOnUiThread { live.mehiz.mpvkt.testutils.captureWindow(compose.activity, "startup") }
     var shown = false
     repeat(650) {
       if (!shown) {
@@ -173,7 +185,7 @@ class SettingsStandardTest {
     compose.mainClock.autoAdvance = true
     compose.waitForIdle()
     compose.onNodeWithText("Actual home").assertIsDisplayed()
-    compose.onNodeWithText("Preparing your library").assertDoesNotExist()
+    compose.onNodeWithText("Preparing your viewing space").assertDoesNotExist()
     assertEquals(1, homes)
     assertEquals(
       live.mehiz.mpvkt.BuildConfig.VERSION_CODE,
@@ -337,7 +349,14 @@ class SettingsStandardTest {
     }
     compose.setContent {
       MpvKtTheme {
-        CompositionLocalProvider(LocalNavigateBack provides {}) {
+        val stack =
+          androidx.navigation3.runtime.rememberNavBackStack<live.mehiz.mpvkt.presentation.Screen>(
+            AdvancedPreferencesScreen
+          )
+        CompositionLocalProvider(
+          LocalNavigateBack provides {},
+          live.mehiz.mpvkt.ui.utils.LocalBackStack provides stack,
+        ) {
           AdvancedPreferencesScreen.Content()
         }
       }

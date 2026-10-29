@@ -1414,6 +1414,20 @@
       "source": "Svg/All/broken/archive-tick.svg",
       "resource": "iconsax_broken_archive_tick",
       "sha256": "ed797dde6ae26ac47770c20b7749b22c12752f5791ab13833fc8f3c259551d41"
+    },
+    {
+      "key": "Instagram",
+      "style": "outline",
+      "source": "Svg/All/outline/instagram.svg",
+      "resource": "iconsax_outline_instagram",
+      "sha256": "8029781a2730c69a1e4aae84344c321d8ff083b2e0e0c059b81896435f0af306"
+    },
+    {
+      "key": "Instagram",
+      "style": "broken",
+      "source": "Svg/All/broken/instagram.svg",
+      "resource": "iconsax_broken_instagram",
+      "sha256": "be4c186d99d0f06386a1fabdb1246c57a6b3994d9e7c2c73def0ba93113936cc"
     }
   ]
 }

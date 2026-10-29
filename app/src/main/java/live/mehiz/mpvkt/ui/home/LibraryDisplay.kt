@@ -71,22 +71,39 @@ internal fun FadingHorizontalRow(
 }
 
 @Composable
-internal fun LibraryMetadataRow(values: List<String>, modifier: Modifier = Modifier) {
+internal fun LibraryMetadataRow(
+  values: List<String>,
+  modifier: Modifier = Modifier,
+  centered: Boolean = false,
+) {
   if (values.isEmpty()) return
-  FadingHorizontalRow(modifier.fillMaxWidth()) {
-    values.forEach { value ->
-      Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = .65f),
+  BoxWithConstraints(modifier.fillMaxWidth()) {
+    val viewport = maxWidth
+    FadingHorizontalRow(Modifier.fillMaxWidth()) {
+      Row(
+        Modifier.widthIn(min = viewport),
+        horizontalArrangement =
+          Arrangement.spacedBy(
+            8.dp,
+            if (centered) androidx.compose.ui.Alignment.CenterHorizontally
+            else androidx.compose.ui.Alignment.Start,
+          ),
       ) {
-        Text(
-          value,
-          Modifier.widthIn(max = 260.dp).padding(horizontal = 8.dp, vertical = 4.dp),
-          maxLines = 1,
-          overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-          style = MaterialTheme.typography.labelSmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        values.forEach { value ->
+          Surface(
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = .65f),
+          ) {
+            Text(
+              value,
+              Modifier.widthIn(max = 260.dp).padding(horizontal = 8.dp, vertical = 4.dp),
+              maxLines = 1,
+              overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
+        }
       }
     }
   }

@@ -59,6 +59,7 @@ internal fun LibrarySortButton(
       onDismissRequest = { expanded = false },
       dismissRequested = closing,
       reduceMotion = reduceMotion,
+      fixedHeight = true,
       title = stringResource(R.string.mpv_sort),
     ) {
       CompositionLocalProvider(
@@ -97,7 +98,13 @@ internal fun LibrarySortMenuContent(
   val duration = if (reduceMotion) 0 else 220
   val keyChoices =
     if (countEnabled)
-      listOf(LibrarySortKey.Title, LibrarySortKey.Date, LibrarySortKey.Size, LibrarySortKey.Count)
+      listOf(
+        LibrarySortKey.Title,
+        LibrarySortKey.Date,
+        LibrarySortKey.Size,
+        LibrarySortKey.Count,
+        LibrarySortKey.Duration,
+      )
     else
       listOf(
         LibrarySortKey.Title,
@@ -193,7 +200,7 @@ internal fun LibrarySortMenuContent(
           onDisplay(display.copy(grid = false))
         }
         SortChip(
-          stringResource(R.string.mpv_layout_grid),
+          stringResource(R.string.update_card),
           display.grid,
           duration,
           Icons.Grid,
@@ -204,7 +211,9 @@ internal fun LibrarySortMenuContent(
       }
       ExpandableSettingsContent(display.grid) {
         FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
-          listOf(0, 2, 3, 4, 5).forEach { count ->
+          val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+          val limit = ((width - 40) / 144).coerceIn(1, 5)
+          (listOf(0) + (2..limit).toList()).forEach { count ->
             SortChip(
               if (count == 0) stringResource(R.string.mpv_grid_auto) else count.toString(),
               display.columns == count,

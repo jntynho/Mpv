@@ -4,16 +4,20 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
@@ -25,7 +29,9 @@ import live.mehiz.mpvkt.ui.player.Sheets
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerPanelHeader
 import org.koin.compose.koinInject
 
-/** Both root menus and settings live in this one surface, including when navigation is interrupted. */
+/**
+ * Both root menus and settings live in this one surface, including when navigation is interrupted.
+ */
 @Composable
 internal fun PlayerPane(
   pages: List<PlayerPanelRoute>,
@@ -36,63 +42,111 @@ internal fun PlayerPane(
 ) {
   val page = pages.lastOrNull() ?: return
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
+  val focus = androidx.compose.ui.platform.LocalFocusManager.current
+  LaunchedEffect(page.key) { focus.clearFocus() }
   val savedPages = rememberSaveableStateHolder()
-  PlayerSheet(onDismissRequest = onDismiss, onNavigateBack = onBack.takeIf { pages.size > 1 }, reduceMotion = reduceMotion, onCloseStart = onCloseStart) { close, headerDrag ->
-    CompositionLocalProvider(LocalOverscrollFactory provides if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory) {
-    Column(Modifier.fillMaxSize()) {
-      PlayerPanelHeader(title = page.title(), icon = page.icon(), onClose = close, onBack = onBack.takeIf { pages.size > 1 }, animateTitle = !reduceMotion, modifier = headerDrag)
-      AnimatedContent(
-        targetState = pages,
-        contentKey = { it.last().key },
-        modifier = Modifier.weight(1f).fillMaxSize().clipToBounds(),
-        transitionSpec = {
-          val direction = if (targetState.size < initialState.size) -1 else 1
-          val duration = if (reduceMotion) 0 else 240
-          val enter = fadeIn(tween(duration)) + slideInHorizontally(tween(duration, easing = FastOutSlowInEasing)) { direction * it / 10 }
-          val exit = fadeOut(tween(if (reduceMotion) 0 else 160)) + slideOutHorizontally(tween(duration, easing = FastOutSlowInEasing)) { -direction * it / 10 }
-          (enter togetherWith exit).using(SizeTransform(clip = true, sizeAnimationSpec = { _, _ -> tween(0) }))
-        },
-        label = "player_pane_page",
-      ) { history ->
-        val destination = history.last()
-        savedPages.SaveableStateProvider(destination.key) { content(destination) }
+  PlayerSheet(
+    onDismissRequest = onDismiss,
+    onNavigateBack = onBack.takeIf { pages.size > 1 },
+    reduceMotion = reduceMotion,
+    onCloseStart = onCloseStart,
+  ) { close, headerDrag ->
+    CompositionLocalProvider(
+      LocalOverscrollFactory provides
+        if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
+    ) {
+      Column(Modifier.fillMaxSize()) {
+        PlayerPanelHeader(
+          title = page.title(),
+          icon = page.icon(),
+          onClose = close,
+          onBack = onBack.takeIf { pages.size > 1 },
+          animateTitle = !reduceMotion,
+          modifier = headerDrag,
+        )
+        AnimatedContent(
+          targetState = pages,
+          contentKey = { it.last().key },
+          modifier = Modifier.weight(1f).fillMaxSize().clipToBounds(),
+          transitionSpec = {
+            val direction = if (targetState.size < initialState.size) -1 else 1
+            val duration = if (reduceMotion) 0 else 240
+            val enter =
+              fadeIn(tween(duration)) +
+                slideInHorizontally(tween(duration, easing = FastOutSlowInEasing)) {
+                  direction * it / 10
+                }
+            val exit =
+              fadeOut(tween(if (reduceMotion) 0 else 160)) +
+                slideOutHorizontally(tween(duration, easing = FastOutSlowInEasing)) {
+                  -direction * it / 10
+                }
+            (enter togetherWith exit).using(
+              SizeTransform(clip = true, sizeAnimationSpec = { _, _ -> tween(0) })
+            )
+          },
+          label = "player_pane_page",
+        ) { history ->
+          val destination = history.last()
+          savedPages.SaveableStateProvider(destination.key) {
+            val inactive = destination.key != page.key
+            androidx.compose.foundation.layout.Box(
+              Modifier.fillMaxSize()
+                .then(if (inactive) Modifier.clearAndSetSemantics {} else Modifier)
+                .pointerInput(inactive) {
+                  if (inactive)
+                    awaitPointerEventScope {
+                      while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach {
+                        it.consume()
+                      }
+                    }
+                }
+            ) {
+              content(destination)
+            }
+          }
+        }
       }
     }
+  }
+}
+
+@Composable
+private fun PlayerPanelRoute.title(): String =
+  stringResource(
+    when (panel) {
+      Panels.SubtitleSearch -> R.string.subtitle_search
+      Panels.SubtitleSearchOptions -> R.string.subtitle_filters
+      Panels.SubtitleSearchLanguages -> R.string.subtitle_languages
+      Panels.SubtitleSearchSeason -> R.string.subtitle_season
+      Panels.SubtitleSearchEpisode -> R.string.subtitle_episode
+      Panels.SubtitleSearchFiles -> R.string.subtitle_choose_file
+      Panels.VideoFilters -> R.string.player_sheets_filters_title
+      Panels.SubtitleSettings -> R.string.player_sheets_subtitles_settings_title
+      Panels.SubtitleDelay -> R.string.player_sheets_sub_delay_card_title
+      Panels.AudioDelay -> R.string.player_sheets_audio_delay_card_title
+      Panels.SleepTimer -> R.string.timer_title
+      Panels.None ->
+        when (sheet) {
+          Sheets.More -> R.string.player_sheets_more_title
+          Sheets.SubtitleTracks -> R.string.mpv_panel_subtitles
+          Sheets.AudioTracks -> R.string.mpv_panel_audio
+          Sheets.Chapters -> R.string.mpv_panel_chapters
+          Sheets.Decoders -> R.string.pref_decoder
+          Sheets.PlaybackSpeed -> R.string.player_sheets_speed_slider_label
+          Sheets.None -> error("An empty route cannot be displayed")
+        }
     }
-  }
-}
+  )
 
 @Composable
-private fun PlayerPanelRoute.title(): String = stringResource(when (panel) {
-  Panels.SubtitleSearch -> R.string.subtitle_search
-  Panels.SubtitleSearchOptions -> R.string.subtitle_filters
-  Panels.SubtitleSearchLanguages -> R.string.subtitle_languages
-  Panels.SubtitleSearchSeason -> R.string.subtitle_season
-  Panels.SubtitleSearchEpisode -> R.string.subtitle_episode
-  Panels.SubtitleSearchFiles -> R.string.subtitle_choose_file
-  Panels.VideoFilters -> R.string.player_sheets_filters_title
-  Panels.SubtitleSettings -> R.string.player_sheets_subtitles_settings_title
-  Panels.SubtitleDelay -> R.string.player_sheets_sub_delay_card_title
-  Panels.AudioDelay -> R.string.player_sheets_audio_delay_card_title
-  Panels.SleepTimer -> R.string.timer_title
-  Panels.None -> when (sheet) {
-    Sheets.More -> R.string.player_sheets_more_title
-    Sheets.SubtitleTracks -> R.string.mpv_panel_subtitles
-    Sheets.AudioTracks -> R.string.mpv_panel_audio
-    Sheets.Chapters -> R.string.mpv_panel_chapters
-    Sheets.Decoders -> R.string.pref_decoder
-    Sheets.PlaybackSpeed -> R.string.player_sheets_speed_slider_label
-    Sheets.None -> error("An empty route cannot be displayed")
+private fun PlayerPanelRoute.icon(): ImageVector =
+  when (sheet) {
+    Sheets.More -> Icons.MoreVert
+    Sheets.SubtitleTracks -> Icons.Subtitles
+    Sheets.AudioTracks -> Icons.Audiotrack
+    Sheets.Chapters -> Icons.Bookmarks
+    Sheets.Decoders -> Icons.Memory
+    Sheets.PlaybackSpeed -> Icons.Schedule
+    Sheets.None -> Icons.Tune
   }
-})
-
-@Composable
-private fun PlayerPanelRoute.icon(): ImageVector = when (sheet) {
-  Sheets.More -> Icons.MoreVert
-  Sheets.SubtitleTracks -> Icons.Subtitles
-  Sheets.AudioTracks -> Icons.Audiotrack
-  Sheets.Chapters -> Icons.Bookmarks
-  Sheets.Decoders -> Icons.Memory
-  Sheets.PlaybackSpeed -> Icons.Schedule
-  Sheets.None -> Icons.Tune
-}
