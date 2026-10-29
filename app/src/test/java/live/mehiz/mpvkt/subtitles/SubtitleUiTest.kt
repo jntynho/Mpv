@@ -110,28 +110,69 @@ class SubtitleUiTest {
   }
 
   @Test
-  fun seasonAndEpisodeAppearOnlyInSeriesMode() {
+  fun initialSearchShowsOnlyTheQueryLanguageAndAdvancedFiltersUntilSubmitted() {
     val context = compose.activity.applicationContext
     val preferences = SubtitlesPreferences(AndroidPreferenceStore(context))
+    var requested = false
+    lateinit var controller: SubtitleSearchController
+    var opened: live.mehiz.mpvkt.ui.player.Panels? = null
     val service =
       SubtitleService(
-        FakeSubtitleTransport { _, _ -> "[]".toByteArray() },
+        FakeSubtitleTransport { _, _ ->
+          requested = true
+          "[]".toByteArray()
+        },
         { "" },
         File(context.filesDir, "subtitle-test"),
       )
     theme {
       val scope = rememberCoroutineScope()
-      val controller = remember {
+      controller = remember {
+        SubtitleSearchController(scope, service, { SubtitleSearchOptions() })
+      }
+      LaunchedEffect(Unit) { controller.begin("Show.S01E02.mkv", 1) }
+      SubtitleSearchPanel(controller, preferences, { opened = it }, { _, _ -> })
+    }
+    compose.waitForIdle()
+    compose.onNodeWithText("Movie or series").assertIsDisplayed()
+    compose.onNodeWithText("English").assertIsDisplayed()
+    compose.onNodeWithText("Advanced search filters").performClick()
+    assertEquals(live.mehiz.mpvkt.ui.player.Panels.SubtitleSearchOptions, opened)
+    compose.onNodeWithText("Season").assertDoesNotExist()
+    compose.onNodeWithText("Episode").assertDoesNotExist()
+    compose.onNodeWithText("Primary").assertDoesNotExist()
+    assertFalse(requested)
+    assertEquals(1, controller.state.value.slot)
+  }
+
+  @Test
+  fun anOutgoingQueryFieldCannotCancelTheSubmittedSearchWithALateImeEdit() {
+    val context = compose.activity.applicationContext
+    val preferences = SubtitlesPreferences(AndroidPreferenceStore(context))
+    lateinit var controller: SubtitleSearchController
+    val service =
+      SubtitleService(
+        FakeSubtitleTransport { _, _ -> kotlinx.coroutines.awaitCancellation() },
+        { "" },
+        File(context.filesDir, "subtitle-test"),
+      )
+    theme {
+      val scope = rememberCoroutineScope()
+      controller = remember {
         SubtitleSearchController(scope, service, { SubtitleSearchOptions() })
       }
       SubtitleSearchPanel(controller, preferences, {}, { _, _ -> })
     }
-    compose.onNodeWithText("Season").assertDoesNotExist()
-    compose.onNodeWithContentDescription("TV series").performClick()
-    compose.onNodeWithText("Season").assertExists()
-    compose.onNodeWithText("Episode").assertExists()
-    compose.onNodeWithContentDescription("TV series").performClick()
-    compose.onNodeWithText("Season").assertDoesNotExist()
+    compose.onNode(hasSetTextAction()).performTextReplacement("Film")
+    compose.mainClock.autoAdvance = false
+    compose.onNodeWithText("Search").performClick()
+    compose.onNode(hasSetTextAction()).performTextReplacement("Late keyboard edit")
+    compose.runOnIdle {
+      assertEquals(SubtitleSearchPage.Titles, controller.state.value.page)
+      assertEquals("Film", controller.state.value.query)
+      controller.back()
+    }
+    compose.mainClock.autoAdvance = true
   }
 
   @Test
@@ -185,7 +226,7 @@ class SubtitleUiTest {
     }
     compose.mainClock.advanceTimeBy(600)
     compose.waitForIdle()
-    compose.onNodeWithText("English").assertIsDisplayed()
+    compose.onNodeWithText("English", substring = true).assertIsDisplayed()
     compose.onNodeWithText("Season 1").assertIsDisplayed()
     compose.onNodeWithText("Episode 2").assertExists()
     val bitmap = Bitmap.createBitmap(960, 540, Bitmap.Config.ARGB_8888)
@@ -218,6 +259,75 @@ class SubtitleUiTest {
   @Test
   @Config(qualifiers = "en-rUS-w1080dp-h608dp-land-mdpi")
   fun selectedSeriesPosterRendersInsideTheExistingPanel() = renderPosterSearch(true)
+
+  @Test
+  @Config(qualifiers = "en-rUS-w1080dp-h608dp-land-mdpi")
+  fun adjustmentsAndCompactImportStayAboveTheAnimatedTrackList() {
+    var selected: Pair<Int, Int>? = null
+    var imports = 0
+    theme {
+      PlayerSheet({}, reduceMotion = true) { close, drag ->
+        Column(Modifier.fillMaxSize()) {
+          PlayerPanelHeader("Subtitles", Icons.Subtitles, close, drag)
+          live.mehiz.mpvkt.ui.player.controls.components.sheets.SubtitlesSheet(
+            kotlinx.collections.immutable.persistentListOf(
+              live.mehiz.mpvkt.ui.player.TrackNode(
+                1,
+                "sub",
+                title = "English track",
+                mainSelection = 0,
+              ),
+              live.mehiz.mpvkt.ui.player.TrackNode(
+                2,
+                "sub",
+                title = "Arabic track",
+                mainSelection = 1,
+              ),
+            ),
+            { id, slot -> selected = id to slot },
+            { imports++ },
+            {},
+            {},
+            {},
+            Modifier.weight(1f),
+          )
+        }
+      }
+    }
+    compose.mainClock.advanceTimeBy(600)
+    val tabRole =
+      SemanticsMatcher.expectValue(
+        androidx.compose.ui.semantics.SemanticsProperties.Role,
+        androidx.compose.ui.semantics.Role.Tab,
+      )
+    val primary = compose.onNode(hasText("Primary") and tabRole)
+    val secondary = compose.onNode(hasText("Secondary") and tabRole)
+    assertTrue(
+      compose.onNodeWithText("Adjustments").fetchSemanticsNode().boundsInRoot.bottom <
+        primary.fetchSemanticsNode().boundsInRoot.top
+    )
+    compose
+      .onNodeWithContentDescription("Add external subtitles")
+      .assertIsDisplayed()
+      .performClick()
+    assertEquals(1, imports)
+    compose.mainClock.autoAdvance = false
+    secondary.performClick()
+    compose.mainClock.advanceTimeBy(70)
+    primary.performClick()
+    compose.mainClock.advanceTimeBy(70)
+    secondary.performClick()
+    compose.mainClock.advanceTimeBy(500)
+    compose.mainClock.autoAdvance = true
+    secondary.assertIsSelected()
+    compose.onNodeWithText("English track").performClick()
+    assertEquals(1 to 1, selected)
+    compose
+      .onNodeWithText("Secondary subtitles will have no ASS/SSA Styling.")
+      .performScrollTo()
+      .assertExists()
+    capturePosterPane("subtitle-tracks")
+  }
 
   private fun renderPosterSearch(selectedScreenshot: Boolean) {
     val context = compose.activity.applicationContext
@@ -252,9 +362,16 @@ class SubtitleUiTest {
         controller.findMedia()
       }
       CompositionLocalProvider(LocalSubtitlePosters provides loader) {
-        PlayerSheet({}, reduceMotion = true) { close, drag ->
+        PlayerSheet({}, onNavigateBack = { controller.back() }, reduceMotion = true) { close, drag
+          ->
           Column(Modifier.fillMaxSize()) {
-            PlayerPanelHeader("Subtitle search", Icons.Subtitles, close, drag, onBack = {})
+            PlayerPanelHeader(
+              "Subtitle search",
+              Icons.Subtitles,
+              close,
+              drag,
+              onBack = { controller.back() },
+            )
             Box(Modifier.weight(1f)) {
               SubtitleSearchPanel(controller, preferences, {}, { _, _ -> }, reduceMotion = true)
             }
@@ -269,20 +386,40 @@ class SubtitleUiTest {
     compose.mainClock.advanceTimeBy(600)
     compose.waitForIdle()
     compose.onNodeWithText("Afterlight: A New Beginning").assertIsDisplayed()
+    compose.onNodeWithText("Movie or series").assertDoesNotExist()
+    compose.onNodeWithText("Advanced search filters").assertDoesNotExist()
     if (!selectedScreenshot) capturePosterPane("poster-results")
+    compose.onNodeWithText("Afterlight: A New Beginning").performClick()
+    compose.waitUntil(5000) {
+      controller.state.value.media?.id == 8 && !controller.state.value.loading
+    }
+    compose.waitForIdle()
+    compose.onNodeWithText("Season 1").assertDoesNotExist()
+    compose.onAllNodes(hasSetTextAction()).assertCountEquals(0)
+    compose.onNodeWithContentDescription("Back").performClick()
+    compose.waitForIdle()
+    compose.onNodeWithText("Afterlight: A New Beginning").assertIsDisplayed()
     compose.onAllNodesWithText("Afterlight", useUnmergedTree = true).onLast().performClick()
     compose.waitUntil(5000) {
       controller.state.value.episode == 3 && !controller.state.value.loadingEpisodes
     }
-    compose.runOnIdle { controller.search() }
+    compose.onNodeWithText("Search").performClick()
     compose.waitUntil(5000) {
       controller.state.value.subtitles.size == 1 && !controller.state.value.loading
     }
     compose.mainClock.advanceTimeBy(600)
     compose.waitForIdle()
+    compose.onNodeWithText("Movie or series").assertDoesNotExist()
     compose.onNodeWithText("Season 1").assertIsDisplayed()
     if (selectedScreenshot) capturePosterPane("poster-selected-series")
     compose.onNodeWithText("Afterlight.S01E03.1080p.WEB.srt").performScrollTo().assertIsDisplayed()
+    compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+    compose.waitForIdle()
+    compose.onNodeWithText("Afterlight: A New Beginning").assertIsDisplayed()
+    compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+    compose.waitForIdle()
+    compose.onNodeWithText("Movie or series").assertIsDisplayed()
+    compose.onNodeWithText("Advanced search filters").assertIsDisplayed()
   }
 
   private fun capturePosterPane(name: String) {

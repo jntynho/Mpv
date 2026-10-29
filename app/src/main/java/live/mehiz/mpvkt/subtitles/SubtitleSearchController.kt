@@ -20,7 +20,14 @@ internal enum class SubtitleNotice {
   AddUnavailable,
 }
 
+internal enum class SubtitleSearchPage {
+  Query,
+  Titles,
+  Subtitles,
+}
+
 internal data class SubtitleSearchState(
+  val page: SubtitleSearchPage = SubtitleSearchPage.Query,
   val query: String = "",
   val media: MediaMatch? = null,
   val matches: List<MediaMatch> = emptyList(),
@@ -79,8 +86,8 @@ internal class SubtitleSearchController(
   }
 
   fun begin(title: String, slot: Int, ownerKey: String = title) {
+    invalidate()
     if (owner != ownerKey) {
-      invalidate()
       owner = ownerKey
       val parsed = MediaQuery.parse(title)
       mutable.value =
@@ -89,16 +96,19 @@ internal class SubtitleSearchController(
           series = parsed.season != null,
           season = parsed.season,
           episode = parsed.episode,
-          slot = slot,
+          slot = slot.coerceIn(0, 1),
         )
-      if (parsed.title.isNotBlank()) findMedia()
-    } else mutable.update { it.copy(slot = slot) }
+    } else {
+      editQuery(state.value.query)
+      setSlot(slot)
+    }
   }
 
   fun editQuery(query: String) {
     invalidate()
     mutable.update {
       it.copy(
+        page = SubtitleSearchPage.Query,
         query = query.take(500),
         media = null,
         matches = emptyList(),
@@ -115,23 +125,27 @@ internal class SubtitleSearchController(
     }
   }
 
-  fun setSeries(value: Boolean) {
+  /** Back changes the current search page, without dismissing the persistent player pane. */
+  fun back(): Boolean {
+    val page = state.value.page
+    if (page == SubtitleSearchPage.Query) return false
     invalidate()
     mutable.update {
       it.copy(
-        series = value,
+        page =
+          if (page == SubtitleSearchPage.Subtitles) SubtitleSearchPage.Titles
+          else SubtitleSearchPage.Query,
         media = null,
-        seasons = emptyList(),
-        episodes = emptyList(),
-        season = if (value) it.season ?: 1 else null,
-        episode = if (value) it.episode ?: 1 else null,
         subtitles = emptyList(),
-        files = emptyList(),
+        failures = emptyList(),
         loading = false,
         loadingEpisodes = false,
         downloading = null,
+        files = emptyList(),
+        message = null,
       )
     }
+    return true
   }
 
   fun setSlot(slot: Int) {
@@ -160,13 +174,16 @@ internal class SubtitleSearchController(
         episode = null,
         episodes = emptyList(),
         subtitles = emptyList(),
+        failures = emptyList(),
+        message = null,
         loading = false,
         loadingEpisodes = false,
         files = emptyList(),
         downloading = null,
       )
     }
-    if (selected != null && number != null) {
+    // Manual fallback must not launch/cancel metadata requests for every typed digit.
+    if (selected != null && number != null && state.value.seasons.any { it.number == number }) {
       mutable.update { it.copy(loadingEpisodes = true) }
       job =
         scope.launch {
@@ -198,6 +215,8 @@ internal class SubtitleSearchController(
       it.copy(
         episode = number,
         subtitles = emptyList(),
+        failures = emptyList(),
+        message = null,
         files = emptyList(),
         loading = false,
         loadingEpisodes = false,
@@ -209,13 +228,11 @@ internal class SubtitleSearchController(
   fun findMedia() {
     val snapshot = state.value
     if (snapshot.query.isBlank()) return
-    if (snapshot.media != null) {
-      search()
-      return
-    }
     val ticket = invalidate()
     mutable.update {
       it.copy(
+        page = SubtitleSearchPage.Titles,
+        media = null,
         loading = true,
         message = null,
         matches = emptyList(),
@@ -253,15 +270,15 @@ internal class SubtitleSearchController(
     val ticket = invalidate()
     mutable.update {
       it.copy(
+        page = SubtitleSearchPage.Subtitles,
         media = media,
-        query = media.title,
         series = media.television,
-        matches = emptyList(),
         seasons = emptyList(),
         episodes = emptyList(),
         season = if (media.television) old.season else null,
         episode = if (media.television) old.episode else null,
         subtitles = emptyList(),
+        failures = emptyList(),
         message = null,
         loading = false,
         loadingEpisodes = media.television,
@@ -293,8 +310,8 @@ internal class SubtitleSearchController(
                 season = season?.number ?: old.season ?: 1,
                 episode =
                   episodes.firstOrNull { it.number == old.episode }?.number
-                    ?: old.episode
                     ?: episodes.firstOrNull()?.number
+                    ?: old.episode
                     ?: 1,
                 loadingEpisodes = false,
               )
@@ -317,7 +334,7 @@ internal class SubtitleSearchController(
 
   private fun request(s: SubtitleSearchState) =
     SubtitleRequest(
-      s.query.trim(),
+      s.media?.title ?: s.query.trim(),
       s.media,
       s.season.takeIf { s.series },
       s.episode.takeIf { s.series },
@@ -333,11 +350,11 @@ internal class SubtitleSearchController(
     val ticket = invalidate()
     mutable.update {
       it.copy(
+        page = SubtitleSearchPage.Subtitles,
         loading = true,
         loadingEpisodes = false,
         message = null,
         subtitles = emptyList(),
-        matches = emptyList(),
         files = emptyList(),
         downloading = null,
         failures = emptyList(),

@@ -128,7 +128,7 @@ class PlayerActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     onBackPressedDispatcher.addCallback(this) {
       if (viewModel.panelNavigator.isOpen) {
-        viewModel.panelNavigator.back()
+        viewModel.backFromPlayerPanel()
         if (!viewModel.panelNavigator.isOpen) viewModel.showControls()
         return@addCallback
       }

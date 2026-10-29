@@ -147,10 +147,12 @@ class PlayerViewModel(
   }
   internal fun backFromPlayerPanel() {
     val page=panelNavigator.state.value.lastOrNull()?.panel
-    if(page==Panels.SubtitleSearch) subtitleSearch.stop()
+    if(page==Panels.SubtitleSearch) {
+      if(subtitleSearch.back()) return
+      subtitleSearch.stop()
+    }
     if(page==Panels.SubtitleSearchFiles) subtitleSearch.clearFiles()
     panelNavigator.back()
-    if(page==Panels.SubtitleSearchOptions || page==Panels.SubtitleSearchLanguages) subtitleSearch.search()
   }
   internal fun applyOnlineSubtitle(file: File, slot: Int) {
     val generation=subtitleOwnerGeneration;val path=subtitleOwnerPath
