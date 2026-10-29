@@ -1,0 +1,30 @@
+{
+  "sourceCoordinate": "io.github.abdallahmehiz:mpv-android-lib:0.1.9",
+  "originalAarSha256": "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b",
+  "mpvCommit": "7653cc8f0",
+  "nativeVersion": "0.40.0-276-g7653cc8f0-mpvkt-pause1",
+  "ndk": "27.0.12077973",
+  "apiLevel": 21,
+  "patchSha256": "1c6a8bd0e8e3052e84ee05297434d6d76a5e90b0b9f59c164c7169f606f85873",
+  "fixtures": {
+    "upstream/audio/out/ao_opensles.c": "f5ce157894b8a7d88e20b8f207b1f26afbeb51609692c5a6b1a7e77ce35c2bef",
+    "upstream/audio/out/buffer.c": "e053296cdfe58a07b6bd2aa5554774ff5c54ca57c622a56636fb6fe8f0fed105"
+  },
+  "binaries": {
+    "arm64-v8a": {
+      "sha256": "05abefc7e6a745a525794f05ffe7b14028707e72bb6adf9bce11b4aa87495f2d",
+      "bytes": 5423240
+    },
+    "armeabi-v7a": {
+      "sha256": "c62064a7ce4c1b4032bba698f45afabbdb4294a23ba0770631d46adde8e53d43",
+      "bytes": 4975672
+    }
+  },
+  "ffmpeg": "2a22972db3 (unmodified upstream shared libraries)",
+  "libass": "338fd2cea8ac156a910b04838b5f40b868e41160",
+  "libplacebo": "f1cc9dd8",
+  "lua": "5.2.4; upstream Android portability flags",
+  "testScope": "Native C regression harness with simulated clock/device; no physical Android playback measurement",
+  "sourceLockSha256": "bb247f8279a529dd4ffe558822564aedb0cf134642c975dfa152c49150e6c992",
+  "buildScriptSha256": "cccd5975fc5ee7eacf66c458e66ed4f5a140990be8a74cea895b8913bd205c2b"
+}

@@ -1,0 +1,15 @@
+{
+  "uniqueId": "io.github.abdallahmehiz:mpv-android-lib",
+  "artifactVersion": "0.1.9",
+  "name": "mpv Android library",
+  "description": "Original mpvKt Android wrapper. The ARM libmpv native pause correction is listed separately. Native components retain their own upstream licenses.",
+  "website": "https://github.com/abdallahmehiz/mpv-android/",
+  "developers": [
+    {
+      "name": "Abdallah Mehiz and mpv-android contributors"
+    }
+  ],
+  "licenses": [
+    "MIT"
+  ]
+}

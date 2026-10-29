@@ -119,7 +119,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
   }
 
   @Suppress("EmptyFunctionBlock")
-  override fun event(eventId: Int, data: MPVNode) {
+  override fun event(eventId: Int) {
   }
 
   private var mediaThumbnail: Bitmap? = null
@@ -137,12 +137,12 @@ class MediaPlaybackService : MediaBrowserServiceCompat(), MPVLib.EventObserver {
     if (PlaybackControl.state.value.attached) {
     MPVLib.addObserver(this)
     mapOf(
-      "pause" to MPVLib.MpvFormat.MPV_FORMAT_FLAG,
-      "duration" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
-      "time-pos" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
-      "speed" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
-      "media-title" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
-      "metadata/artist" to MPVLib.MpvFormat.MPV_FORMAT_STRING,
+      "pause" to MPVLib.mpvFormat.MPV_FORMAT_FLAG,
+      "duration" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
+      "time-pos" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
+      "speed" to MPVLib.mpvFormat.MPV_FORMAT_DOUBLE,
+      "media-title" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
+      "metadata/artist" to MPVLib.mpvFormat.MPV_FORMAT_STRING,
     ).onEach {
       MPVLib.observeProperty(it.key, it.value)
     }

@@ -1,7 +1,11 @@
 // Modified for Luma Player: interface, appearance, or build configuration.
 import java.security.MessageDigest
+import java.io.File
+import java.util.Properties
+import java.util.zip.ZipFile
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import com.android.build.api.variant.FilterConfiguration
 import io.gitlab.arturbosch.detekt.Detekt
 import org.apache.commons.io.output.ByteArrayOutputStream
@@ -17,6 +21,76 @@ plugins {
   alias(libs.plugins.kotlinx.serialization)
 }
 
+
+// Resolve the original published library, then replace only its two ARM libmpv binaries.
+// Classes, JNI wrapper, FFmpeg libraries, resources and manifest remain from 0.1.9.
+val originalMpvRuntime = configurations.create("originalMpvRuntime") {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+  isTransitive = false
+  attributes.attribute(org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE, objects.named(org.gradle.api.attributes.Usage.JAVA_RUNTIME))
+}
+val patchedMpvAar = layout.buildDirectory.file("generated/mpv-runtime/mpv-android-lib-0.1.9-pause1.aar")
+val nativePauseDirectory = rootProject.file("third_party/mpv-pause")
+
+fun sha256Of(file: File): String {
+  val digest = MessageDigest.getInstance("SHA-256")
+  file.inputStream().use { input ->
+    val bytes = ByteArray(1024 * 1024)
+    while (true) {
+      val count = input.read(bytes)
+      if (count < 0) break
+      digest.update(bytes, 0, count)
+    }
+  }
+  return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
+val prepareMpvRuntime = tasks.register("prepareMpvRuntime") {
+  inputs.files(originalMpvRuntime)
+  inputs.dir(nativePauseDirectory.resolve("native"))
+  inputs.file(nativePauseDirectory.resolve("native-hashes.properties"))
+  outputs.file(patchedMpvAar)
+  doLast {
+    val original = originalMpvRuntime.singleFile
+    check(sha256Of(original) == "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b") {
+      "Published mpv-android-lib 0.1.9 changed"
+    }
+    val hashes = Properties().apply {
+      nativePauseDirectory.resolve("native-hashes.properties").inputStream().use(::load)
+    }
+    val replacements = listOf("arm64-v8a", "armeabi-v7a").associate { abi ->
+      val binary = nativePauseDirectory.resolve("native/$abi/libmpv.so")
+      check(sha256Of(binary) == hashes.getProperty(abi)) { "Native pause fix changed for $abi" }
+      "jni/$abi/libmpv.so" to binary
+    }
+    val output = patchedMpvAar.get().asFile
+    output.parentFile.mkdirs()
+    var replaced = 0
+    ZipFile(original).use { source ->
+      ZipOutputStream(output.outputStream().buffered()).use { target ->
+        target.setLevel(9)
+        source.entries().asSequence().sortedBy { it.name }.forEach { entry ->
+          if (entry.isDirectory) return@forEach
+          if (entry.name.startsWith("jni/") &&
+              !entry.name.startsWith("jni/arm64-v8a/") &&
+              !entry.name.startsWith("jni/armeabi-v7a/")) return@forEach
+          target.putNextEntry(ZipEntry(entry.name).apply { time = 315532800000L })
+          val replacement = replacements[entry.name]
+          if (replacement != null) {
+            replacement.inputStream().use { it.copyTo(target) }
+            replaced++
+          } else {
+            source.getInputStream(entry).use { it.copyTo(target) }
+          }
+          target.closeEntry()
+        }
+      }
+    }
+    check(replaced == 2) { "Both ARM pause fixes must replace their upstream binaries" }
+  }
+}
+
 android {
   namespace = "live.mehiz.mpvkt"
   compileSdk = 36
@@ -27,10 +101,10 @@ android {
   defaultConfig {
     applicationId = "io.github.jntynho.luma"
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
-    minSdk = 24
+    minSdk = 21
     targetSdk = 36
-    versionCode = 20
-    versionName = "0.16.0"
+    versionCode = 21
+    versionName = "0.17.0"
 
     vectorDrawables {
       useSupportLibrary = true
@@ -97,7 +171,7 @@ android {
     includeSourceInformation = true
   }
   packaging {
-    // Retain compressed downloads when raising minSdk; installers extract the native libraries.
+    // Keep compressed native downloads; installers extract the native libraries.
     jniLibs.useLegacyPackaging = true
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -155,7 +229,8 @@ dependencies {
   implementation(libs.mediasession)
   implementation(libs.saveable)
 
-  implementation(variantOf(libs.mpv.lib) { artifactType("aar") })
+  add(originalMpvRuntime.name, libs.mpv.lib)
+  implementation(files(prepareMpvRuntime))
 
   implementation(platform(libs.koin.bom))
   implementation(libs.bundles.koin)
@@ -209,38 +284,36 @@ fun runCommand(command: String): String {
 }
 
 aboutLibraries {
+  collect { configPath.set(rootProject.layout.projectDirectory.dir("config/aboutlibraries")) }
   excludeFields = arrayOf("generated")
 }
 
-// The producer publishes an AAR without Maven metadata. Verify the exact native artifact
-// and reject an accidental reintroduction of the previous runtime before release validation.
+// Validate the declared upstream runtime and the exact native artifact that enters the APK.
 tasks.register("verifyMpvRuntime") {
   group = "verification"
+  dependsOn(prepareMpvRuntime)
   doLast {
-    val configuration = configurations.getByName("debugRuntimeClasspath")
-    val modules = configuration.incoming.resolutionResult.allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
-    check(modules.none { it.group == "io.github.abdallahmehiz" && it.module == "mpv-android-lib" }) {
-      "The replaced mpv runtime is still present"
-    }
-    val runtime = modules.single { it.group == "app.gyrolet.mpvlib" && it.module == "mpvlib" }
-    check(runtime.version == "1.1.4")
-    val artifact = configuration.incoming.artifactView {
-      componentFilter { it is ModuleComponentIdentifier && it.group == "app.gyrolet.mpvlib" && it.module == "mpvlib" }
-      attributes.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "aar")
-    }.files.singleFile
-    val digest = MessageDigest.getInstance("SHA-256")
-    artifact.inputStream().use { input ->
-      val buffer = ByteArray(1024 * 1024)
-      while (true) {
-        val count = input.read(buffer)
-        if (count < 0) break
-        digest.update(buffer, 0, count)
+    val modules = configurations.getByName("debugRuntimeClasspath").incoming.resolutionResult
+      .allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
+    check(modules.none { it.group == "app.gyrolet.mpvlib" }) { "Removed gyrolet runtime is still present" }
+    val original = originalMpvRuntime.incoming.resolutionResult.allComponents.mapNotNull {
+      it.id as? ModuleComponentIdentifier
+    }.single { it.group == "io.github.abdallahmehiz" && it.module == "mpv-android-lib" }
+    check(original.version == "0.1.9")
+    check(sha256Of(originalMpvRuntime.singleFile) == "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b")
+    ZipFile(originalMpvRuntime.singleFile).use { upstream ->
+      ZipFile(patchedMpvAar.get().asFile).use { patched ->
+        upstream.entries().asSequence().filter { !it.isDirectory }.forEach { entry ->
+          if (entry.name.startsWith("jni/") &&
+              !entry.name.startsWith("jni/arm64-v8a/") &&
+              !entry.name.startsWith("jni/armeabi-v7a/")) return@forEach
+          if (entry.name in setOf("jni/arm64-v8a/libmpv.so", "jni/armeabi-v7a/libmpv.so")) return@forEach
+          check(upstream.getInputStream(entry).use { it.readBytes() }.contentEquals(
+            patched.getInputStream(patched.getEntry(entry.name)).use { it.readBytes() }
+          )) { "Unexpected upstream runtime change: ${entry.name}" }
+        }
       }
     }
-    val actual = digest.digest().joinToString("") { "%02x".format(it) }
-    check(actual == "4abc71bfc1a0e0c8d5008e8fb3a8ccf83f3ced6e430a04b51156f75ae53bb285") {
-      "mpvlib 1.1.4 artifact changed: $actual"
-    }
-    logger.lifecycle("Verified app.gyrolet.mpvlib:mpvlib:1.1.4; previous runtime absent")
+    logger.lifecycle("Verified io.github.abdallahmehiz:mpv-android-lib:0.1.9 with ARM native pause fix; gyrolet absent")
   }
 }

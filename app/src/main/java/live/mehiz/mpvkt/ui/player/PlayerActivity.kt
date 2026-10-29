@@ -604,8 +604,8 @@ class PlayerActivity : AppCompatActivity() {
   internal fun event(eventId: Int) {
     if (player.isExiting) return
     when (eventId) {
-      MPVLib.MpvEvent.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
-      MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> {
+      MPVLib.mpvEventId.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
+      MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
         fileName = getFileName(intent)
         setIntentExtras(intent.extras)
         val mediaTitle = MPVLib.getPropertyString("media-title")
@@ -620,7 +620,7 @@ class PlayerActivity : AppCompatActivity() {
         viewModel.changeVideoAspect(playerPreferences.videoAspect.get())
       }
 
-      MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> player.isExiting = false
+      MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> player.isExiting = false
     }
   }
 

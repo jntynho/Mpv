@@ -1,0 +1,77 @@
+--- a/audio/out/ao_opensles.c
++++ b/audio/out/ao_opensles.c
+@@ -234,9 +234,27 @@
+     (*p->buffer_queue)->Clear(p->buffer_queue);
+ }
+ 
++// Preserve queued samples on user pause; reset() is reserved for seeks/stops.
++static bool set_pause(struct ao *ao, bool paused)
++{
++    struct priv *p = ao->priv;
++    SLresult res = (*p->play)->SetPlayState(p->play,
++                          paused ? SL_PLAYSTATE_PAUSED : SL_PLAYSTATE_PLAYING);
++    if (res != SL_RESULT_SUCCESS) {
++        MP_ERR(ao, "Failed to change native pause state: %d\n", res);
++        ao_request_reload(ao);
++        return false;
++    }
++    return true;
++}
++
+ static void resume(struct ao *ao)
+ {
+     struct priv *p = ao->priv;
++    // A seek/reset can clear hw_paused while the OpenSL player remains paused.
++    // Every fresh start must resume the device before feeding its first buffer.
++    if (!set_pause(ao, false))
++        return;
+     buffer_callback(p->buffer_queue, ao);
+ }
+ 
+@@ -249,6 +267,7 @@
+     .uninit    = uninit,
+     .reset     = reset,
+     .start     = resume,
++    .set_pause = set_pause,
+ 
+     .priv_size = sizeof(struct priv),
+     .priv_defaults = &(const struct priv) {
+--- a/audio/out/buffer.c
++++ b/audio/out/buffer.c
+@@ -304,9 +304,10 @@
+         get_dev_state(ao, &state);
+         driver_delay = state.delay;
+     } else {
+-        int64_t end = p->end_time_ns;
+-        int64_t now = mp_time_ns();
+-        driver_delay = MPMAX(0, MP_TIME_NS_TO_S(end - now));
++        // Freeze the callback clock while hardware preserves the queued samples.
++        int64_t delay = p->paused && p->hw_paused
++                      ? p->queued_time_ns : p->end_time_ns - mp_time_ns();
++        driver_delay = MPMAX(0, MP_TIME_NS_TO_S(delay));
+     }
+ 
+     int64_t pending = mp_async_queue_get_samples(p->queue);
+@@ -414,6 +415,8 @@
+                 do_change_state = true;
+                 p->streaming = false;
+                 is_hw_paused = p->hw_paused = !!ao->driver->set_pause;
++                if (is_hw_paused)
++                    p->queued_time_ns = p->end_time_ns - mp_time_ns();
+             }
+         }
+         wakeup = true;
+@@ -439,9 +442,13 @@
+         if (is_hw_paused) {
+             if (paused) {
+                 ao->driver->set_pause(ao, true);
++                mp_mutex_lock(&p->lock);
+                 p->queued_time_ns = p->end_time_ns - mp_time_ns();
++                mp_mutex_unlock(&p->lock);
+             } else {
++                mp_mutex_lock(&p->lock);
+                 p->end_time_ns = p->queued_time_ns + mp_time_ns();
++                mp_mutex_unlock(&p->lock);
+                 ao->driver->set_pause(ao, false);
+             }
+         } else {

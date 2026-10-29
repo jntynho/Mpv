@@ -1,0 +1,3 @@
+
+# Unified diffs encode blank context lines with a required leading space.
+third_party/mpv-pause/*.patch -whitespace
