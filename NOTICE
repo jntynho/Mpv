@@ -15,3 +15,9 @@ Miuix overscroll and spring implementation (0.9.4)
 Copyright 2025 compose-miuix-ui contributors, Apache-2.0.
 Adapted OverscrollFactory.kt and SpringUtils.kt to the app's refresh coordinator and Compose 1.9 WindowInfo API.
 Source: https://github.com/miuix-kotlin-multiplatform/miuix
+
+MPV 0.17 native pause correction
+Uses io.github.abdallahmehiz:mpv-android-lib:0.1.9 with only the two ARM libmpv.so binaries rebuilt from matching upstream source revisions.
+OpenSLES pause and callback audio-clock modifications are provided under the applicable GPL-2.0-or-later terms.
+See third_party/mpv-pause for the patch, original copyright/license texts, checksum-pinned source inputs, binary provenance and build instructions.
+Original JNI wrapper, FFmpeg shared libraries and other AAR contents retain their upstream licenses and remain unmodified.

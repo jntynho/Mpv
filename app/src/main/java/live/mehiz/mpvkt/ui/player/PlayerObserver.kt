@@ -40,7 +40,7 @@ class PlayerObserver(private val activity: PlayerActivity) : MPVLib.EventObserve
     dispatch { activity.onObserverEvent(property, value) }
   }
 
-  override fun event(eventId: Int, data: MPVNode) {
+  override fun event(eventId: Int) {
     dispatch { activity.event(eventId) }
   }
 }

@@ -7,18 +7,18 @@ import `is`.xyz.mpv.MPVNode
 internal object MpvProperties {
   private val session = StablePropertySession()
   val propBoolean =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_FLAG) { MPVLib.getPropertyBoolean(it) }
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_FLAG) { MPVLib.getPropertyBoolean(it) }
   val propString =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_STRING) { MPVLib.getPropertyString(it) }
-  val propInt = session.channel(MPVLib.MpvFormat.MPV_FORMAT_INT64) { MPVLib.getPropertyInt(it) }
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_STRING) { MPVLib.getPropertyString(it) }
+  val propInt = session.channel(MPVLib.mpvFormat.MPV_FORMAT_INT64) { MPVLib.getPropertyInt(it) }
   val propLong =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_INT64) { MPVLib.getPropertyNode(it)?.asInt() }
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_INT64) { MPVLib.getPropertyNode(it)?.asInt() }
   val propDouble =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_DOUBLE) { MPVLib.getPropertyDouble(it) }
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_DOUBLE) { MPVLib.getPropertyDouble(it) }
   val propFloat =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_DOUBLE) { MPVLib.getPropertyFloat(it) }
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_DOUBLE) { MPVLib.getPropertyFloat(it) }
   val propNode =
-    session.channel(MPVLib.MpvFormat.MPV_FORMAT_NODE) {
+    session.channel(MPVLib.mpvFormat.MPV_FORMAT_NODE) {
       MPVLib.getPropertyNode(it)?.takeUnless { node -> node is MPVNode.None }
     }
   private var owner: Any? = null
@@ -54,7 +54,7 @@ internal object MpvProperties {
         override fun eventProperty(property: String, value: MPVNode) =
           session.accept(token) { propNode.emit(property, value.takeUnless { it is MPVNode.None }) }
 
-        override fun event(eventId: Int, data: MPVNode) {}
+        override fun event(eventId: Int) {}
       }
     observer = listener
     MPVLib.addObserver(listener)

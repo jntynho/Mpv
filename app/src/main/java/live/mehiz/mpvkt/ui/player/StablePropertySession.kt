@@ -3,7 +3,7 @@ package live.mehiz.mpvkt.ui.player
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** Stable flow identities survive mpvlib clearing its own maps on native destruction. */
+/** Stable application-owned flows are rebound whenever the native player is recreated. */
 internal class StablePropertySession {
   private val lock = Any()
   private val channels = mutableListOf<Channel<*>>()

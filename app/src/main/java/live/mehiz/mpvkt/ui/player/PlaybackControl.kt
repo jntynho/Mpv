@@ -43,10 +43,10 @@ internal object PlaybackControl {
             if (property in setOf("pause", "paused-for-cache", "eof-reached")) c.refresh()
           }
 
-          override fun event(eventId: Int, data: MPVNode) {
+          override fun event(eventId: Int) {
             when (eventId) {
-              MPVLib.MpvEvent.MPV_EVENT_START_FILE -> c.mediaStarted()
-              MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> c.mediaLoaded()
+              MPVLib.mpvEventId.MPV_EVENT_START_FILE -> c.mediaStarted()
+              MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> c.mediaLoaded()
             }
           }
 
@@ -64,7 +64,7 @@ internal object PlaybackControl {
         }
         .also { MPVLib.addObserver(it) }
     listOf("pause", "paused-for-cache", "eof-reached").forEach {
-      MPVLib.observeProperty(it, MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+      MPVLib.observeProperty(it, MPVLib.mpvFormat.MPV_FORMAT_FLAG)
     }
     c.refresh()
   }

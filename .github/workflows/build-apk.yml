@@ -37,6 +37,8 @@ jobs:
           PYCODE
       - name: Validate icon catalogue and unchanged home folder
         run: python3 scripts/check-icon-assets.py
+      - name: Validate native pause regression and provenance
+        run: python3 scripts/check-native-pause.py
       - name: Build installable APKs and validate
         shell: bash
         run: |
@@ -81,6 +83,7 @@ jobs:
           for apk in app/build/outputs/apk/preview/*.apk; do
             "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 4 "$apk"
           done
+          python3 scripts/check-mpv-apks.py
       - uses: actions/upload-artifact@v4
         with:
           name: MPV-APK-arm64
@@ -123,7 +126,7 @@ jobs:
           cat > release-notes.md <<'NOTES'
           Download an APK below directly; no ZIP extraction is needed.
 
-          Requires Android 7.0 (API 24) or newer. Uses app.gyrolet.mpvlib:mpvlib:1.1.4.
+          Requires Android 5.0 (API 21) or newer. Uses mpv-android-lib 0.1.9 with an ARM native pause correction.
 
           - arm64-v8a: Android ARM 64-bit
           - armeabi-v7a: Android ARM 32-bit
