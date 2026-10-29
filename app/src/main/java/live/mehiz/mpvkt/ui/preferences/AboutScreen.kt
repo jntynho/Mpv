@@ -2,9 +2,9 @@ package live.mehiz.mpvkt.ui.preferences
 
 import android.content.Intent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,10 +42,8 @@ import live.mehiz.mpvkt.ui.icons.Code
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold as Scaffold
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsTopAppBar as TopAppBar
-import live.mehiz.mpvkt.ui.theme.spacing
 import live.mehiz.mpvkt.ui.utils.LocalBackStack
 import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
-import me.zhanghai.compose.preference.ProvidePreferenceLocals
 
 @Serializable
 object AboutScreen : Screen {
@@ -68,72 +65,81 @@ object AboutScreen : Screen {
         )
       }
     ) { paddingValues ->
-      Column(modifier = Modifier.padding(paddingValues).verticalScroll(rememberScrollState())) {
-        Column(
-          Modifier.fillMaxWidth().padding(bottom = MaterialTheme.spacing.large),
-          horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-          Image(
-            painterResource(id = R.drawable.mpv_launcher_foreground),
-            null,
-            modifier = Modifier.size(160.dp),
-          )
-          Text(
-            text = stringResource(id = R.string.app_name),
-            style = MaterialTheme.typography.headlineSmall,
-          )
-        }
-        Text(
-          stringResource(R.string.mpv_icons_credit),
-          Modifier.padding(horizontal = 16.dp),
-          style = MaterialTheme.typography.bodySmall,
-        )
-        Text(
-          stringResource(R.string.mpv_folder_credit),
-          Modifier.padding(horizontal = 16.dp),
-          style = MaterialTheme.typography.bodySmall,
-        )
-        HorizontalDivider()
-        ProvidePreferenceLocals {
-          Preference(
-            title = { Text(text = stringResource(id = R.string.pref_about_app_version)) },
-            summary = {
+      Column(
+        Modifier.padding(paddingValues)
+          .verticalScroll(rememberScrollState())
+          .padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        SettingsCard(Modifier.padding(horizontal = 20.dp)) {
+          Column(
+            Modifier.fillMaxWidth().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+          ) {
+            Image(painterResource(R.drawable.mpv_launcher_foreground), null, Modifier.size(88.dp))
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+            Text(
+              stringResource(R.string.update_about_tagline),
+              style = MaterialTheme.typography.bodyMedium,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            androidx.compose.material3.Surface(
+              shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+              color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
               Text(
-                text =
-                  stringResource(
-                    id = R.string.pref_about_app_version_formatted,
-                    BuildConfig.BUILD_TYPE.replaceFirstChar { it.uppercaseChar() },
-                    BuildConfig.VERSION_NAME,
-                  )
-              )
-            },
-            onClick = { clipboard.setText(AnnotatedString(collectDeviceInfo())) },
-            icon = { Icon(optionIcon(R.string.pref_about_app_version), null) },
-          )
-          Preference(
-            title = { Text(text = stringResource(id = R.string.pref_about_oss_libraries)) },
-            onClick = { backstack.add(LibrariesScreen) },
-            icon = { Icon(optionIcon(R.string.pref_about_oss_libraries), null) },
-          )
-          Preference(
-            title = { Text(text = stringResource(id = R.string.pref_about_privacy_policy)) },
-            onClick = {
-              context.startActivity(
-                Intent(Intent.ACTION_VIEW, context.getString(R.string.privacy_policy_url).toUri())
-              )
-            },
-            icon = { Icon(optionIcon(R.string.pref_about_privacy_policy), null) },
-          )
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-          IconButton(
-            onClick = {
-              context.startActivity(
-                Intent(Intent.ACTION_VIEW, context.getString(R.string.github_repo_url).toUri())
+                "v${BuildConfig.VERSION_NAME}",
+                Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge,
               )
             }
+          }
+        }
+        SettingsGroup {
+          SettingsRow(
+            { Text(stringResource(R.string.pref_about_app_version)) },
+            { Text("${BuildConfig.VERSION_NAME} · ${BuildConfig.BUILD_TYPE}") },
+            { Icon(Icons.Info, null) },
           ) {
-            Icon(imageVector = Icons.Code, contentDescription = null)
+            clipboard.setText(AnnotatedString(collectDeviceInfo()))
+          }
+          SettingsRow(
+            { Text(stringResource(R.string.pref_about_oss_libraries)) },
+            icon = { Icon(Icons.Code, null) },
+          ) {
+            backstack.add(LibrariesScreen)
+          }
+          SettingsRow(
+            { Text(stringResource(R.string.pref_about_privacy_policy)) },
+            icon = { Icon(Icons.Lock, null) },
+          ) {
+            context.startActivity(
+              Intent(Intent.ACTION_VIEW, context.getString(R.string.privacy_policy_url).toUri())
+            )
+          }
+          SettingsRow({ Text("GitHub") }, icon = { Icon(Icons.Link, null) }) {
+            context.startActivity(
+              Intent(Intent.ACTION_VIEW, context.getString(R.string.github_repo_url).toUri())
+            )
+          }
+        }
+        SettingsCard(Modifier.padding(horizontal = 20.dp)) {
+          Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+              stringResource(R.string.update_about_credits),
+              style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+              stringResource(R.string.mpv_icons_credit),
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+              stringResource(R.string.mpv_folder_credit),
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
           }
         }
       }

@@ -92,6 +92,8 @@ class PlayerActivity : AppCompatActivity() {
   private val gesturePreferences: GesturePreferences by inject()
   private val fileManager: FileManager by inject()
 
+  private val securePlayback: Boolean
+    get() = live.mehiz.mpvkt.ui.secure.SecurePlaybackRegistry.file(intent.getStringExtra("secure_session")) != null
   private var fileName = ""
   private var mediaPlaybackService: MediaPlaybackService? = null
   private var serviceBinding = false
@@ -126,6 +128,7 @@ class PlayerActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    if (securePlayback) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
     onBackPressedDispatcher.addCallback(this) {
       if (viewModel.panelNavigator.isOpen) {
         viewModel.backFromPlayerPanel()
@@ -133,7 +136,7 @@ class PlayerActivity : AppCompatActivity() {
         return@addCallback
       }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isPipSupported &&
-        viewModel.paused == false && playerPreferences.automaticallyEnterPip.get() &&
+        viewModel.paused == false && !securePlayback && playerPreferences.automaticallyEnterPip.get() &&
         !viewModel.panelNavigator.isOpen) {
         if (tryEnterPip()) return@addCallback
       }
@@ -210,12 +213,15 @@ class PlayerActivity : AppCompatActivity() {
 
     restoreJob?.cancel()
     pipReceiver?.let { unregisterReceiver(it); pipReceiver = null }
+    if (isFinishing) {
+      live.mehiz.mpvkt.ui.secure.SecurePlaybackRegistry.remove(intent.getStringExtra("secure_session"))
+    }
     super.onDestroy()
   }
 
   override fun onPause() {
     if (!pipTransitionExpected && !(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) &&
-      !playerPreferences.automaticBackgroundPlayback.get()
+      (!playerPreferences.automaticBackgroundPlayback.get() || securePlayback)
     ) {
       viewModel.pause()
     }
@@ -230,7 +236,7 @@ class PlayerActivity : AppCompatActivity() {
 
   override fun onStop() {
     saveVideoPlaybackState(fileName)
-    if (!isFinishing && !isChangingConfigurations && playerPreferences.automaticBackgroundPlayback.get()) {
+    if (!isFinishing && !isChangingConfigurations && !securePlayback && playerPreferences.automaticBackgroundPlayback.get()) {
       if (!serviceBinding) startBackgroundPlayback()
     } else if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)) {
       viewModel.pause()
@@ -246,7 +252,7 @@ class PlayerActivity : AppCompatActivity() {
 
   @SuppressLint("NewApi")
   override fun onUserLeaveHint() {
-    val autoPip = isPipSupported && viewModel.paused == false && playerPreferences.automaticallyEnterPip.get()
+    val autoPip = isPipSupported && viewModel.paused == false && !securePlayback && playerPreferences.automaticallyEnterPip.get()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) pipTransitionExpected = autoPip
     else if (autoPip) tryEnterPip()
     super.onUserLeaveHint()
@@ -288,7 +294,7 @@ class PlayerActivity : AppCompatActivity() {
       endBackgroundPlayback()
       setupAudio()
     }
-    mediaSession?.isActive = true
+    mediaSession?.isActive = !securePlayback
   }
 
   private fun copyMPVAssets() {
@@ -442,6 +448,7 @@ class PlayerActivity : AppCompatActivity() {
   }
 
   private fun startBackgroundPlayback() {
+    if (securePlayback) return
     val previousFocus = audioFocusRequest
     audioFocusRequest = null
     PlaybackControl.clearFocusRequester(this)
@@ -518,6 +525,7 @@ class PlayerActivity : AppCompatActivity() {
   }
 
   private fun getFileName(intent: Intent): String {
+    if (securePlayback) return intent.getStringExtra("secure_title").orEmpty().take(300)
     val uri = if (intent.type == "text/plain") {
       intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()?.toUri()
     } else {
@@ -607,13 +615,14 @@ class PlayerActivity : AppCompatActivity() {
       MPVLib.mpvEventId.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
       MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
         fileName = getFileName(intent)
+        val privateMedia = securePlayback
         val sourceHint = intent.data?.toString()
         val recentTitle = fileName
         val recentContext = applicationContext
         PlaybackControl.enqueue("recent-media") {
           val path = MPVLib.getPropertyString("path")
           val uri = if(path == null || path.startsWith("fd") || path.startsWith("/proc/self/fd")) sourceHint else path
-          if(uri != null) playbackWriterScope.launch { live.mehiz.mpvkt.ui.home.RecentMedia.record(recentContext,uri,recentTitle) }
+          if(uri != null && !privateMedia) playbackWriterScope.launch { live.mehiz.mpvkt.ui.home.RecentMedia.record(recentContext,uri,recentTitle) }
         }
         setIntentExtras(intent.extras)
         val mediaTitle = MPVLib.getPropertyString("media-title")
@@ -633,7 +642,7 @@ class PlayerActivity : AppCompatActivity() {
   }
 
   private fun saveVideoPlaybackState(mediaTitle: String) {
-    if (mediaTitle.isBlank()) return
+    if (mediaTitle.isBlank() || securePlayback) return
     // Read native values on the owner thread before dispatching database I/O.
     val snapshot = PlaybackStateEntity(
       mediaTitle = mediaTitle,
@@ -663,7 +672,7 @@ class PlayerActivity : AppCompatActivity() {
 
   private suspend fun loadVideoPlaybackState(mediaTitle: String, generation: Long) {
     if (mediaTitle.isBlank()) return
-    val state = withContext(Dispatchers.IO) { playbackStateRepository.getVideoDataByTitle(mediaTitle) }
+    val state = if (securePlayback) null else withContext(Dispatchers.IO) { playbackStateRepository.getVideoDataByTitle(mediaTitle) }
     if (generation != mediaGeneration || isDestroyed || player.isExiting) return
     if(state==null && !intent.hasExtra("subs.enable") && "slang" !in live.mehiz.mpvkt.subtitles.SubtitleConfig.active) {
       val tracks=MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
@@ -701,13 +710,20 @@ class PlayerActivity : AppCompatActivity() {
     saveVideoPlaybackState(fileName)
     restoreJob?.cancel()
     mediaGeneration++
+    val oldSession = this.intent.getStringExtra("secure_session")
+    if (oldSession != intent.getStringExtra("secure_session")) {
+      live.mehiz.mpvkt.ui.secure.SecurePlaybackRegistry.remove(oldSession)
+    }
     setIntent(intent)
+    if (securePlayback) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+    else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+    mediaSession?.isActive = !securePlayback
     applyRequestOptions(intent.extras)
     MPVLib.command("loadfile", playable)
   }
 
   private fun tryEnterPip(): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isPipSupported || isFinishing) return false
+    if (securePlayback || Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !isPipSupported || isFinishing) return false
     pipTransitionExpected = true
     return runCatching { enterPictureInPictureMode(createPipParams()) }.getOrDefault(false).also {
       if (!it) pipTransitionExpected = false
@@ -721,7 +737,7 @@ class PlayerActivity : AppCompatActivity() {
       builder.setTitle(MPVLib.getPropertyString("media-title") ?: fileName)
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      val autoEnter = playerPreferences.automaticallyEnterPip.get()
+      val autoEnter = playerPreferences.automaticallyEnterPip.get() && !securePlayback
       builder.setAutoEnterEnabled(viewModel.paused == false && autoEnter)
       builder.setSeamlessResizeEnabled(viewModel.paused == false && autoEnter)
     }
@@ -909,7 +925,7 @@ class PlayerActivity : AppCompatActivity() {
           )
           .build(),
       )
-      isActive = true
+      isActive = !securePlayback
     }
 
     val filter = IntentFilter().apply { addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY) }

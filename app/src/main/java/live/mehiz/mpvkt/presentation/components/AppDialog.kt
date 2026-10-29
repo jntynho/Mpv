@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -71,30 +72,19 @@ internal fun AppDialog(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 0.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .45f)),
+        border =
+          BorderStroke(1.dp, glassRimBrush(MaterialTheme.colorScheme.surface.luminance() < .5f)),
       ) {
         Column(Modifier.padding(20.dp)) {
           Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
           ) {
-            Surface(
-              shape = RoundedCornerShape(14.dp),
-              color =
-                lerp(
-                  MaterialTheme.colorScheme.surfaceContainer,
-                  MaterialTheme.colorScheme.onSurface,
-                  .045f,
-                ),
-              border =
-                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .3f)),
-            ) {
-              Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                CompositionLocalProvider(
-                  LocalContentColor provides MaterialTheme.colorScheme.primary
-                ) {
-                  if (icon != null) icon() else Icon(Icons.Tune, null, Modifier.size(24.dp))
-                }
+            Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+              CompositionLocalProvider(
+                LocalContentColor provides MaterialTheme.colorScheme.primary
+              ) {
+                if (icon != null) icon() else Icon(Icons.Tune, null, Modifier.size(24.dp))
               }
             }
             Box(Modifier.weight(1f)) {

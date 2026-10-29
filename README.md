@@ -1,5 +1,17 @@
 # MPV
 
+### MPV 0.20.0
+
+- Sort keeps one stable sheet size while Card columns and Fields expand; List and Card retain independent field selections. Card defaults favour thumbnails, duration and counts, with paths off.
+- Player pane transitions prevent outgoing pages from accepting late taps; scrollbars handle variable-height content and invalid input safely.
+- Colour Accent gains directional edge masks. Shared dialogs use their actual option icon without a backing tile and a restrained reflective rim.
+- Advanced → Backup & Restore exports typed XML and validates the entire import before one atomic commit. Credentials and vault contents are excluded.
+- Secure Folder (Android 6+) uses a six-digit PIN, a device-bound Android Keystore wrapping key, encrypted names and authenticated 64 KB media chunks. It creates encrypted copies and preserves originals. Remember the PIN; vault data has no recovery or cloud backup. Private playback uses a temporary app-private file that is removed when the player finishes or the process next starts; it is excluded from recents/history, PiP, background playback and screenshots.
+- Landscape Controls is a standalone settings page with per-region drag ordering, accessible move buttons and a live preview. Seekbar Style offers six direct radio choices and native previews.
+- Home playback actions appear as individual animated pills and account for system gesture insets. Instagram opens the installed app or its website.
+- About and startup preparation have refreshed layouts; the existing measured warmup and readiness checks remain in use.
+
+
 مشغل Android مشتق من [mpvKt](https://github.com/abdallahmehiz/mpvKt)، بمحرك
 `io.github.abdallahmehiz:mpv-android-lib:0.1.9` مع تصحيح أصلي لـPause وواجهة Compose بألوان ليلية ونعناعية.
 المصدر الأصلي وترخيص Apache-2.0 محفوظان في `NOTICE` و`LICENSE`.

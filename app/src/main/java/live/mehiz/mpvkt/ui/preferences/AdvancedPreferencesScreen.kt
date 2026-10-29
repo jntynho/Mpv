@@ -64,6 +64,7 @@ object AdvancedPreferencesScreen : Screen {
   @OptIn(ExperimentalMaterial3Api::class)
   @Composable
   override fun Content() {
+    val backstack = live.mehiz.mpvkt.ui.utils.LocalBackStack.current
     val context = LocalContext.current
     val preferences = koinInject<AdvancedPreferences>()
     val fontsRepository = koinInject<live.mehiz.mpvkt.subtitles.SubtitleFonts>()
@@ -98,6 +99,15 @@ object AdvancedPreferencesScreen : Screen {
             }
           val mpvConfStorageLocation by preferences.mpvConfStorageUri.collectAsState()
           Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
+            SettingsGroup {
+              SettingsRow(
+                { Text(stringResource(R.string.update_backup)) },
+                { Text(stringResource(R.string.update_backup_detail)) },
+                { Icon(Icons.Save, null) },
+              ) {
+                backstack.add(BackupRestoreScreen)
+              }
+            }
             SettingsGroup {
               TwoTargetIconButtonPreference(
                 title = { Text(stringResource(R.string.pref_advanced_mpv_conf_storage_location)) },

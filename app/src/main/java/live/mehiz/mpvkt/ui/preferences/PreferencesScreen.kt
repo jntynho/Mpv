@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.ui.custombuttons.CustomButtonsScreen
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Audiotrack
 import live.mehiz.mpvkt.ui.icons.Code
@@ -88,6 +89,22 @@ object PreferencesScreen : Screen {
             summary = { Text(text = stringResource(id = R.string.pref_player_summary)) },
             icon = { Icon(Icons.PlayCircle, null) },
             onClick = { backstack.add(PlayerPreferencesScreen) },
+          )
+          preference(
+            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            key = "landscape",
+            title = { Text(stringResource(R.string.mpv_landscape_controls)) },
+            summary = { Text(stringResource(R.string.mpv_landscape_controls_summary)) },
+            icon = { Icon(Icons.Monitor, null) },
+            onClick = { backstack.add(LandscapeControlsScreen) },
+          )
+          preference(
+            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            key = "secure",
+            title = { Text(stringResource(R.string.update_secure)) },
+            summary = { Text(stringResource(R.string.update_secure_summary)) },
+            icon = { Icon(Icons.Lock, null) },
+            onClick = { backstack.add(live.mehiz.mpvkt.ui.secure.SecureFolderScreen) },
           )
           preference(
             modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),

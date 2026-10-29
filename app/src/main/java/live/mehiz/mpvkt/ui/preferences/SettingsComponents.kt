@@ -187,6 +187,7 @@ internal fun <T> ListPreference(
     AppDialog(
       onDismissRequest = { showing = false },
       title = title,
+      icon = icon,
       confirmButton = {
         DialogButton({ showing = false }) { Text(stringResource(R.string.subtitle_done)) }
       },

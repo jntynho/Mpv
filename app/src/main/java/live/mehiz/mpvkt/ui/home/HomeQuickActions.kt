@@ -31,6 +31,7 @@ import live.mehiz.mpvkt.ui.player.controls.components.PlayerLazyScrollArea
 private enum class QuickAction {
   File,
   Recent,
+  Instagram,
   Link,
 }
 
@@ -38,7 +39,10 @@ private enum class QuickAction {
 internal fun HomeQuickActions(reduceMotion: Boolean) {
   if (live.mehiz.mpvkt.ui.startup.LocalInterfacePreparation.current) return
   val context = LocalContext.current
-  val popupOffset = with(androidx.compose.ui.platform.LocalDensity.current) { (-72).dp.roundToPx() }
+  val density = androidx.compose.ui.platform.LocalDensity.current
+  val gestureNavigation = WindowInsets.mandatorySystemGestures.getBottom(density) > 0
+  val clearance = if (gestureNavigation) 12.dp else 4.dp
+  val popupOffset = with(density) { (-72.dp - clearance).roundToPx() }
   var expanded by rememberSaveable { mutableStateOf(false) }
   val visibility = remember { MutableTransitionState(false) }
   visibility.targetState = expanded
@@ -64,6 +68,21 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
       when (pending) {
         QuickAction.File -> picker.launch(arrayOf("*/*"))
         QuickAction.Recent -> recent = true
+        QuickAction.Instagram -> {
+          runCatching {
+              context.startActivity(
+                Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.instagram.com/"))
+              )
+            }
+            .onFailure {
+              android.widget.Toast.makeText(
+                  context,
+                  R.string.update_operation_failed,
+                  android.widget.Toast.LENGTH_SHORT,
+                )
+                .show()
+            }
+        }
         QuickAction.Link -> {
           invalid = false
           link = true
@@ -74,7 +93,7 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
     }
   }
   BackHandler(expanded) { expanded = false }
-  Box {
+  Box(Modifier.padding(bottom = clearance)) {
     FloatingActionButton(
       onClick = { expanded = !expanded },
       shape = CircleShape,
@@ -104,50 +123,71 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
             fadeOut(tween(if (reduceMotion) 0 else 180)) +
               slideOutVertically(tween(if (reduceMotion) 0 else 180)) { it / 10 },
         ) {
-          Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shadowElevation = 4.dp,
+          Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
           ) {
-            Column(
-              Modifier.widthIn(min = 208.dp, max = 280.dp).padding(8.dp),
-              verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-              listOf(QuickAction.File, QuickAction.Recent, QuickAction.Link).forEach { action ->
-                Row(
-                  Modifier.fillMaxWidth()
-                    .clickable {
-                      if (expanded) {
-                        pending = action
-                        expanded = false
-                      }
-                    }
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(14.dp),
+            listOf(QuickAction.File, QuickAction.Recent, QuickAction.Instagram, QuickAction.Link)
+              .forEachIndexed { index, action ->
+                Surface(
+                  Modifier.animateEnterExit(
+                    enter =
+                      fadeIn(
+                        tween(
+                          if (reduceMotion) 0 else 180,
+                          delayMillis = if (reduceMotion) 0 else (3 - index) * 30,
+                        )
+                      ) +
+                        slideInVertically(
+                          tween(
+                            if (reduceMotion) 0 else 220,
+                            delayMillis = if (reduceMotion) 0 else (3 - index) * 30,
+                          )
+                        ) {
+                          it / 3
+                        },
+                    exit = fadeOut(tween(if (reduceMotion) 0 else 140)),
+                  ),
+                  shape = RoundedCornerShape(20.dp),
+                  color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                  shadowElevation = 3.dp,
                 ) {
-                  Icon(
-                    when (action) {
-                      QuickAction.File -> Icons.FolderOpen
-                      QuickAction.Recent -> Icons.History
-                      QuickAction.Link -> Icons.Link
-                    },
-                    null,
-                    Modifier.size(22.dp),
-                  )
-                  Text(
-                    stringResource(
-                      when (action) {
-                        QuickAction.File -> R.string.mpv_open_file
-                        QuickAction.Recent -> R.string.mpv_recently_played
-                        QuickAction.Link -> R.string.mpv_open_link
+                  Row(
+                    Modifier.widthIn(min = 208.dp, max = 280.dp)
+                      .clickable {
+                        if (expanded) {
+                          pending = action
+                          expanded = false
+                        }
                       }
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
-                  )
+                      .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                  ) {
+                    Text(
+                      stringResource(
+                        when (action) {
+                          QuickAction.File -> R.string.mpv_open_file
+                          QuickAction.Recent -> R.string.mpv_recently_played
+                          QuickAction.Instagram -> R.string.update_instagram
+                          QuickAction.Link -> R.string.mpv_open_link
+                        }
+                      ),
+                      Modifier.weight(1f),
+                    )
+                    Icon(
+                      when (action) {
+                        QuickAction.File -> Icons.FolderOpen
+                        QuickAction.Recent -> Icons.History
+                        QuickAction.Instagram -> Icons.Instagram
+                        QuickAction.Link -> Icons.Link
+                      },
+                      null,
+                      Modifier.size(22.dp),
+                    )
+                  }
                 }
               }
-            }
           }
         }
       }

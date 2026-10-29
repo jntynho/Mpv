@@ -57,12 +57,19 @@ class LibraryCustomizationTest {
   fun buttonLocationEditorMovesOneButtonAndPreviewsThePersistedResult() {
     compose.setContent {
       MpvKtTheme {
-        CompositionLocalProvider(LocalNavigateBack provides {}) {
+        val stack =
+          androidx.navigation3.runtime.rememberNavBackStack<live.mehiz.mpvkt.presentation.Screen>(
+            LandscapeControlsScreen
+          )
+        CompositionLocalProvider(
+          LocalNavigateBack provides { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+          live.mehiz.mpvkt.ui.utils.LocalBackStack provides stack,
+        ) {
           CompositionLocalProvider(
             androidx.compose.ui.platform.LocalLayoutDirection provides
               androidx.compose.ui.unit.LayoutDirection.Rtl
           ) {
-            LandscapeControlsScreen.Content()
+            (stack.last() as live.mehiz.mpvkt.presentation.Screen).Content()
           }
         }
       }
@@ -73,8 +80,9 @@ class LibraryCustomizationTest {
       previewTitle.center.x < 196f,
     )
     capture("landscape-controls")
-    compose.onNodeWithText("More").performScrollTo().performClick()
-    compose.onNode(hasText("Bottom left") and hasAnyAncestor(isDialog())).performClick()
+    compose.onNodeWithText("Bottom left").performScrollTo().performClick()
+    compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("More"))
+    compose.onNodeWithText("More").performClick()
     compose.waitForIdle()
     assertTrue(LandscapeControl.More in player.landscapeLayout.get().bottomLeft)
     assertFalse(LandscapeControl.More in player.landscapeLayout.get().topRight)

@@ -198,9 +198,9 @@ fun PlayerSheet(
               laidOut = true
             }
             .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }
-            .pointerInput(closing) {
+            .pointerInput(closing, interactive) {
               // Once exit starts, a late tap cannot change tracks or push another page.
-              if (closing)
+              if (closing || !interactive)
                 awaitPointerEventScope {
                   while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach {
                     it.consume()

@@ -43,13 +43,18 @@ internal fun LibraryFolderItem(
           androidx.compose.ui.text.style.TextAlign.Center
         else androidx.compose.ui.text.style.TextAlign.Start,
     )
-    LibraryMetadataRow(values)
+    LibraryMetadataRow(values, centered = display.grid && fields.has(LibraryField.CenterTitles))
   }
   val base =
     modifier
       .fillMaxWidth()
       .clip(RoundedCornerShape(12.dp))
       .clickable(onClick = onClick)
+      .then(
+        if (display.grid)
+          Modifier.background(MaterialTheme.colorScheme.surfaceContainer).heightIn(min = 178.dp)
+        else Modifier
+      )
       .padding(vertical = 12.dp)
   if (display.grid)
     Column(
@@ -85,6 +90,7 @@ internal fun LibraryVideoItem(
   val detailsNeeded = fields.any { it in setOf("Resolution", "Framerate", "Subtitles", "Codec") }
   val details by
     produceState<VideoDetails?>(null, video.uri, video.revision, detailsNeeded) {
+      value = null
       if (detailsNeeded) value = VideoDetailsLoader.load(context.applicationContext, video)
     }
   val progress =
@@ -133,7 +139,7 @@ internal fun LibraryVideoItem(
           androidx.compose.ui.text.style.TextAlign.Center
         else androidx.compose.ui.text.style.TextAlign.Start,
     )
-    LibraryMetadataRow(values)
+    LibraryMetadataRow(values, centered = display.grid && fields.has(LibraryField.CenterTitles))
     if (fields.has(LibraryField.Progress))
       LinearProgressIndicator(
         progress = { progress },
@@ -145,10 +151,14 @@ internal fun LibraryVideoItem(
       .fillMaxWidth()
       .clip(RoundedCornerShape(12.dp))
       .clickable(onClick = onClick)
+      .then(
+        if (display.grid) Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+        else Modifier
+      )
       .padding(vertical = 8.dp)
   if (display.grid)
     Column(
-      base,
+      base.padding(horizontal = 10.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp),
       horizontalAlignment =
         if (fields.has(LibraryField.CenterTitles)) Alignment.CenterHorizontally else Alignment.Start,

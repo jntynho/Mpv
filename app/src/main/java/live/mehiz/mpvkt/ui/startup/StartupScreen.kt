@@ -11,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -279,7 +278,13 @@ private fun StartupPage(
 ) {
   val colors = MaterialTheme.colorScheme
   Box(
-    Modifier.fillMaxSize().background(colors.background).safeDrawingPadding(),
+    Modifier.fillMaxSize()
+      .background(
+        androidx.compose.ui.graphics.Brush.verticalGradient(
+          listOf(colors.surfaceContainerLow, colors.background)
+        )
+      )
+      .safeDrawingPadding(),
     contentAlignment = Alignment.Center,
   ) {
     Column(
@@ -290,18 +295,54 @@ private fun StartupPage(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-      Box(
-        Modifier.size(88.dp).background(colors.primaryContainer, CircleShape),
-        contentAlignment = Alignment.Center,
-      ) {
-        Icon(Icons.Play, null, Modifier.size(36.dp), tint = colors.primary)
+      val reduced = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
+      val smoothProgress by
+        androidx.compose.animation.core.animateFloatAsState(
+          progress,
+          tween(if (reduced) 0 else 300),
+          label = "preparation_ring",
+        )
+      Box(Modifier.size(116.dp), contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+          val stroke = 3.dp.toPx()
+          drawArc(
+            colors.outlineVariant.copy(alpha = .35f),
+            -90f,
+            360f,
+            false,
+            style =
+              androidx.compose.ui.graphics.drawscope.Stroke(
+                stroke,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+              ),
+          )
+          drawArc(
+            colors.primary,
+            -90f,
+            360f * smoothProgress.coerceIn(.02f, 1f),
+            false,
+            style =
+              androidx.compose.ui.graphics.drawscope.Stroke(
+                stroke,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+              ),
+          )
+        }
+        Surface(shape = RoundedCornerShape(28.dp), color = colors.surfaceContainerHigh) {
+          androidx.compose.foundation.Image(
+            androidx.compose.ui.res.painterResource(R.drawable.mpv_launcher_foreground),
+            null,
+            Modifier.size(88.dp),
+          )
+        }
       }
-      Text("MPV", style = MaterialTheme.typography.displaySmall)
+      Text("MPV", style = MaterialTheme.typography.displaySmall, color = colors.onBackground)
       Text(
         stringResource(
-          if (showIntroduction) R.string.mpv_welcome else R.string.mpv_loading_interface
+          if (showIntroduction) R.string.mpv_welcome else R.string.update_loading_status
         ),
         style = MaterialTheme.typography.titleLarge,
+        color = colors.onBackground,
         textAlign = TextAlign.Center,
       )
       if (showIntroduction) {
@@ -337,7 +378,7 @@ private fun StartupPage(
       }
       if (!showIntroduction)
         Text(
-          stringResource(R.string.mpv_loading_detail),
+          stringResource(R.string.update_loading_hint),
           style = MaterialTheme.typography.bodyMedium,
           color = colors.onSurfaceVariant,
           textAlign = TextAlign.Center,
@@ -352,6 +393,9 @@ private fun StartupPage(
         LinearProgressIndicator(
           progress = { animatedProgress },
           modifier = Modifier.width(180.dp).height(4.dp).clip(RoundedCornerShape(50)),
+          trackColor = colors.onSurface.copy(alpha = .12f),
+          gapSize = 0.dp,
+          drawStopIndicator = {},
         )
         if (showIntroduction)
           Text(

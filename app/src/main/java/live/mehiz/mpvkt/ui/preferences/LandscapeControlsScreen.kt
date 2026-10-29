@@ -13,8 +13,6 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
-import live.mehiz.mpvkt.presentation.components.AppDialog
-import live.mehiz.mpvkt.presentation.components.DialogButton
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsTopAppBar
@@ -30,32 +28,18 @@ object LandscapeControlsScreen : Screen {
     val context = androidx.compose.ui.platform.LocalContext.current
     val preferences = koinInject<PlayerPreferences>()
     val layout by preferences.landscapeLayout.collectAsState()
-    var editing by remember { mutableStateOf<LandscapeControl?>(null) }
-    editing?.let { button ->
-      val current = ControlRegion.entries.firstOrNull { button in layout.buttons(it) }
-      AppDialog(
-        onDismissRequest = { editing = null },
-        title = { Text(stringResource(button.titleRes)) },
-        icon = { Icon(button.icon(), null) },
-        confirmButton = {
-          DialogButton({ editing = null }) { Text(stringResource(R.string.subtitle_done)) }
+    val backstack = live.mehiz.mpvkt.ui.utils.LocalBackStack.current
+    var resetting by remember { mutableStateOf(false) }
+    if (resetting)
+      live.mehiz.mpvkt.presentation.components.ConfirmDialog(
+        stringResource(R.string.mpv_reset_controls),
+        stringResource(R.string.update_reset_controls_confirm),
+        onConfirm = {
+          preferences.landscapeLayout.set(LandscapeLayout())
+          resetting = false
         },
-        text = {
-          Column {
-            (listOf<ControlRegion?>(null) + ControlRegion.entries).forEach { region ->
-              SettingsRow(
-                { Text(stringResource(region?.titleRes ?: R.string.mpv_control_hidden)) },
-                enabled = region == null || region == current || layout.buttons(region).size < 6,
-                icon = { Icon(optionIcon(R.string.mpv_control_hidden), null) },
-              ) {
-                preferences.landscapeLayout.set(layout.assign(button, region))
-                editing = null
-              }
-            }
-          }
-        },
+        onCancel = { resetting = false },
       )
-    }
     ElasticSettingsScaffold(
       topBar = {
         ElasticSettingsTopAppBar(
@@ -74,95 +58,31 @@ object LandscapeControlsScreen : Screen {
       ) {
         item { LandscapePreview(layout) }
         item {
-          val style by preferences.seekbarStyle.collectAsState()
           SettingsGroup {
-            ListPreference(
-              style,
-              preferences.seekbarStyle::set,
-              live.mehiz.mpvkt.ui.player.controls.components.SeekbarStyle.entries,
-              title = { Text(stringResource(R.string.mpv_seekbar_style)) },
-              summary = { Text(stringResource(style.titleRes)) },
-              icon = { Icon(Icons.DoubleArrow, null) },
-              valueToText = {
-                androidx.compose.ui.text.AnnotatedString(context.getString(it.titleRes))
-              },
-            )
-            live.mehiz.mpvkt.ui.player.controls.components.StyledSeeker(
-              30f,
-              100f,
-              65f,
-              emptyList(),
-              {},
-              {},
-              Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-              style = style,
-            )
-          }
-        }
-        item {
-          Text(
-            stringResource(R.string.mpv_landscape_controls_summary),
-            Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
-        ControlRegion.entries.forEach { region ->
-          item(key = region.name) {
-            PreferenceCategory({ Text(stringResource(region.titleRes)) })
-            SettingsGroup {
-              layout.buttons(region).forEachIndexed { index, button ->
-                SettingsRow(
-                  { Text(stringResource(button.titleRes)) },
-                  icon = { Icon(button.icon(), null) },
-                  trailing = {
-                    Row {
-                      IconButton(
-                        { preferences.landscapeLayout.set(layout.reorder(region, index, -1)) },
-                        enabled = index > 0,
-                      ) {
-                        Icon(Icons.ArrowDropUp, stringResource(R.string.mpv_move_earlier))
-                      }
-                      IconButton(
-                        { preferences.landscapeLayout.set(layout.reorder(region, index, 1)) },
-                        enabled = index < layout.buttons(region).lastIndex,
-                      ) {
-                        Icon(Icons.ArrowDropDown, stringResource(R.string.mpv_move_later))
-                      }
-                    }
-                  },
-                ) {
-                  editing = button
-                }
+            ControlRegion.entries.forEach { region ->
+              SettingsRow(
+                { Text(stringResource(region.titleRes)) },
+                {
+                  Text(
+                    layout.buttons(region).joinToString(" · ") { context.getString(it.titleRes) }
+                  )
+                },
+                { Icon(Icons.Monitor, null) },
+              ) {
+                backstack.add(ControlRegionEditorScreen(region))
               }
-              if (layout.buttons(region).isEmpty())
-                SettingsRow(
-                  { Text(stringResource(R.string.mpv_controls_empty)) },
-                  enabled = false,
-                  icon = { Icon(optionIcon(R.string.mpv_controls_empty), null) },
-                ) {}
             }
-          }
-        }
-        item {
-          PreferenceCategory({ Text(stringResource(R.string.mpv_available_controls)) })
-          SettingsGroup {
-            val used = ControlRegion.entries.flatMap { layout.buttons(it) }.toSet()
-            LandscapeControl.entries
-              .filter { it !in used }
-              .forEach { button ->
-                SettingsRow(
-                  { Text(stringResource(button.titleRes)) },
-                  { Text(stringResource(R.string.mpv_control_hidden)) },
-                  { Icon(button.icon(), null) },
-                ) {
-                  editing = button
-                }
-              }
+            SettingsRow(
+              { Text(stringResource(R.string.mpv_seekbar_style)) },
+              icon = { Icon(Icons.DoubleArrow, null) },
+            ) {
+              backstack.add(SeekbarStylesScreen)
+            }
             SettingsRow(
               { Text(stringResource(R.string.mpv_reset_controls)) },
-              icon = { Icon(optionIcon(R.string.mpv_reset_controls), null) },
+              icon = { Icon(Icons.Refresh, null) },
             ) {
-              preferences.landscapeLayout.set(LandscapeLayout())
+              resetting = true
             }
           }
         }
@@ -172,7 +92,7 @@ object LandscapeControlsScreen : Screen {
 }
 
 @Composable
-private fun LandscapePreview(layout: LandscapeLayout) {
+internal fun LandscapePreview(layout: LandscapeLayout) {
   CompositionLocalProvider(
     androidx.compose.ui.platform.LocalLayoutDirection provides
       androidx.compose.ui.unit.LayoutDirection.Ltr

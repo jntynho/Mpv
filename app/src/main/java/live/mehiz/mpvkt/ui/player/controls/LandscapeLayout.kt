@@ -75,6 +75,13 @@ data class LandscapeLayout(
     return replace(region, list)
   }
 
+  fun move(region: ControlRegion, from: Int, to: Int): LandscapeLayout {
+    val selected = buttons(region).toMutableList()
+    if (from !in selected.indices || to !in selected.indices || from == to) return this
+    selected.add(to, selected.removeAt(from))
+    return replace(region, selected)
+  }
+
   fun normalized(): LandscapeLayout {
     val used = hashSetOf<LandscapeControl>()
     var result = this

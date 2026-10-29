@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="update_backup">Backup &amp; Restore</string>
+  <string name="update_export">Export Settings</string>
+  <string name="update_export_summary">Export settings to an XML file</string>
+  <string name="update_import">Import Settings</string>
+  <string name="update_import_summary">Restore settings from an XML backup</string>
+  <string name="update_backup_detail">Back up interface and playback preferences. API keys, credentials and Secure Folder contents are excluded.</string>
+  <string name="update_import_confirm">Importing replaces matching settings. Invalid or incompatible files are rejected before any settings are changed.</string>
+  <string name="update_operation_done">Completed successfully</string>
+  <string name="update_operation_failed">Could not complete the operation. Check the file and storage access.</string>
+  <string name="update_secure">Secure Folder</string>
+  <string name="update_secure_summary">A locked, encrypted space for private videos</string>
+  <string name="update_secure_setup">Create Secure Folder</string>
+  <string name="update_secure_detail">Use a 6-digit PIN. Files are encrypted on this device and lock when you leave. Remember your PIN: there is no recovery or cloud backup.</string>
+  <string name="update_secure_requires">Secure Folder requires Android 6.0 or newer for device-bound encryption.</string>
+  <string name="update_unlock">Unlock</string>
+  <string name="update_lock">Lock</string>
+  <string name="update_pin">6-digit PIN</string>
+  <string name="update_pin_confirm">Confirm PIN</string>
+  <string name="update_secure_failed">Could not unlock or complete the operation. Check your PIN or try again in 30 seconds.</string>
+  <string name="update_secure_add">Add private files</string>
+  <string name="update_secure_copy">Creates encrypted copies. Original files remain in their current location.</string>
+  <string name="update_secure_empty">Your private files will appear here.</string>
+  <string name="update_secure_delete">Delete encrypted copy</string>
+  <string name="update_reset_controls_confirm">Restore the default layout for all landscape controls?</string>
+  <string name="update_drag_controls">Long press the handle to reorder. Use the arrows for precise movement. Tap + to add a control.</string>
+  <string name="update_remove_control">Remove control</string>
+  <string name="update_live_preview">Live preview</string>
+  <string name="update_instagram">Instagram</string>
+  <string name="update_about_tagline">Your videos. A quieter way to watch.</string>
+  <string name="update_about_credits">Design &amp; acknowledgements</string>
+  <string name="update_loading_status">Preparing your viewing space</string>
+  <string name="update_loading_hint">Library, controls and transitions</string>
+  <string name="update_card">Card</string>
+</resources>
