@@ -1,91 +1,122 @@
 package live.mehiz.mpvkt.ui.preferences
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.presentation.components.AppDialog
-import live.mehiz.mpvkt.presentation.components.DialogButton
 import live.mehiz.mpvkt.ui.home.*
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Palette
+import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
 import live.mehiz.mpvkt.ui.theme.ColourAccent
+import live.mehiz.mpvkt.ui.theme.DarkMode
+import live.mehiz.mpvkt.ui.theme.previewScheme
 
 @Composable
 internal fun ColourAccentPreference(preferences: AppearancePreferences) {
   val accent by preferences.colourAccent.collectAsState()
   val dynamic by preferences.materialYou.collectAsState()
-  var open by rememberSaveable { mutableStateOf(false) }
-  SettingsRow(
-    { Text(stringResource(R.string.mpv_colour_accent)) },
-    { Text(if (dynamic) stringResource(R.string.mpv_wallpaper_colours) else accent.label) },
-  ) {
-    open = true
-  }
-  if (open)
-    AppDialog(
-      onDismissRequest = { open = false },
-      title = { Text(stringResource(R.string.mpv_colour_accent)) },
-      confirmButton = {
-        DialogButton({ open = false }) { Text(stringResource(R.string.subtitle_done)) }
-      },
-      text = {
-        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          ColourAccent.entries.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              row.forEach { choice ->
-                val selected = choice == accent && !dynamic
-                Surface(
-                  Modifier.weight(1f).selectable(selected, role = Role.RadioButton) {
-                    preferences.colourAccent.set(choice)
-                    preferences.materialYou.set(false)
-                    open = false
-                  },
-                  shape = RoundedCornerShape(16.dp),
-                  color =
-                    if (selected) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceContainerHigh,
-                  border =
-                    if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
-                ) {
-                  Column(
-                    Modifier.padding(8.dp).heightIn(min = 64.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                  ) {
-                    Surface(
-                      Modifier.size(24.dp),
-                      shape = CircleShape,
-                      color = choice.preview(true),
-                    ) {}
-                    Text(
-                      choice.label,
-                      style = MaterialTheme.typography.labelSmall,
-                      maxLines = 2,
-                      overflow = TextOverflow.Ellipsis,
-                    )
-                  }
-                }
-              }
-              repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-            }
-          }
+  val darkMode by preferences.darkMode.collectAsState()
+  val dark = darkMode == DarkMode.Dark || (darkMode == DarkMode.System && isSystemInDarkTheme())
+  val listState = rememberLazyListState(initialFirstVisibleItemIndex = accent.ordinal)
+  Column {
+    Row(
+      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+      Icon(Icons.Palette, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(stringResource(R.string.mpv_colour_accent), style = MaterialTheme.typography.bodyLarge)
+        Text(
+          if (dynamic) stringResource(R.string.mpv_wallpaper_colours) else accent.label,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+    }
+    LazyRow(
+      modifier = Modifier.fillMaxWidth().selectableGroup(),
+      state = listState,
+      contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      items(ColourAccent.entries, key = { it.name }) { choice ->
+        ColourAccentSwatch(choice, dark, selected = choice == accent && !dynamic) {
+          preferences.colourAccent.set(choice)
+          preferences.materialYou.set(false)
         }
-      },
+      }
+    }
+  }
+}
+
+@Composable
+private fun ColourAccentSwatch(
+  accent: ColourAccent,
+  dark: Boolean,
+  selected: Boolean,
+  onClick: () -> Unit,
+) {
+  val scheme = remember(accent, dark) { accent.previewScheme(dark) }
+  val ringAlpha by
+    animateFloatAsState(
+      if (selected) 1f else 0f,
+      tween(if (LocalReduceMotion.current) 0 else 180),
+      label = "accent_selection",
     )
+  Box(
+    Modifier.size(76.dp)
+      .clip(CircleShape)
+      .selectable(selected, role = Role.RadioButton, onClick = onClick)
+      .semantics { contentDescription = accent.label }
+  ) {
+    Canvas(Modifier.fillMaxSize()) {
+      val stroke = 3.dp.toPx()
+      drawCircle(
+        scheme.primary.copy(alpha = ringAlpha),
+        radius = (size.minDimension - stroke) / 2f,
+        style = Stroke(stroke),
+      )
+    }
+    Canvas(Modifier.fillMaxSize().padding(7.dp).clip(CircleShape)) {
+      drawRect(scheme.surface)
+      drawRect(
+        scheme.primary,
+        topLeft = Offset(0f, size.height / 2f),
+        size = Size(size.width / 2f, size.height / 2f),
+      )
+      drawRect(
+        scheme.tertiary,
+        topLeft = Offset(size.width / 2f, size.height / 2f),
+        size = Size(size.width / 2f, size.height / 2f),
+      )
+    }
+  }
 }
 
 @Composable
