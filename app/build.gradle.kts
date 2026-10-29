@@ -103,8 +103,8 @@ android {
     ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     minSdk = 21
     targetSdk = 36
-    versionCode = 24
-    versionName = "0.17.3"
+    versionCode = 25
+    versionName = "0.17.4"
 
     vectorDrawables {
       useSupportLibrary = true
