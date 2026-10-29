@@ -91,11 +91,12 @@ class LibraryCustomizationTest {
         }
       }
     }
-    compose.onNodeWithText("Colour Accent").performClick()
-    compose.onNodeWithText("Ocean").performScrollTo().performClick()
+    compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasContentDescription("Ocean"))
+    compose.onNodeWithContentDescription("Ocean").assertIsNotSelected().performClick()
     compose.waitForIdle()
     assertEquals(ColourAccent.Ocean, appearance.colourAccent.get())
     assertFalse(appearance.materialYou.get())
+    compose.onNodeWithContentDescription("Ocean").assertIsSelected()
     compose.onNodeWithText("Ocean").assertExists()
     capture("appearance-ocean")
     compose.onNodeWithText("Show video thumbnails").performScrollTo().performClick()
