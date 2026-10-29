@@ -607,6 +607,14 @@ class PlayerActivity : AppCompatActivity() {
       MPVLib.mpvEventId.MPV_EVENT_START_FILE -> viewModel.subtitleMediaStarted()
       MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
         fileName = getFileName(intent)
+        val sourceHint = intent.data?.toString()
+        val recentTitle = fileName
+        val recentContext = applicationContext
+        PlaybackControl.enqueue("recent-media") {
+          val path = MPVLib.getPropertyString("path")
+          val uri = if(path == null || path.startsWith("fd") || path.startsWith("/proc/self/fd")) sourceHint else path
+          if(uri != null) playbackWriterScope.launch { live.mehiz.mpvkt.ui.home.RecentMedia.record(recentContext,uri,recentTitle) }
+        }
         setIntentExtras(intent.extras)
         val mediaTitle = MPVLib.getPropertyString("media-title")
         if (mediaTitle.isNullOrBlank() || mediaTitle.isDigitsOnly()) {

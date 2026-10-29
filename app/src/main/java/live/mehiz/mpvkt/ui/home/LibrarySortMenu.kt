@@ -1,7 +1,7 @@
 package live.mehiz.mpvkt.ui.home
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,22 +15,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.StableBottomSheet
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.Sort
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
+import live.mehiz.mpvkt.ui.preferences.ExpandableSettingsContent
 
-@OptIn(ExperimentalMaterial3Api::class)
+internal data class LibraryDisplayOptions(
+  val fields: Set<String> = setOf("Path", "Thumbnails", "Extension", "Duration"),
+  val grid: Boolean = false,
+  val columns: Int = 0,
+)
+
 @Composable
 internal fun LibrarySortButton(
   sort: LibrarySort,
@@ -39,6 +39,8 @@ internal fun LibrarySortButton(
   enabled: Boolean = true,
   viewMode: LibraryViewMode = LibraryViewMode.Folder,
   onViewMode: (LibraryViewMode) -> Unit = {},
+  display: LibraryDisplayOptions = LibraryDisplayOptions(),
+  onDisplay: (LibraryDisplayOptions) -> Unit = {},
   onSelect: (LibrarySort) -> Unit,
 ) {
   var expanded by remember { mutableStateOf(false) }
@@ -52,7 +54,7 @@ internal fun LibrarySortButton(
   ) {
     Icon(Icons.Sort, stringResource(R.string.mpv_sort))
   }
-  if (expanded) {
+  if (expanded)
     StableBottomSheet(
       onDismissRequest = { expanded = false },
       dismissRequested = closing,
@@ -65,28 +67,19 @@ internal fun LibrarySortButton(
         LibrarySortMenuContent(
           sort,
           countEnabled,
-          reduceMotion = reduceMotion,
-          modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
-          viewMode = viewMode,
-          onViewMode = { mode ->
-            if (!closing) {
-              onViewMode(mode)
-              closing = true
-            }
-          },
-          onSelect = { choice ->
-            if (!closing) {
-              onSelect(choice)
-              closing = true
-            }
-          },
+          Modifier.fillMaxWidth().weight(1f, false),
+          reduceMotion,
+          viewMode,
+          onViewMode = { if (!closing) onViewMode(it) },
+          display = display,
+          onDisplay = { if (!closing) onDisplay(it) },
+          onDone = { closing = true },
+          onSelect = { if (!closing) onSelect(it) },
         )
       }
     }
-  }
 }
 
-/** Fixed row geometry keeps selection movement independent from dismissal. */
 @Composable
 internal fun LibrarySortMenuContent(
   sort: LibrarySort,
@@ -95,163 +88,242 @@ internal fun LibrarySortMenuContent(
   reduceMotion: Boolean = false,
   viewMode: LibraryViewMode = LibraryViewMode.Folder,
   onViewMode: (LibraryViewMode) -> Unit = {},
+  display: LibraryDisplayOptions = LibraryDisplayOptions(),
+  onDisplay: (LibraryDisplayOptions) -> Unit = {},
+  onDone: () -> Unit = {},
   onSelect: (LibrarySort) -> Unit,
 ) {
-  val colors = MaterialTheme.colorScheme
-  val duration = if (reduceMotion) 0 else 240
-  val rowHeight =
-    with(LocalDensity.current) { MaterialTheme.typography.titleMedium.lineHeight.toDp() + 24.dp }
-      .coerceAtLeast(52.dp)
-  val selected = colors.primaryContainer
-  val index by
-    animateFloatAsState(
-      sort.key.ordinal.toFloat(),
-      tween(duration, easing = FastOutSlowInEasing),
-      label = "sort_selection",
-    )
-  Column(
-    modifier
-      .verticalScroll(rememberScrollState())
-      .padding(start = 20.dp, end = 20.dp, bottom = 24.dp)
-  ) {
-    Text(
-      stringResource(R.string.mpv_view_mode),
-      style = MaterialTheme.typography.labelLarge,
-      color = colors.onSurfaceVariant,
-      modifier = Modifier.padding(start = 12.dp, bottom = 12.dp),
-    )
-    Row(
-      Modifier.fillMaxWidth().selectableGroup(),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-      LibraryViewMode.entries.forEach { mode ->
-        SortChoice(
-          stringResource(
-            when (mode) {
-              LibraryViewMode.Folder -> R.string.mpv_view_folders
-              LibraryViewMode.Tree -> R.string.mpv_view_tree
-              LibraryViewMode.Videos -> R.string.mpv_view_videos
-            }
-          ),
-          viewMode == mode,
-          true,
-          Modifier.weight(1f).heightIn(min = rowHeight),
-          tonal = true,
-          duration = duration,
-        ) {
-          onViewMode(mode)
-        }
-      }
-    }
-    Spacer(Modifier.height(24.dp))
-    Text(
-      stringResource(R.string.mpv_sort),
-      style = MaterialTheme.typography.titleLarge,
-      modifier = Modifier.padding(start = 12.dp, bottom = 16.dp),
-    )
-    Box(Modifier.fillMaxWidth().selectableGroup()) {
-      Box(
-        Modifier.fillMaxWidth()
-          .height(rowHeight)
-          .graphicsLayer { translationY = index * rowHeight.toPx() }
-          .background(selected, RoundedCornerShape(20.dp))
+  var fieldsExpanded by remember { mutableStateOf(true) }
+  val duration = if (reduceMotion) 0 else 220
+  val keyChoices =
+    if (countEnabled)
+      listOf(LibrarySortKey.Title, LibrarySortKey.Date, LibrarySortKey.Size, LibrarySortKey.Count)
+    else
+      listOf(
+        LibrarySortKey.Title,
+        LibrarySortKey.Duration,
+        LibrarySortKey.Date,
+        LibrarySortKey.Size,
       )
-      Column {
-        LibrarySortKey.entries.forEach { key ->
-          val enabled = key != LibrarySortKey.Count || countEnabled
-          val disabledDescription = stringResource(R.string.mpv_sort_count_folders)
-          SortChoice(
-            stringResource(
-              when (key) {
-                LibrarySortKey.Title -> R.string.mpv_sort_title
-                LibrarySortKey.Date -> R.string.mpv_sort_date
-                LibrarySortKey.Size -> R.string.mpv_sort_size
-                LibrarySortKey.Count -> R.string.mpv_sort_count
-              }
-            ),
-            sort.key == key,
-            enabled,
-            Modifier.fillMaxWidth().height(rowHeight).semantics {
-              if (!enabled) stateDescription = disabledDescription
-            },
-            duration = duration,
-          ) {
+  Column(modifier) {
+    Row(
+      Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        stringResource(R.string.mpv_sort),
+        Modifier.weight(1f),
+        style = MaterialTheme.typography.titleLarge,
+      )
+      TextButton(onClick = onDone) { Text(stringResource(R.string.subtitle_done)) }
+    }
+    Column(
+      Modifier.weight(1f, false)
+        .verticalScroll(rememberScrollState())
+        .padding(horizontal = 20.dp, vertical = 12.dp),
+      verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+      FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
+        keyChoices.forEach { key ->
+          SortChip(stringResource(key.titleRes), sort.key == key, duration, key.icon()) {
             onSelect(sort.copy(key = key))
           }
         }
       }
-    }
-    Text(
-      stringResource(R.string.mpv_sort_order),
-      style = MaterialTheme.typography.labelLarge,
-      color = colors.onSurfaceVariant,
-      modifier = Modifier.padding(start = 12.dp, top = 20.dp, bottom = 12.dp),
-    )
-    Row(
-      Modifier.fillMaxWidth().selectableGroup(),
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-      SortChoice(
-        stringResource(R.string.mpv_sort_ascending),
-        sort.ascending,
-        true,
-        Modifier.weight(1f).height(rowHeight),
-        tonal = true,
-        duration = duration,
+      val labels = sort.orderLabels()
+      Row(
+        Modifier.fillMaxWidth().selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
       ) {
-        onSelect(sort.copy(ascending = true))
+        SortChip(
+          stringResource(labels.first),
+          sort.ascending,
+          duration,
+          modifier = Modifier.weight(1f),
+        ) {
+          onSelect(sort.copy(ascending = true))
+        }
+        SortChip(
+          stringResource(labels.second),
+          !sort.ascending,
+          duration,
+          modifier = Modifier.weight(1f),
+        ) {
+          onSelect(sort.copy(ascending = false))
+        }
       }
-      SortChoice(
-        stringResource(R.string.mpv_sort_descending),
-        !sort.ascending,
-        true,
-        Modifier.weight(1f).height(rowHeight),
-        tonal = true,
-        duration = duration,
+      HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f))
+      Text(
+        stringResource(R.string.mpv_view_mode),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Row(
+        Modifier.fillMaxWidth().selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
-        onSelect(sort.copy(ascending = false))
+        LibraryViewMode.entries.forEach { mode ->
+          SortChip(
+            stringResource(
+              when (mode) {
+                LibraryViewMode.Folder -> R.string.mpv_view_folders
+                LibraryViewMode.Tree -> R.string.mpv_view_tree
+                LibraryViewMode.Videos -> R.string.mpv_view_videos
+              }
+            ),
+            viewMode == mode,
+            duration,
+            modifier = Modifier.weight(1f),
+          ) {
+            onViewMode(mode)
+          }
+        }
       }
+      Row(
+        Modifier.fillMaxWidth().selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+      ) {
+        SortChip(
+          stringResource(R.string.mpv_layout_list),
+          !display.grid,
+          duration,
+          Icons.List,
+          Modifier.weight(1f),
+        ) {
+          onDisplay(display.copy(grid = false))
+        }
+        SortChip(
+          stringResource(R.string.mpv_layout_grid),
+          display.grid,
+          duration,
+          Icons.Grid,
+          Modifier.weight(1f),
+        ) {
+          onDisplay(display.copy(grid = true))
+        }
+      }
+      ExpandableSettingsContent(display.grid) {
+        FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
+          listOf(0, 2, 3, 4, 5).forEach { count ->
+            SortChip(
+              if (count == 0) stringResource(R.string.mpv_grid_auto) else count.toString(),
+              display.columns == count,
+              duration,
+            ) {
+              onDisplay(display.copy(columns = count))
+            }
+          }
+        }
+      }
+      Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+          stringResource(R.string.mpv_fields),
+          Modifier.weight(1f),
+          style = MaterialTheme.typography.titleSmall,
+        )
+        IconButton({ fieldsExpanded = !fieldsExpanded }) {
+          Icon(
+            if (fieldsExpanded) Icons.ArrowDropUp else Icons.ArrowDropDown,
+            stringResource(R.string.mpv_fields),
+          )
+        }
+      }
+      ExpandableSettingsContent(fieldsExpanded) {
+        FadingHorizontalRow(Modifier.fillMaxWidth()) {
+          LibraryField.entries
+            .filter {
+              (it.folder && countEnabled) ||
+                (it.video && (!countEnabled || viewMode == LibraryViewMode.Tree))
+            }
+            .forEach { field ->
+              FilterChip(
+                display.fields.has(field),
+                onClick = {
+                  onDisplay(
+                    display.copy(
+                      fields =
+                        if (display.fields.has(field)) display.fields - field.name
+                        else display.fields + field.name
+                    )
+                  )
+                },
+                label = { Text(stringResource(field.titleRes)) },
+                shape = RoundedCornerShape(18.dp),
+              )
+            }
+        }
+      }
+      Spacer(Modifier.height(8.dp))
     }
   }
 }
 
 @Composable
-private fun SortChoice(
+private fun SortChip(
   title: String,
   selected: Boolean,
-  enabled: Boolean,
-  modifier: Modifier,
-  tonal: Boolean = false,
   duration: Int,
+  icon: ImageVector? = null,
+  modifier: Modifier = Modifier,
   onClick: () -> Unit,
 ) {
-  val colors = MaterialTheme.colorScheme
-  val background by
+  val bg by
     animateColorAsState(
-      if (!tonal) Color.Transparent
-      else if (selected) colors.primaryContainer else colors.surfaceContainerHighest,
+      if (selected) MaterialTheme.colorScheme.primaryContainer
+      else MaterialTheme.colorScheme.surfaceContainerHigh,
       tween(duration),
-      label = "sort_order_selection",
+      label = "sort_chip",
     )
-  val foreground by
+  val fg by
     animateColorAsState(
-      if (selected) colors.onPrimaryContainer else colors.onSurface,
+      if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+      else MaterialTheme.colorScheme.onSurfaceVariant,
       tween(duration),
-      label = "sort_text",
+      label = "sort_chip_text",
     )
-  Box(
+  Row(
     modifier
-      .clip(RoundedCornerShape(20.dp))
-      .background(background)
-      .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-      .padding(horizontal = if (tonal) 10.dp else 20.dp),
-    contentAlignment = if (tonal) Alignment.Center else Alignment.CenterStart,
+      .heightIn(min = 48.dp)
+      .clip(RoundedCornerShape(18.dp))
+      .background(bg)
+      .selectable(selected, role = Role.RadioButton, onClick = onClick)
+      .padding(horizontal = 14.dp, vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.Center,
   ) {
-    Text(
-      title,
-      style = MaterialTheme.typography.titleMedium,
-      fontWeight = FontWeight.Medium,
-      color = foreground.copy(alpha = if (enabled) 1f else .38f),
-    )
+    if (icon != null) {
+      Icon(icon, null, Modifier.size(20.dp), tint = fg)
+      Spacer(Modifier.width(8.dp))
+    }
+    Text(title, color = fg, style = MaterialTheme.typography.labelLarge, maxLines = 1)
   }
 }
+
+internal val LibrarySortKey.titleRes
+  get() =
+    when (this) {
+      LibrarySortKey.Title -> R.string.mpv_sort_title
+      LibrarySortKey.Date -> R.string.mpv_sort_date
+      LibrarySortKey.Size -> R.string.mpv_sort_size
+      LibrarySortKey.Count -> R.string.mpv_sort_count
+      LibrarySortKey.Duration -> R.string.mpv_field_duration
+    }
+
+@Composable
+private fun LibrarySortKey.icon() =
+  when (this) {
+    LibrarySortKey.Title -> Icons.FormatSize
+    LibrarySortKey.Date -> Icons.Calendar
+    LibrarySortKey.Size -> Icons.Data
+    LibrarySortKey.Count -> Icons.Movie
+    LibrarySortKey.Duration -> Icons.Schedule
+  }
+
+internal fun LibrarySort.orderLabels() =
+  when (key) {
+    LibrarySortKey.Title -> R.string.mpv_sort_ascending to R.string.mpv_sort_descending
+    LibrarySortKey.Date -> R.string.mpv_order_oldest to R.string.mpv_order_newest
+    LibrarySortKey.Size -> R.string.mpv_order_smallest to R.string.mpv_order_largest
+    LibrarySortKey.Count -> R.string.mpv_order_fewest to R.string.mpv_order_most
+    LibrarySortKey.Duration -> R.string.mpv_order_shortest to R.string.mpv_order_longest
+  }

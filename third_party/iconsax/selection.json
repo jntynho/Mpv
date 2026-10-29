@@ -494,16 +494,16 @@
     {
       "key": "FormatSize",
       "style": "outline",
-      "source": "Svg/All/outline/size.svg",
-      "resource": "iconsax_outline_size",
-      "sha256": "ce0ed501442f8fb94dc3569112e09b2ed526058287c1221ee38ae776958168c9"
+      "source": "Svg/All/outline/text.svg",
+      "resource": "iconsax_outline_text",
+      "sha256": "0dc36df5781e3dd1c387e4f2ee0f8286568cc898908c1f56aecd903c00e43224"
     },
     {
       "key": "FormatSize",
       "style": "broken",
-      "source": "Svg/All/broken/size.svg",
-      "resource": "iconsax_broken_size",
-      "sha256": "36729ce0b4341da633cc4e7e0c24230c99525281e132213faf374ad056357ea7"
+      "source": "Svg/All/broken/text.svg",
+      "resource": "iconsax_broken_text",
+      "sha256": "13c2cf69176dd484763e2448e24d45d9d25d475e08c8a76060468ccedfafa53d"
     },
     {
       "key": "Gesture",
@@ -1134,6 +1134,286 @@
       "source": "Svg/All/broken/forward.svg",
       "resource": "iconsax_broken_forward",
       "sha256": "1b9fdd8ee80d86c15c984a00f83edfc6e63bdbc20b1d165537fd8dafbd2e6583"
+    },
+    {
+      "key": "Download",
+      "style": "outline",
+      "source": "Svg/All/outline/import.svg",
+      "resource": "iconsax_outline_import",
+      "sha256": "7d440bbc5545db1e17824e09af93de30dbba1d9c9005bb8cf569efdc55a3df20"
+    },
+    {
+      "key": "Download",
+      "style": "broken",
+      "source": "Svg/All/broken/import.svg",
+      "resource": "iconsax_broken_import",
+      "sha256": "e51f65499d40958fa94c9294c3ad73a6eb3001c2d180c991e5e67f770b90d9f8"
+    },
+    {
+      "key": "Upload",
+      "style": "outline",
+      "source": "Svg/All/outline/document-upload.svg",
+      "resource": "iconsax_outline_document_upload",
+      "sha256": "2f4f897c097871852313d47e7dcfc21ebbbb02209daed8e788c639937b5a0d42"
+    },
+    {
+      "key": "Upload",
+      "style": "broken",
+      "source": "Svg/All/broken/document-upload.svg",
+      "resource": "iconsax_broken_document_upload",
+      "sha256": "83aa880bd74278d343a0b4fa9212d87427937d891152b707b3f0ca347182261d"
+    },
+    {
+      "key": "Language",
+      "style": "outline",
+      "source": "Svg/All/outline/translate.svg",
+      "resource": "iconsax_outline_translate",
+      "sha256": "8abf6d172c4588df66cf13ff2f3df4f94c63eb880b75d74d31837fe048a3a8bb"
+    },
+    {
+      "key": "Language",
+      "style": "broken",
+      "source": "Svg/All/broken/translate.svg",
+      "resource": "iconsax_broken_translate",
+      "sha256": "ecebe1096baedeb6ac06b96c29b979485486a7be0d1b2ebbd242cd7c3f46cdcc"
+    },
+    {
+      "key": "Speed",
+      "style": "outline",
+      "source": "Svg/All/outline/speedometer.svg",
+      "resource": "iconsax_outline_speedometer",
+      "sha256": "488bbc51430cafcb91a2bace1bf6c5adab1288cea9cff20da18ae2fd0149eebe"
+    },
+    {
+      "key": "Speed",
+      "style": "broken",
+      "source": "Svg/All/broken/speedometer.svg",
+      "resource": "iconsax_broken_speedometer",
+      "sha256": "358e6cd6d312433fd8ac22ca9e0016df6901a4b6a2b44f9292d49e2878ce0a0c"
+    },
+    {
+      "key": "Calendar",
+      "style": "outline",
+      "source": "Svg/All/outline/calendar.svg",
+      "resource": "iconsax_outline_calendar",
+      "sha256": "a1fda28c377d64ef728fa5803ae54b0a3fba73643a0347d3ee086c72ca2cc9d5"
+    },
+    {
+      "key": "Calendar",
+      "style": "broken",
+      "source": "Svg/All/broken/calendar.svg",
+      "resource": "iconsax_broken_calendar",
+      "sha256": "ec14137f052838975bcd9184b55a6f02da4a93e1b142cb15f7aeac4af0bcef16"
+    },
+    {
+      "key": "Layers",
+      "style": "outline",
+      "source": "Svg/All/outline/layer.svg",
+      "resource": "iconsax_outline_layer",
+      "sha256": "68c2a597c287f951d8ee573eae25d53fdfaa97eb1f730c223168d172d9ce8552"
+    },
+    {
+      "key": "Layers",
+      "style": "broken",
+      "source": "Svg/All/broken/layer.svg",
+      "resource": "iconsax_broken_layer",
+      "sha256": "6bbb6576a70e24f81ed92cc14c0bdfbb334f810b44c6ca6816c88700a6a4eaa7"
+    },
+    {
+      "key": "Ruler",
+      "style": "outline",
+      "source": "Svg/All/outline/ruler.svg",
+      "resource": "iconsax_outline_ruler",
+      "sha256": "660bfbd9ff41ef88cbdfbd3e0b419f7999640ade9f13b60972391346bc6faf32"
+    },
+    {
+      "key": "Ruler",
+      "style": "broken",
+      "source": "Svg/All/broken/ruler.svg",
+      "resource": "iconsax_broken_ruler",
+      "sha256": "558b9298d7fc0cc95015dadd757615db4705700e7437e873e599c32cfe2e7821"
+    },
+    {
+      "key": "Repeat",
+      "style": "outline",
+      "source": "Svg/All/outline/repeat.svg",
+      "resource": "iconsax_outline_repeat",
+      "sha256": "6e0936699a026f5a197482fd07f191fcdda24ccc95f3246b76fb86cc0d8998ef"
+    },
+    {
+      "key": "Repeat",
+      "style": "broken",
+      "source": "Svg/All/broken/repeat.svg",
+      "resource": "iconsax_broken_repeat",
+      "sha256": "832dc8f03de6c637cf364b1d33e859cf734cea0d446318d1e5ee6a02838f0243"
+    },
+    {
+      "key": "Monitor",
+      "style": "outline",
+      "source": "Svg/All/outline/monitor.svg",
+      "resource": "iconsax_outline_monitor",
+      "sha256": "8ba9208344a84cceae5b757a4f285da5e3a5f0e4691b044b46222c3025ef481b"
+    },
+    {
+      "key": "Monitor",
+      "style": "broken",
+      "source": "Svg/All/broken/monitor.svg",
+      "resource": "iconsax_broken_monitor",
+      "sha256": "7c85bfb6d2ec4664c3ae087af97f123293d1a6e25147b45448ba4f9aa55bc8ba"
+    },
+    {
+      "key": "Eye",
+      "style": "outline",
+      "source": "Svg/All/outline/eye.svg",
+      "resource": "iconsax_outline_eye",
+      "sha256": "1cf3ef3dfa2fb5944863b8dfe38faaad697cf8d1af8fb28c771848bbc8ca2a5f"
+    },
+    {
+      "key": "Eye",
+      "style": "broken",
+      "source": "Svg/All/broken/eye.svg",
+      "resource": "iconsax_broken_eye",
+      "sha256": "f0283278f65ac0724205f277e197d5aac86b03b461e0d9518348a195059865b2"
+    },
+    {
+      "key": "FolderOpen",
+      "style": "outline",
+      "source": "Svg/All/outline/folder-open.svg",
+      "resource": "iconsax_outline_folder_open",
+      "sha256": "cee4961da6f6298c81118f860ab11d4e6ee849baf15a516f4e5ca0d5319052b6"
+    },
+    {
+      "key": "FolderOpen",
+      "style": "broken",
+      "source": "Svg/All/broken/folder-open.svg",
+      "resource": "iconsax_broken_folder_open",
+      "sha256": "74ee0f1b6e984b9b8c66b98fb95b8b08d03b8dcd6dc07941cccf9f0d443f1e42"
+    },
+    {
+      "key": "Data",
+      "style": "outline",
+      "source": "Svg/All/outline/data.svg",
+      "resource": "iconsax_outline_data",
+      "sha256": "9214b0a8e1c53a007716446e253894380553d62b13acf3c2c9c0d65afb745ea1"
+    },
+    {
+      "key": "Data",
+      "style": "broken",
+      "source": "Svg/All/broken/data.svg",
+      "resource": "iconsax_broken_data",
+      "sha256": "079eaef8789972ceddf87f74a54aa3f93c16811d5bc14721088b798dadcaa1be"
+    },
+    {
+      "key": "History",
+      "style": "outline",
+      "source": "Svg/All/outline/clock.svg",
+      "resource": "iconsax_outline_clock",
+      "sha256": "a85bd682a940e88e52b060a308b13a1b3d3e27a164a73b7077f592943f1f9d1b"
+    },
+    {
+      "key": "History",
+      "style": "broken",
+      "source": "Svg/All/broken/clock.svg",
+      "resource": "iconsax_broken_clock",
+      "sha256": "d30fdb67236fc86ebee620e47298afc1f512e236771e486fdb8808faa8f9aa4a"
+    },
+    {
+      "key": "Network",
+      "style": "outline",
+      "source": "Svg/All/outline/global.svg",
+      "resource": "iconsax_outline_global",
+      "sha256": "e471eb0e3bd7079db457d567b6abe6bc3d3978e3d81355662428b5e71438a12e"
+    },
+    {
+      "key": "Network",
+      "style": "broken",
+      "source": "Svg/All/broken/global.svg",
+      "resource": "iconsax_broken_global",
+      "sha256": "11931147dbd9f22edaa84e2838b10e397e254d6fd7f6c49a0cd30d3689394ed5"
+    },
+    {
+      "key": "Touch",
+      "style": "outline",
+      "source": "Svg/All/outline/finger-scan.svg",
+      "resource": "iconsax_outline_finger_scan",
+      "sha256": "84d7d9d902f914720c26d250e26d603e7584fa9d13b0034645f00b437d70d123"
+    },
+    {
+      "key": "Touch",
+      "style": "broken",
+      "source": "Svg/All/broken/finger-scan.svg",
+      "resource": "iconsax_broken_finger_scan",
+      "sha256": "8da2e699052fe1de9bba1fc9e93b0b5e922113dd926a50d49262b9f5a129d324"
+    },
+    {
+      "key": "List",
+      "style": "outline",
+      "source": "Svg/All/outline/menu.svg",
+      "resource": "iconsax_outline_menu",
+      "sha256": "3c27f83a4252548618093ff22e33aa97d43df71b8369a1436db73a792fc50ebf"
+    },
+    {
+      "key": "List",
+      "style": "broken",
+      "source": "Svg/All/broken/menu.svg",
+      "resource": "iconsax_broken_menu",
+      "sha256": "acf166031d731b559e45451d6ab9683caeea93e1c24d897a6985740ba447b50c"
+    },
+    {
+      "key": "Grid",
+      "style": "outline",
+      "source": "Svg/All/outline/element-4.svg",
+      "resource": "iconsax_outline_element_4",
+      "sha256": "75b4f95ff181eb7c7304dad41ad35e7ff060c3f2f788b49775565b4da831498f"
+    },
+    {
+      "key": "Grid",
+      "style": "broken",
+      "source": "Svg/All/broken/element-4.svg",
+      "resource": "iconsax_broken_element_4",
+      "sha256": "008e8d62ad5fe3c27aa12c9e19702125bb0902ce952454822f57222425243ae4"
+    },
+    {
+      "key": "Resolution",
+      "style": "outline",
+      "source": "Svg/All/outline/video-horizontal.svg",
+      "resource": "iconsax_outline_video_horizontal",
+      "sha256": "8549218598a2a984a8c2c33d040555967e1510079db4c27c166bb1fa289ffce4"
+    },
+    {
+      "key": "Resolution",
+      "style": "broken",
+      "source": "Svg/All/broken/video-horizontal.svg",
+      "resource": "iconsax_broken_video_horizontal",
+      "sha256": "1542bd7ecd3d24a79845a93d7170ac169a0be4e9bc7791f7ab1de21fd170a7b3"
+    },
+    {
+      "key": "Audio",
+      "style": "outline",
+      "source": "Svg/All/outline/sound.svg",
+      "resource": "iconsax_outline_sound",
+      "sha256": "5d40de824a4df5b5d02491e8f77f656430cd9cab00137f13bb3aab3938307ef0"
+    },
+    {
+      "key": "Audio",
+      "style": "broken",
+      "source": "Svg/All/broken/sound.svg",
+      "resource": "iconsax_broken_sound",
+      "sha256": "c7cc64650e7c8aee171b5846bac6ac184e5c35794404287decae5fec8fec899b"
+    },
+    {
+      "key": "Save",
+      "style": "outline",
+      "source": "Svg/All/outline/archive-tick.svg",
+      "resource": "iconsax_outline_archive_tick",
+      "sha256": "d81b8791e9a1c2fb6814389fc8338146d0649a849b12a38093ce920606c60401"
+    },
+    {
+      "key": "Save",
+      "style": "broken",
+      "source": "Svg/All/broken/archive-tick.svg",
+      "resource": "iconsax_broken_archive_tick",
+      "sha256": "ed797dde6ae26ac47770c20b7749b22c12752f5791ab13833fc8f3c259551d41"
     }
   ]
 }

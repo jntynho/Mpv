@@ -19,8 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import dev.vivvvek.seeker.Seeker
-import dev.vivvvek.seeker.SeekerDefaults
 import dev.vivvvek.seeker.Segment
 import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.ImmutableList
@@ -41,6 +39,9 @@ fun SeekbarWithTimers(
   durationTimerOnCLick: () -> Unit,
   chapters: ImmutableList<Segment>,
   modifier: Modifier = Modifier,
+  style: SeekbarStyle = SeekbarStyle.Normal,
+  paused: Boolean = true,
+  reduceMotion: Boolean = false,
 ) {
   val clickEvent = LocalPlayerButtonsClickEvent.current
   Row(
@@ -57,22 +58,17 @@ fun SeekbarWithTimers(
       },
       modifier = Modifier.width(92.dp),
     )
-    Seeker(
-      value = position.coerceIn(0f, duration),
-      range = 0f..duration,
-      onValueChange = onValueChange,
-      onValueChangeFinished = onValueChangeFinished,
-      readAheadValue = readAheadValue,
-      segments = chapters
-        .filter { it.start in 0f..duration }
-        .let { (if (it.isNotEmpty() && it[0].start != 0f) persistentListOf(Segment("", 0f)) + it else it) + it },
-      modifier = Modifier.weight(1f),
-      colors = SeekerDefaults.seekerColors(
-        progressColor = MaterialTheme.colorScheme.primary,
-        thumbColor = MaterialTheme.colorScheme.primary,
-        trackColor = MaterialTheme.colorScheme.background,
-        readAheadColor = MaterialTheme.colorScheme.inversePrimary,
-      ),
+    StyledSeeker(
+      position,
+      duration,
+      readAheadValue,
+      chapters,
+      onValueChange,
+      onValueChangeFinished,
+      Modifier.weight(1f),
+      style,
+      paused,
+      reduceMotion,
     )
     VideoTimer(
       value = if (timersInverted.second) -remaining else duration,
@@ -95,14 +91,15 @@ fun VideoTimer(
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   Text(
-    modifier = modifier
-      .fillMaxHeight()
-      .clickable(
-        interactionSource = interactionSource,
-        indication = ripple(bounded = false, radius = 24.dp),
-        onClick = onClick,
-      )
-      .wrapContentHeight(Alignment.CenterVertically),
+    modifier =
+      modifier
+        .fillMaxHeight()
+        .clickable(
+          interactionSource = interactionSource,
+          indication = ripple(bounded = false, radius = 24.dp),
+          onClick = onClick,
+        )
+        .wrapContentHeight(Alignment.CenterVertically),
     text = Utils.prettyTime(value.toInt(), isInverted),
     color = Color.White,
     textAlign = TextAlign.Center,
@@ -122,6 +119,6 @@ private fun PreviewSeekBar() {
     Pair(false, true),
     {},
     {},
-    persistentListOf<Segment>()
+    persistentListOf<Segment>(),
   )
 }

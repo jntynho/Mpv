@@ -162,9 +162,10 @@ internal fun SwitchPreference(
   title: @Composable () -> Unit,
   summary: (@Composable () -> Unit)? = null,
   enabled: Boolean = true,
+  icon: (@Composable () -> Unit)? = null,
 ) {
   PreferenceCard {
-    SettingsRow(title, summary, LocalSettingsIcon.current, enabled, toggle = value) {
+    SettingsRow(title, summary, icon ?: LocalSettingsIcon.current, enabled, toggle = value) {
       onValueChange(!value)
     }
   }
@@ -233,12 +234,13 @@ internal fun <T> TextFieldPreference(
   title: @Composable () -> Unit,
   summary: (@Composable () -> Unit)? = null,
   textToValue: (String) -> T,
+  icon: (@Composable () -> Unit)? = null,
   textField: @Composable (String, (String) -> Unit, () -> Unit) -> Unit,
 ) {
   var showing by rememberSaveable { mutableStateOf(false) }
   var draft by rememberSaveable { mutableStateOf("") }
   var failure by remember { mutableStateOf(false) }
-  Preference(title, summary, { Icon(Icons.Edit, null) }) {
+  Preference(title, summary, icon ?: { Icon(Icons.Edit, null) }) {
     draft = value.toString()
     failure = false
     showing = true
@@ -303,12 +305,13 @@ internal fun SliderPreference(
   summary: (@Composable () -> Unit)? = null,
   onSliderValueChange: (Float) -> Unit,
   sliderValue: Float,
+  icon: (@Composable () -> Unit)? = null,
 ) {
   var expanded by rememberSaveable { mutableStateOf(false) }
   var draft by remember { mutableFloatStateOf(sliderValue) }
   LaunchedEffect(sliderValue) { draft = sliderValue }
   PreferenceCard {
-    SettingsRow(title, summary, expanded = expanded) { expanded = !expanded }
+    SettingsRow(title, summary, icon = icon, expanded = expanded) { expanded = !expanded }
     ExpandableSettingsContent(expanded) {
       SlimPlayerSlider(
         draft.coerceIn(valueRange.start, valueRange.endInclusive),

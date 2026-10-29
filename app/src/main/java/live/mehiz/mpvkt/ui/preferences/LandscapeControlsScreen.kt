@@ -27,6 +27,7 @@ object LandscapeControlsScreen : Screen {
   @OptIn(ExperimentalMaterial3Api::class)
   @Composable
   override fun Content() {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val preferences = koinInject<PlayerPreferences>()
     val layout by preferences.landscapeLayout.collectAsState()
     var editing by remember { mutableStateOf<LandscapeControl?>(null) }
@@ -45,6 +46,7 @@ object LandscapeControlsScreen : Screen {
               SettingsRow(
                 { Text(stringResource(region?.titleRes ?: R.string.mpv_control_hidden)) },
                 enabled = region == null || region == current || layout.buttons(region).size < 6,
+                icon = { Icon(optionIcon(R.string.mpv_control_hidden), null) },
               ) {
                 preferences.landscapeLayout.set(layout.assign(button, region))
                 editing = null
@@ -71,6 +73,32 @@ object LandscapeControlsScreen : Screen {
         contentPadding = PaddingValues(bottom = 24.dp),
       ) {
         item { LandscapePreview(layout) }
+        item {
+          val style by preferences.seekbarStyle.collectAsState()
+          SettingsGroup {
+            ListPreference(
+              style,
+              preferences.seekbarStyle::set,
+              live.mehiz.mpvkt.ui.player.controls.components.SeekbarStyle.entries,
+              title = { Text(stringResource(R.string.mpv_seekbar_style)) },
+              summary = { Text(stringResource(style.titleRes)) },
+              icon = { Icon(Icons.DoubleArrow, null) },
+              valueToText = {
+                androidx.compose.ui.text.AnnotatedString(context.getString(it.titleRes))
+              },
+            )
+            live.mehiz.mpvkt.ui.player.controls.components.StyledSeeker(
+              30f,
+              100f,
+              65f,
+              emptyList(),
+              {},
+              {},
+              Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+              style = style,
+            )
+          }
+        }
         item {
           Text(
             stringResource(R.string.mpv_landscape_controls_summary),
@@ -110,6 +138,7 @@ object LandscapeControlsScreen : Screen {
                 SettingsRow(
                   { Text(stringResource(R.string.mpv_controls_empty)) },
                   enabled = false,
+                  icon = { Icon(optionIcon(R.string.mpv_controls_empty), null) },
                 ) {}
             }
           }
@@ -131,7 +160,7 @@ object LandscapeControlsScreen : Screen {
               }
             SettingsRow(
               { Text(stringResource(R.string.mpv_reset_controls)) },
-              icon = { Icon(Icons.Refresh, null) },
+              icon = { Icon(optionIcon(R.string.mpv_reset_controls), null) },
             ) {
               preferences.landscapeLayout.set(LandscapeLayout())
             }

@@ -45,7 +45,7 @@ internal enum class IconKey(
   FormatColorReset(R.drawable.iconsax_outline_eraser_1, R.drawable.iconsax_broken_eraser_1),
   FormatColorText(R.drawable.iconsax_outline_text, R.drawable.iconsax_broken_text),
   FormatItalic(R.drawable.iconsax_outline_text_italic, R.drawable.iconsax_broken_text_italic),
-  FormatSize(R.drawable.iconsax_outline_size, R.drawable.iconsax_broken_size),
+  FormatSize(R.drawable.iconsax_outline_text, R.drawable.iconsax_broken_text),
   Gesture(R.drawable.iconsax_outline_mouse, R.drawable.iconsax_broken_mouse),
   Gradient(R.drawable.iconsax_outline_colorfilter, R.drawable.iconsax_broken_colorfilter),
   Headset(R.drawable.iconsax_outline_headphone, R.drawable.iconsax_broken_headphone),
@@ -90,7 +90,27 @@ internal enum class IconKey(
   Sort(R.drawable.iconsax_outline_sort, R.drawable.iconsax_broken_sort),
   Stop(R.drawable.iconsax_outline_stop, R.drawable.iconsax_broken_stop),
   Backward(R.drawable.iconsax_outline_backward, R.drawable.iconsax_broken_backward),
-  Forward(R.drawable.iconsax_outline_forward, R.drawable.iconsax_broken_forward);
+  Forward(R.drawable.iconsax_outline_forward, R.drawable.iconsax_broken_forward),
+  Download(R.drawable.iconsax_outline_import, R.drawable.iconsax_broken_import),
+  Upload(R.drawable.iconsax_outline_document_upload, R.drawable.iconsax_broken_document_upload),
+  Language(R.drawable.iconsax_outline_translate, R.drawable.iconsax_broken_translate),
+  Speed(R.drawable.iconsax_outline_speedometer, R.drawable.iconsax_broken_speedometer),
+  Calendar(R.drawable.iconsax_outline_calendar, R.drawable.iconsax_broken_calendar),
+  Layers(R.drawable.iconsax_outline_layer, R.drawable.iconsax_broken_layer),
+  Ruler(R.drawable.iconsax_outline_ruler, R.drawable.iconsax_broken_ruler),
+  Repeat(R.drawable.iconsax_outline_repeat, R.drawable.iconsax_broken_repeat),
+  Monitor(R.drawable.iconsax_outline_monitor, R.drawable.iconsax_broken_monitor),
+  Eye(R.drawable.iconsax_outline_eye, R.drawable.iconsax_broken_eye),
+  FolderOpen(R.drawable.iconsax_outline_folder_open, R.drawable.iconsax_broken_folder_open),
+  Data(R.drawable.iconsax_outline_data, R.drawable.iconsax_broken_data),
+  History(R.drawable.iconsax_outline_clock, R.drawable.iconsax_broken_clock),
+  Network(R.drawable.iconsax_outline_global, R.drawable.iconsax_broken_global),
+  Touch(R.drawable.iconsax_outline_finger_scan, R.drawable.iconsax_broken_finger_scan),
+  List(R.drawable.iconsax_outline_menu, R.drawable.iconsax_broken_menu),
+  Grid(R.drawable.iconsax_outline_element_4, R.drawable.iconsax_broken_element_4),
+  Resolution(R.drawable.iconsax_outline_video_horizontal, R.drawable.iconsax_broken_video_horizontal),
+  Audio(R.drawable.iconsax_outline_sound, R.drawable.iconsax_broken_sound),
+  Save(R.drawable.iconsax_outline_archive_tick, R.drawable.iconsax_broken_archive_tick);
 
   @DrawableRes
   fun drawable(style: IconStyle, mirrored: Boolean = false): Int = when (style) {

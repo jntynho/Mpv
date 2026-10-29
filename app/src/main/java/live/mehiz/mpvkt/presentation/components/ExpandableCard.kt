@@ -1,16 +1,13 @@
 package live.mehiz.mpvkt.presentation.components
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.ArrowDropDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -29,6 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
+import live.mehiz.mpvkt.ui.icons.ArrowDropDown
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
+import live.mehiz.mpvkt.ui.preferences.ExpandableSettingsContent
 import live.mehiz.mpvkt.ui.theme.spacing
 
 @SuppressLint("UnrememberedMutableState")
@@ -44,32 +45,32 @@ fun ExpandableCard(
   elevation: CardElevation = CardDefaults.cardElevation(),
   content: @Composable () -> Unit,
 ) {
-  val rotationState by animateFloatAsState(if (isExpanded) 0f else 180f, label = "card_rotation")
+  val rotationState by
+    animateFloatAsState(
+      if (isExpanded) 180f else 0f,
+      tween(if (LocalReduceMotion.current) 0 else 280),
+      label = "card_rotation",
+    )
   Card(
-    modifier = modifier.animateContentSize(),
+    modifier = modifier,
     colors = colors,
     shape = shape,
     border = border,
     elevation = elevation,
   ) {
     Row(
-      modifier = Modifier
-        .clickable(onClick = { onExpand(!isExpanded) })
-        .padding(start = MaterialTheme.spacing.medium),
+      modifier =
+        Modifier.clickable(onClick = { onExpand(!isExpanded) })
+          .padding(start = MaterialTheme.spacing.medium),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       title(isExpanded)
       Spacer(Modifier.weight(1f))
-      IconButton(
-        modifier = Modifier.rotate(rotationState),
-        onClick = { onExpand(!isExpanded) },
-      ) {
+      IconButton(modifier = Modifier.rotate(rotationState), onClick = { onExpand(!isExpanded) }) {
         Icon(Icons.ArrowDropDown, null)
       }
     }
-    Box(Modifier.animateContentSize()) {
-      if (isExpanded) content()
-    }
+    ExpandableSettingsContent(isExpanded) { content() }
   }
 }
 

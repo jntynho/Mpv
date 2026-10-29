@@ -16,3 +16,18 @@ internal fun ResetScrollOnLibrarySort(state: LazyListState, sort: LibrarySort) {
     }
   }
 }
+
+@Composable
+internal fun ResetScrollOnLibrarySort(
+  state: androidx.compose.foundation.lazy.grid.LazyGridState,
+  sort: LibrarySort,
+) {
+  val identity = "${sort.key.storedName}:${sort.ascending}"
+  var applied by rememberSaveable { mutableStateOf(identity) }
+  SideEffect {
+    if (applied != identity) {
+      state.requestScrollToItem(0)
+      applied = identity
+    }
+  }
+}

@@ -6,6 +6,7 @@ import live.mehiz.mpvkt.ui.player.PlayerOrientation
 import live.mehiz.mpvkt.ui.player.VideoAspect
 
 class PlayerPreferences(preferenceStore: PreferenceStore) {
+  val seekbarStyle = preferenceStore.getEnum("seekbar_style", live.mehiz.mpvkt.ui.player.controls.components.SeekbarStyle.Normal)
   val orientation = preferenceStore.getEnum("player_orientation", PlayerOrientation.SensorLandscape)
   val invertDuration = preferenceStore.getBoolean("invert_duration")
   val drawOverDisplayCutout = preferenceStore.getBoolean("draw_over_cutout", true)

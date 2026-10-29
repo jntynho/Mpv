@@ -84,6 +84,7 @@ object FoldersPreferencesScreen : Screen {
             valueToText = {
               AnnotatedString(if (it == 0) context.getString(R.string.mpv_no_limit) else "$it s")
             },
+            icon = { Icon(optionIcon(R.string.mpv_minimum_duration), null) },
           )
           ListPreference(
             minimumSize,
@@ -98,6 +99,7 @@ object FoldersPreferencesScreen : Screen {
             valueToText = {
               AnnotatedString(if (it == 0) context.getString(R.string.mpv_no_limit) else "$it MB")
             },
+            icon = { Icon(optionIcon(R.string.mpv_minimum_size), null) },
           )
         }
         PreferenceCategory({ Text(stringResource(R.string.mpv_folder_visibility)) })
@@ -114,6 +116,7 @@ object FoldersPreferencesScreen : Screen {
             preferences.includeOnly::set,
             { Text(stringResource(R.string.mpv_include_only)) },
             { Text(stringResource(R.string.mpv_include_only_summary)) },
+            icon = { Icon(optionIcon(R.string.mpv_include_only), null) },
           )
           ExpandableSettingsContent(includeOnly) {
             SettingsRow(
@@ -143,6 +146,7 @@ object FoldersPreferencesScreen : Screen {
             },
             { Text(stringResource(R.string.mpv_scan_selected_folders)) },
             { Text(stringResource(R.string.mpv_hidden_access_summary)) },
+            icon = { Icon(optionIcon(R.string.mpv_scan_selected_folders), null) },
           )
           ExpandableSettingsContent(hidden) {
             trees.sorted().forEach { tree ->
@@ -173,7 +177,7 @@ object FoldersPreferencesScreen : Screen {
             }
             SettingsRow(
               { Text(stringResource(R.string.mpv_add_folder)) },
-              icon = { Icon(Icons.Add, null) },
+              icon = { Icon(optionIcon(R.string.mpv_add_folder), null) },
             ) {
               picker.launch(null)
             }
@@ -216,6 +220,7 @@ object FoldersPreferencesScreen : Screen {
                 )
               )
             },
+            icon = { Icon(optionIcon(R.string.mpv_clear_library_cache), null) },
           ) {
             library.clearPreparedCache()
             Thumbnails.clear()
@@ -263,7 +268,7 @@ data class FolderSelectionScreen(val inclusion: Boolean) : Screen {
           SettingsGroup {
             SettingsRow(
               { Text(stringResource(R.string.mpv_add_folder)) },
-              icon = { Icon(Icons.Add, null) },
+              icon = { Icon(optionIcon(R.string.mpv_add_folder), null) },
             ) {
               picker.launch(null)
             }

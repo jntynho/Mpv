@@ -29,6 +29,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.ui.home.*
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.Icons
 import live.mehiz.mpvkt.ui.icons.Palette
 import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
@@ -132,6 +133,7 @@ internal fun ThumbnailPreferences(preferences: AppearancePreferences) {
     preferences.showThumbnails::set,
     { Text(stringResource(R.string.mpv_show_thumbnails)) },
     { Text(stringResource(R.string.mpv_show_thumbnails_summary)) },
+    icon = { Icon(optionIcon(R.string.mpv_show_thumbnails), null) },
   )
   ExpandableSettingsContent(enabled) {
     ListPreference(
@@ -144,6 +146,7 @@ internal fun ThumbnailPreferences(preferences: AppearancePreferences) {
       title = { Text(stringResource(R.string.mpv_thumbnail_source)) },
       summary = { Text(stringResource(generator.titleRes)) },
       valueToText = { AnnotatedString(context.getString(it.titleRes)) },
+      icon = { Icon(optionIcon(R.string.mpv_thumbnail_source), null) },
     )
     ListPreference(
       quality,
@@ -159,6 +162,7 @@ internal fun ThumbnailPreferences(preferences: AppearancePreferences) {
           "${context.getString(if (it == ThumbnailQuality.High) R.string.mpv_quality_high else R.string.mpv_quality_standard)} · ${it.width} × ${it.height}"
         )
       },
+      icon = { Icon(optionIcon(R.string.mpv_thumbnail_quality), null) },
     )
     ExpandableSettingsContent(generator == ThumbnailGenerator.Frame) {
       SliderPreference(
@@ -168,6 +172,7 @@ internal fun ThumbnailPreferences(preferences: AppearancePreferences) {
         valueRange = 0f..100f,
         sliderValue = position.coerceIn(0, 100).toFloat(),
         onSliderValueChange = {},
+        icon = { Icon(optionIcon(R.string.mpv_thumbnail_frame), null) },
       )
     }
   }
@@ -180,6 +185,7 @@ internal fun ThumbnailPreferences(preferences: AppearancePreferences) {
         )
       )
     },
+    icon = { Icon(optionIcon(R.string.mpv_clear_thumbnail_cache), null) },
   ) {
     Thumbnails.clear()
     cleared = true

@@ -136,6 +136,9 @@ class SubtitleUiTest {
     compose.waitForIdle()
     compose.onNodeWithText("Movie or series").assertIsDisplayed()
     compose.onNodeWithText("English").assertIsDisplayed()
+    val languageHeight = compose.onNodeWithText("English").fetchSemanticsNode().boundsInRoot.height
+    val queryHeight = compose.onNode(hasSetTextAction()).fetchSemanticsNode().boundsInRoot.height
+    assertEquals(languageHeight, queryHeight, 1f)
     compose.onNodeWithText("Advanced search filters").performClick()
     assertEquals(live.mehiz.mpvkt.ui.player.Panels.SubtitleSearchOptions, opened)
     compose.onNodeWithText("Season").assertDoesNotExist()
@@ -188,7 +191,9 @@ class SubtitleUiTest {
               """{"episodes":[{"episode_number":2,"name":"Episode Two"}]}"""
             "/api/tmdb/tv/" in url -> """{"seasons":[{"season_number":1,"name":"Season One"}]}"""
             else ->
-              """[{"url":"https://example.com/Show.S01E02.srt","fileName":"Show.S01E02.srt","language":"en","format":"srt","source":"Example"}]"""
+              (0..29).joinToString(",", "[", "]") { i ->
+                """{"url":"https://example.com/Show.S01E02.$i.srt","fileName":"Show.S01E02.$i.srt","language":"en","format":"srt","source":"Example"}"""
+              }
           }.toByteArray()
         },
         { "" },
@@ -222,11 +227,11 @@ class SubtitleUiTest {
     compose.waitUntil(5000) { controller.state.value.episodes.isNotEmpty() }
     compose.runOnIdle { controller.search() }
     compose.waitUntil(5000) {
-      controller.state.value.subtitles.size == 1 && !controller.state.value.loading
+      controller.state.value.subtitles.size == 30 && !controller.state.value.loading
     }
     compose.mainClock.advanceTimeBy(600)
     compose.waitForIdle()
-    compose.onNodeWithText("English", substring = true).assertIsDisplayed()
+    compose.onAllNodesWithText("English", substring = true).onFirst().assertIsDisplayed()
     compose.onNodeWithText("Season 1").assertIsDisplayed()
     compose.onNodeWithText("Episode 2").assertExists()
     val bitmap = Bitmap.createBitmap(960, 540, Bitmap.Config.ARGB_8888)
@@ -240,8 +245,11 @@ class SubtitleUiTest {
     compose
       .onAllNodes(hasScrollToIndexAction())
       .onLast()
-      .performScrollToNode(hasText("Show.S01E02.srt"))
-    compose.onNodeWithText("Show.S01E02.srt").assertIsDisplayed()
+      .performScrollToNode(hasText("Show.S01E02.29.srt"))
+    compose.onNodeWithText("Show.S01E02.29.srt").assertIsDisplayed()
+    compose.onNodeWithText("Season 1").assertDoesNotExist()
+    compose.onAllNodes(hasScrollToIndexAction()).onLast().performScrollToIndex(0)
+    compose.onNodeWithText("Season 1").assertIsDisplayed()
     compose.mainClock.autoAdvance = false
     compose.onAllNodesWithContentDescription("Close").onLast().performClick()
     compose.runOnIdle {
@@ -302,10 +310,26 @@ class SubtitleUiTest {
       )
     val primary = compose.onNode(hasText("Primary") and tabRole)
     val secondary = compose.onNode(hasText("Secondary") and tabRole)
-    assertTrue(
-      compose.onNodeWithText("Adjustments").fetchSemanticsNode().boundsInRoot.bottom <
-        primary.fetchSemanticsNode().boundsInRoot.top
-    )
+    compose.onNodeWithText("Adjustments").assertDoesNotExist()
+    val delay =
+      compose
+        .onNodeWithContentDescription(
+          compose.activity.getString(live.mehiz.mpvkt.R.string.player_sheets_sub_delay_card_title)
+        )
+        .fetchSemanticsNode()
+        .boundsInRoot
+    val upload =
+      compose
+        .onNodeWithContentDescription("Add external subtitles")
+        .fetchSemanticsNode()
+        .boundsInRoot
+    val search =
+      compose
+        .onNodeWithContentDescription("Search subtitles online")
+        .fetchSemanticsNode()
+        .boundsInRoot
+    assertTrue(primary.fetchSemanticsNode().boundsInRoot.bottom < delay.top)
+    assertTrue(delay.left < upload.left && upload.left < search.left)
     compose
       .onNodeWithContentDescription("Add external subtitles")
       .assertIsDisplayed()
@@ -403,7 +427,7 @@ class SubtitleUiTest {
     compose.waitUntil(5000) {
       controller.state.value.episode == 3 && !controller.state.value.loadingEpisodes
     }
-    compose.onNodeWithText("Search").performClick()
+    compose.onNodeWithContentDescription("Search").performClick()
     compose.waitUntil(5000) {
       controller.state.value.subtitles.size == 1 && !controller.state.value.loading
     }
@@ -411,6 +435,13 @@ class SubtitleUiTest {
     compose.waitForIdle()
     compose.onNodeWithText("Movie or series").assertDoesNotExist()
     compose.onNodeWithText("Season 1").assertIsDisplayed()
+    val seasonBounds = compose.onNodeWithText("Season 1").fetchSemanticsNode().boundsInRoot
+    val episodeBounds = compose.onNodeWithText("Episode 3").fetchSemanticsNode().boundsInRoot
+    val searchBounds =
+      compose.onNodeWithContentDescription("Search").fetchSemanticsNode().boundsInRoot
+    assertEquals(48f, seasonBounds.height, 1f)
+    assertEquals(seasonBounds.top, searchBounds.top, 1f)
+    assertEquals(seasonBounds.height, episodeBounds.height, 1f)
     if (selectedScreenshot) capturePosterPane("poster-selected-series")
     compose.onNodeWithText("Afterlight.S01E03.1080p.WEB.srt").performScrollTo().assertIsDisplayed()
     compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }

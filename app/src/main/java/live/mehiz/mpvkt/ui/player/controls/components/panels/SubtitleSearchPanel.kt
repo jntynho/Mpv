@@ -5,14 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,8 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -38,11 +31,11 @@ import kotlinx.coroutines.*
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.player.Panels
 import live.mehiz.mpvkt.ui.player.controls.components.*
+import live.mehiz.mpvkt.ui.player.controls.components.PanelTextField as OutlinedTextField
 import live.mehiz.mpvkt.ui.player.controls.components.sheets.AudioTrackRow
 import live.mehiz.mpvkt.ui.preferences.ProviderKeyRow
 import live.mehiz.mpvkt.ui.preferences.SubtitleSettingRow
@@ -60,7 +53,7 @@ internal fun SubtitleSearchPanel(
 ) {
   val state by controller.state.collectAsState()
   val keyboard = LocalSoftwareKeyboardController.current
-  val posterState = rememberLazyGridState()
+  val posterState = rememberLazyListState()
   val motionDirection = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
   LaunchedEffect(state.page) { keyboard?.hide() }
   val edit: (String) -> Unit = {
@@ -125,7 +118,7 @@ internal fun SubtitleSearchPanel(
             )
             OutlinedButton(
               onClick = { navigate(Panels.SubtitleSearchLanguages) },
-              modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+              modifier = Modifier.fillMaxWidth().height(PanelFieldHeight),
               shape = RoundedCornerShape(16.dp),
             ) {
               Icon(Icons.Subtitles, null, Modifier.size(20.dp))
@@ -149,7 +142,7 @@ internal fun SubtitleSearchPanel(
             FilledTonalButton(
               onClick = { find() },
               enabled = state.query.isNotBlank(),
-              modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+              modifier = Modifier.fillMaxWidth().height(PanelFieldHeight),
               shape = RoundedCornerShape(16.dp),
             ) {
               Icon(Icons.Search, null, Modifier.size(20.dp))
@@ -200,68 +193,67 @@ internal fun SubtitleSearchPanel(
       }
       SubtitleSearchPage.Subtitles ->
         Column(Modifier.fillMaxSize()) {
-          if (state.series) {
-            state.media?.let { media ->
-              Text(
-                media.title,
-                Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp),
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-              )
-            }
-            Row(
-              Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-              horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-              NumberSelector(
-                stringResource(R.string.subtitle_season),
-                state.season,
-                state.seasons.isNotEmpty(),
-                Modifier.weight(1f),
-                { navigate(Panels.SubtitleSearchSeason) },
-                {
-                  if (controller.state.value.page == SubtitleSearchPage.Subtitles)
-                    controller.setSeason(it)
-                },
-                !state.loadingEpisodes,
-              )
-              NumberSelector(
-                stringResource(R.string.subtitle_episode),
-                state.episode,
-                state.episodes.isNotEmpty(),
-                Modifier.weight(1f),
-                { navigate(Panels.SubtitleSearchEpisode) },
-                {
-                  if (controller.state.value.page == SubtitleSearchPage.Subtitles)
-                    controller.setEpisode(it)
-                },
-                !state.loadingEpisodes,
-              )
-            }
-            FilledTonalButton(
-              onClick = {
-                keyboard?.hide()
-                controller.search()
-              },
-              enabled =
-                !state.loading &&
-                  !state.loadingEpisodes &&
-                  state.season != null &&
-                  state.episode != null,
-              modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-              shape = RoundedCornerShape(16.dp),
-            ) {
-              Icon(Icons.Search, null, Modifier.size(18.dp))
-              Spacer(Modifier.width(8.dp))
-              Text(stringResource(R.string.subtitle_find))
-            }
-          }
           Box(Modifier.fillMaxWidth().height(4.dp)) {
             if (state.loading || state.loadingEpisodes)
               LinearProgressIndicator(Modifier.fillMaxWidth())
           }
-          SubtitleResults(state, controller, apply, reduceMotion, Modifier.weight(1f))
+          SubtitleResults(state, controller, apply, reduceMotion, Modifier.weight(1f)) {
+            if (state.series) {
+              state.media?.let { media ->
+                Text(
+                  media.title,
+                  Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
+                  style = MaterialTheme.typography.titleSmall,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+                )
+              }
+              Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+              ) {
+                NumberSelector(
+                  stringResource(R.string.subtitle_season),
+                  state.season,
+                  state.seasons.isNotEmpty(),
+                  Modifier.weight(1f),
+                  { navigate(Panels.SubtitleSearchSeason) },
+                  {
+                    if (controller.state.value.page == SubtitleSearchPage.Subtitles)
+                      controller.setSeason(it)
+                  },
+                  !state.loadingEpisodes,
+                )
+                NumberSelector(
+                  stringResource(R.string.subtitle_episode),
+                  state.episode,
+                  state.episodes.isNotEmpty(),
+                  Modifier.weight(1f),
+                  { navigate(Panels.SubtitleSearchEpisode) },
+                  {
+                    if (controller.state.value.page == SubtitleSearchPage.Subtitles)
+                      controller.setEpisode(it)
+                  },
+                  !state.loadingEpisodes,
+                )
+                IconButton(
+                  onClick = {
+                    keyboard?.hide()
+                    controller.search()
+                  },
+                  enabled =
+                    !state.loading &&
+                      !state.loadingEpisodes &&
+                      state.season != null &&
+                      state.episode != null,
+                  modifier = Modifier.size(PanelFieldHeight),
+                ) {
+                  Icon(Icons.Search, stringResource(R.string.subtitle_find))
+                }
+              }
+            }
+          }
         }
     }
   }
@@ -271,39 +263,27 @@ internal fun SubtitleSearchPanel(
 private fun SubtitlePosterResults(
   matches: List<MediaMatch>,
   reduceMotion: Boolean,
-  state: LazyGridState,
+  state: LazyListState,
   select: (MediaMatch) -> Unit,
 ) {
-  LazyVerticalGrid(
-    columns = GridCells.Fixed(2),
-    state = state,
-    modifier = Modifier.fillMaxSize(),
-    contentPadding = PaddingValues(16.dp),
-    horizontalArrangement = Arrangement.spacedBy(12.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp),
-  ) {
-    gridItems(matches, key = { "${it.id}:${it.television}" }) { media ->
-      Box(
+  PlayerLazyScrollArea(Modifier.fillMaxSize(), state) {
+    items(matches, key = { "${it.id}:${it.television}" }) { media ->
+      Row(
         Modifier.fillMaxWidth()
-          .aspectRatio(2f / 3f)
-          .clip(RoundedCornerShape(8.dp))
+          .padding(horizontal = 16.dp, vertical = 6.dp)
+          .clip(RoundedCornerShape(14.dp))
+          .background(MaterialTheme.colorScheme.surfaceContainerLow)
           .clickable(role = Role.Button, onClick = { select(media) })
+          .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
       ) {
-        SubtitlePoster(media.posterUrl, reduceMotion, Modifier.fillMaxSize())
-        Column(
-          Modifier.align(Alignment.BottomCenter)
-            .fillMaxWidth()
-            .background(
-              Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .88f)))
-            )
-            .padding(start = 10.dp, end = 10.dp, top = 28.dp, bottom = 10.dp),
-          verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
+        SubtitlePoster(media.posterUrl, reduceMotion, Modifier.size(104.dp, 156.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(
             media.title,
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.White,
-            maxLines = 2,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
           )
           Text(
@@ -314,10 +294,8 @@ private fun SubtitlePosterResults(
               )
               .filter(String::isNotBlank)
               .joinToString(" · "),
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.White.copy(alpha = .8f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
           )
         }
       }
@@ -332,10 +310,12 @@ private fun SubtitleResults(
   apply: (File, Int) -> Unit,
   reduceMotion: Boolean,
   modifier: Modifier = Modifier,
+  header: @Composable () -> Unit = {},
 ) {
   val listState = rememberLazyListState()
   LaunchedEffect(state.loading) { if (state.loading) listState.scrollToItem(0) }
   PlayerLazyScrollArea(modifier.fillMaxWidth(), listState) {
+    item("search-controls") { header() }
     if (state.message != null)
       item("notice") {
         Text(
@@ -403,12 +383,11 @@ private fun SubtitleResults(
               controller.download(subtitle, apply)
           },
           enabled = state.downloading == null,
-          modifier =
-            Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+          modifier = Modifier.size(48.dp),
         ) {
           if (state.downloading == subtitle.url)
             CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-          else Icon(Icons.Add, stringResource(R.string.subtitle_download))
+          else Icon(Icons.Download, stringResource(R.string.subtitle_download))
         }
       }
       HorizontalDivider(
@@ -446,7 +425,7 @@ private fun NumberSelector(
   if (choices)
     OutlinedButton(
       onClick = pick,
-      modifier = modifier.heightIn(min = 56.dp),
+      modifier = modifier.height(PanelFieldHeight),
       enabled = enabled,
       shape = RoundedCornerShape(16.dp),
     ) {
