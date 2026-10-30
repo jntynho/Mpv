@@ -71,7 +71,7 @@ internal class PaneMotion {
           spring(dampingRatio = damping, stiffness = 320f, visibilityThreshold = .0005f),
         ) {
           position = value
-          velocity = this.velocity
+          this@PaneMotion.velocity = this.velocity
         }
         position = 0f
         velocity = 0f
@@ -92,7 +92,7 @@ internal class PaneMotion {
             ),
           ) {
             position = value
-            velocity = this.velocity
+            this@PaneMotion.velocity = this.velocity
           }
         }
         position = 0f
@@ -114,7 +114,7 @@ internal class PaneMotion {
           tween(duration, easing = paneEasing),
         ) {
           position = value
-          velocity = this.velocity
+          this@PaneMotion.velocity = this.velocity
         }
         position = target
         velocity = 0f

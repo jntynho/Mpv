@@ -1,6 +1,6 @@
-# Player panel stability — pending source update
+# Player panel stability — v0.22.0
 
-This update follows the audit of v0.21.0. The Android application has **not been compiled, built into an APK, or published as a release** at the user's request. Android unit/UI regressions are added for a later authorized validation run. A Kotlin parser/formatter and source/resource checks are not substitutes for compilation or device testing.
+This update follows the audit of v0.21.0. The original source-only commit deliberately skipped the Android build at the user's request. The user subsequently authorized building the application. Android application and test compilation now pass, and all 198 Android/JVM tests pass, including the eight new Compose panel regressions and five backup/import tests. Physical-device validation remains necessary; host tests do not establish frame pacing or provider behavior on every phone.
 
 | Audit group | Implementation |
 | --- | --- |
@@ -24,7 +24,7 @@ This update follows the audit of v0.21.0. The Android application has **not been
 
 Twenty isolated JVM tests passed using Kotlin 2.2.20 and JUnit 4.13.2 directly, without Gradle or the Android build system. The three tested classes are `PanelDomainTest`, `StablePropertySessionTest` and `PlaybackCoordinatorTest`. Production domain/coordinator/session source files were used directly; route enum definitions were extracted from the real source into the isolated harness.
 
-These results do not cover Android resource compilation, Compose behavior, provider integration, import integration or physical devices. Those added regressions remain pending.
+The subsequent Android validation run covers resource compilation, the complete host test suite (including Robolectric/Compose and import integration), and the existing native-runtime checks. `lintDebug` passes with no errors; it still reports 699 warnings, including incomplete upstream translations and existing deprecations. All three minified APKs also pass signature, 16 KB alignment, architecture-set and exact native-pause-binary checks. Physical-device checks remain pending.
 
 ## Regression coverage
 
@@ -33,8 +33,8 @@ These results do not cover Android resource compilation, Compose behavior, provi
 - Import cases: malformed speeds and enum domains never partially apply; legacy channel migration runs once.
 - Compose cases: semantic increment, no write on panel open, target-change cancellation, stable portrait width under reduced height, inaccessible closing content, all subtitle toolbar targets, unedited timer seconds.
 
-## Follow-up validation when building is authorized
+## Physical-device follow-up
 
-Compile and run the Android test suite and lint, then verify on hardware: cold start, rapid input, large fonts/RTL, rotation and IME during transitions, TalkBack, delayed engine echoes, revoked/cloud document providers, subtitle import for both slots, source failures and poster retries, and background timer expiry.
+Verify on hardware: cold start, rapid input, large fonts/RTL, rotation and IME during transitions, TalkBack, delayed engine echoes, revoked/cloud document providers, subtitle import for both slots, source failures and poster retries, and background timer expiry.
 
-No version/tag/release is created by this source update. Its commit uses `[skip ci]` so pushing it does not start the APK workflow.
+The original source-only commit used `[skip ci]` and created no version/tag/release. The authorized build increments the app to 0.22.0 (base version code 30) and corrects an animation receiver-name collision found by the Android compiler. The release workflow publishes only `arm64-v8a.apk`, `armeabi-v7a.apk` and `universal.apk`.
