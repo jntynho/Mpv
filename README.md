@@ -1,5 +1,17 @@
 # MPV
 
+### MPV 0.21.0
+
+- Sort returns to a compact, content-driven sheet with a single size-animation owner. Its size freezes during dismissal. View, order and field options use semantic Iconsax symbols.
+- Card removes the backing surfaces, aligns title space and gives video thumbnails the full column width. The original folder artwork stays unchanged.
+- Home Play has exactly three intrinsic-width round actions: Open File, Recently Played and Open Link. Instagram and its vectors are removed.
+- Scrubbing previews position/time locally and issues one seek on release. Cancelled touches and media replacement never commit an old target; playback pause state is untouched. Pending seek preview waits for acknowledgement with a bounded timeout.
+- Player controls enter with a short, bounded displacement and consistent fades. Subtitle settings use uniform read-only pickers, cached color observations, queued JNI writes and persistent expansion state.
+- Secure Folder keeps v0.20 files/PINs compatible and adds a 4/6-digit PIN gate, encrypted security-question recovery, optional Android-authenticated device/biometric unlock, a hidden-entry shortcut, bulk selection, move-in and verified restore-out. Originals are removed only after encrypted storage succeeds; Android deletion denial is reported and leaves the original. Restore deletes the encrypted copy only after verifying the destination. Existing v0.20 accounts must first unlock with their PIN to add a recovery question.
+
+
+Signing note: CI uses automatic test signing; v0.19 and v0.20 have different certificates. Before uninstalling an installed version, export its Secure Folder files and verify those public copies. Settings XML does not contain private media. Source-format compatibility cannot bypass Android signature checks.
+
 ### MPV 0.20.0
 
 - Sort keeps one stable sheet size while Card columns and Fields expand; List and Card retain independent field selections. Card defaults favour thumbnails, duration and counts, with paths off.

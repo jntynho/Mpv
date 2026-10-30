@@ -101,6 +101,7 @@ fun PlayerControls(
   modifier: Modifier = Modifier,
 ) {
   val spacing = MaterialTheme.spacing
+  val controlTravel=with(androidx.compose.ui.platform.LocalDensity.current){12.dp.roundToPx()}
   val playerPreferences = koinInject<PlayerPreferences>()
   val audioPreferences = koinInject<AudioPreferences>()
   val interactionSource = remember { MutableInteractionSource() }
@@ -141,6 +142,7 @@ fun PlayerControls(
   LaunchedEffect(mpvDecoder) {
     if (!mpvDecoder.isNullOrBlank()) decoder = getDecoderFromValue(mpvDecoder!!)
   }
+  val seekMediaGeneration by viewModel.seekMediaGeneration.collectAsState()
   val seekbarStyle by playerPreferences.seekbarStyle.collectAsState()
   val decoderReduceMotion by playerPreferences.reduceMotion.collectAsState()
   val playerTimeToDisappear by playerPreferences.playerTimeToDisappear.collectAsState()
@@ -294,7 +296,7 @@ fun PlayerControls(
           enter =
             if (!reduceMotion) {
               slideInHorizontally(playerControlsEnterAnimationSpec()) {
-                if (swapVolumeAndBrightness) -it else it
+                if (swapVolumeAndBrightness) -(it / 8).coerceAtMost(controlTravel) else (it / 8).coerceAtMost(controlTravel)
               } + fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
@@ -302,7 +304,7 @@ fun PlayerControls(
           exit =
             if (!reduceMotion) {
               slideOutHorizontally(playerControlsExitAnimationSpec()) {
-                if (swapVolumeAndBrightness) -it else it
+                if (swapVolumeAndBrightness) -(it / 8).coerceAtMost(controlTravel) else (it / 8).coerceAtMost(controlTravel)
               } + fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -326,7 +328,7 @@ fun PlayerControls(
           enter =
             if (!reduceMotion) {
               slideInHorizontally(playerControlsEnterAnimationSpec()) {
-                if (swapVolumeAndBrightness) it else -it
+                if (swapVolumeAndBrightness) (it / 8).coerceAtMost(controlTravel) else -(it / 8).coerceAtMost(controlTravel)
               } + fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
@@ -334,7 +336,7 @@ fun PlayerControls(
           exit =
             if (!reduceMotion) {
               slideOutHorizontally(playerControlsExitAnimationSpec()) {
-                if (swapVolumeAndBrightness) it else -it
+                if (swapVolumeAndBrightness) (it / 8).coerceAtMost(controlTravel) else -(it / 8).coerceAtMost(controlTravel)
               } + fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -461,14 +463,14 @@ fun PlayerControls(
           visible = (controlsShown || seekBarShown) && !areControlsLocked,
           enter =
             if (!reduceMotion) {
-              slideInVertically(playerControlsEnterAnimationSpec()) { it } +
+              slideInVertically(playerControlsEnterAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
             },
           exit =
             if (!reduceMotion) {
-              slideOutVertically(playerControlsExitAnimationSpec()) { it } +
+              slideOutVertically(playerControlsExitAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -487,9 +489,10 @@ fun PlayerControls(
             duration = duration?.toFloat() ?: 0f,
             remaining = remaining?.toFloat() ?: 0f,
             readAheadValue = readAhead ?: 0f,
+            mediaKey=seekMediaGeneration,
+            onScrubbingChanged={isSeeking=it},
             onValueChange = {
-              isSeeking = true
-              viewModel.seekTo(it.toInt(), preciseSeeking)
+              viewModel.seekTo(it.toInt(), preciseSeeking, seekMediaGeneration)
             },
             onValueChangeFinished = { isSeeking = false },
             timersInverted = Pair(false, invertDuration),
@@ -503,14 +506,14 @@ fun PlayerControls(
           controlsShown && !areControlsLocked,
           enter =
             if (!reduceMotion) {
-              slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { -(it / 8).coerceAtMost(controlTravel) } +
                 fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
             },
           exit =
             if (!reduceMotion) {
-              slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { -(it / 8).coerceAtMost(controlTravel) } +
                 fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -535,14 +538,14 @@ fun PlayerControls(
           controlsShown && !areControlsLocked,
           enter =
             if (!reduceMotion) {
-              slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
             },
           exit =
             if (!reduceMotion) {
-              slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -576,14 +579,14 @@ fun PlayerControls(
           controlsShown && !areControlsLocked,
           enter =
             if (!reduceMotion) {
-              slideInHorizontally(playerControlsEnterAnimationSpec()) { it } +
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
             },
           exit =
             if (!reduceMotion) {
-              slideOutHorizontally(playerControlsExitAnimationSpec()) { it } +
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { (it / 8).coerceAtMost(controlTravel) } +
                 fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -624,14 +627,14 @@ fun PlayerControls(
           controlsShown && !areControlsLocked,
           enter =
             if (!reduceMotion) {
-              slideInHorizontally(playerControlsEnterAnimationSpec()) { -it } +
+              slideInHorizontally(playerControlsEnterAnimationSpec()) { -(it / 8).coerceAtMost(controlTravel) } +
                 fadeIn(playerControlsEnterAnimationSpec())
             } else {
               fadeIn(playerControlsEnterAnimationSpec())
             },
           exit =
             if (!reduceMotion) {
-              slideOutHorizontally(playerControlsExitAnimationSpec()) { -it } +
+              slideOutHorizontally(playerControlsExitAnimationSpec()) { -(it / 8).coerceAtMost(controlTravel) } +
                 fadeOut(playerControlsExitAnimationSpec())
             } else {
               fadeOut(playerControlsExitAnimationSpec())
@@ -759,7 +762,7 @@ fun PlayerControls(
 }
 
 fun <T> playerControlsExitAnimationSpec(): FiniteAnimationSpec<T> =
-  tween(durationMillis = 300, easing = FastOutSlowInEasing)
+  tween(durationMillis = 200, easing = FastOutSlowInEasing)
 
 fun <T> playerControlsEnterAnimationSpec(): FiniteAnimationSpec<T> =
-  tween(durationMillis = 100, easing = LinearOutSlowInEasing)
+  tween(durationMillis = 240, easing = FastOutSlowInEasing)

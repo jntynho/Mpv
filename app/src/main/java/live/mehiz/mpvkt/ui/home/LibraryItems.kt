@@ -35,6 +35,7 @@ internal fun LibraryFolderItem(
   val text: @Composable ColumnScope.() -> Unit = {
     Text(
       entry.name,
+      minLines = if (display.grid) 2 else 1,
       maxLines = if (fields.has(LibraryField.FullName)) Int.MAX_VALUE else 2,
       overflow = TextOverflow.Ellipsis,
       style = MaterialTheme.typography.titleMedium,
@@ -50,11 +51,6 @@ internal fun LibraryFolderItem(
       .fillMaxWidth()
       .clip(RoundedCornerShape(12.dp))
       .clickable(onClick = onClick)
-      .then(
-        if (display.grid)
-          Modifier.background(MaterialTheme.colorScheme.surfaceContainer).heightIn(min = 178.dp)
-        else Modifier
-      )
       .padding(vertical = 12.dp)
   if (display.grid)
     Column(
@@ -131,6 +127,7 @@ internal fun LibraryVideoItem(
   val info: @Composable ColumnScope.() -> Unit = {
     Text(
       title,
+      minLines = if (display.grid) 2 else 1,
       maxLines = if (fields.has(LibraryField.FullName)) Int.MAX_VALUE else 2,
       overflow = TextOverflow.Ellipsis,
       style = MaterialTheme.typography.titleSmall,
@@ -151,14 +148,10 @@ internal fun LibraryVideoItem(
       .fillMaxWidth()
       .clip(RoundedCornerShape(12.dp))
       .clickable(onClick = onClick)
-      .then(
-        if (display.grid) Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
-        else Modifier
-      )
       .padding(vertical = 8.dp)
   if (display.grid)
     Column(
-      base.padding(horizontal = 10.dp),
+      base,
       verticalArrangement = Arrangement.spacedBy(8.dp),
       horizontalAlignment =
         if (fields.has(LibraryField.CenterTitles)) Alignment.CenterHorizontally else Alignment.Start,

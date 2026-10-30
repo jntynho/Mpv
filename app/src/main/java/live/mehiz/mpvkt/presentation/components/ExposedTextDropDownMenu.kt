@@ -6,8 +6,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,19 +32,14 @@ fun ExposedTextDropDownMenu(
     onExpandedChange = { expanded = !expanded },
     modifier = modifier,
   ) {
-    OutlinedTextField(
+    live.mehiz.mpvkt.ui.player.controls.components.PanelTextField(
       readOnly = true,
       value = selectedValue,
       onValueChange = {},
       label = { Text(text = label) },
-      trailingIcon = {
-        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-      },
+      trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
       leadingIcon = leadingIcon,
-      colors = OutlinedTextFieldDefaults.colors(),
-      modifier = Modifier
-        .menuAnchor(MenuAnchorType.PrimaryEditable)
-        .fillMaxWidth()
+      modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
     )
 
     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -56,7 +49,7 @@ fun ExposedTextDropDownMenu(
           onClick = {
             expanded = false
             onValueChangedEvent(option)
-          }
+          },
         )
       }
     }

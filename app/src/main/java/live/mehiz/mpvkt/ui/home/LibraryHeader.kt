@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,6 +47,7 @@ internal fun LibraryHeader(
   onSearch: () -> Unit,
   onSort: (LibrarySort) -> Unit,
   onSettings: () -> Unit,
+  onSecureFolder: () -> Unit = {},
   viewMode: LibraryViewMode = LibraryViewMode.Folder,
   onViewMode: (LibraryViewMode) -> Unit = {},
   display: LibraryDisplayOptions = LibraryDisplayOptions(),
@@ -165,7 +167,13 @@ internal fun LibraryHeader(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                   Text(
                     it,
-                    Modifier.widthIn(max = titleWidth).fillMaxWidth(),
+                    Modifier.widthIn(max = titleWidth)
+                      .fillMaxWidth()
+                      .combinedClickable(
+                        onClick = {},
+                        onLongClick = { if (!preparing) onSecureFolder() },
+                        onDoubleClick = { if (!preparing) onSecureFolder() },
+                      ),
                     style = MaterialTheme.typography.titleLarge,
                     maxLines = 1,
                     softWrap = false,

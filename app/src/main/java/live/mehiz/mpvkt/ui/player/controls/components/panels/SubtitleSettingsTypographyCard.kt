@@ -1,30 +1,16 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
-import live.mehiz.mpvkt.ui.player.MpvProperties
-import live.mehiz.mpvkt.ui.icons.Shadow
-
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.BorderColor
-import live.mehiz.mpvkt.ui.icons.BorderStyle
-import live.mehiz.mpvkt.ui.icons.FormatBold
-import live.mehiz.mpvkt.ui.icons.FormatClear
-import live.mehiz.mpvkt.ui.icons.FormatColorText
-import live.mehiz.mpvkt.ui.icons.FormatItalic
-import live.mehiz.mpvkt.ui.icons.FormatSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
@@ -38,21 +24,19 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.github.k1rakishou.fsaf.FileManager
 import com.yubyf.truetypeparser.TTFFile
-import live.mehiz.mpvkt.ui.player.PanelProperties
-import `is`.xyz.mpv.MPVLib
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitleJustification
@@ -61,30 +45,33 @@ import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.presentation.components.ExpandableCard
 import live.mehiz.mpvkt.presentation.components.ExposedTextDropDownMenu
 import live.mehiz.mpvkt.presentation.components.SliderItem
+import live.mehiz.mpvkt.ui.icons.BorderColor
+import live.mehiz.mpvkt.ui.icons.BorderStyle
+import live.mehiz.mpvkt.ui.icons.FormatBold
+import live.mehiz.mpvkt.ui.icons.FormatClear
+import live.mehiz.mpvkt.ui.icons.FormatColorText
+import live.mehiz.mpvkt.ui.icons.FormatItalic
+import live.mehiz.mpvkt.ui.icons.FormatSize
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Shadow
+import live.mehiz.mpvkt.ui.player.MpvProperties
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.ui.player.controls.CARDS_MAX_WIDTH
 import live.mehiz.mpvkt.ui.player.controls.panelCardsColors
 import live.mehiz.mpvkt.ui.theme.spacing
-import me.zhanghai.compose.preference.ListPreference
-import me.zhanghai.compose.preference.ListPreferenceType
-import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.preferenceTheme
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("MutableCollectionMutableState")
 @Composable
-fun SubtitleSettingsTypographyCard(
-  modifier: Modifier = Modifier,
-) {
+fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
   val context = LocalContext.current
   val preferences = koinInject<SubtitlesPreferences>()
   val fileManager = koinInject<FileManager>()
-  var isExpanded by remember { mutableStateOf(true) }
+  var isExpanded by rememberSaveable { mutableStateOf(true) }
   var fonts by remember { mutableStateOf(listOf(preferences.font.defaultValue())) }
   var fontsLoadingIndicator: (@Composable () -> Unit)? by remember {
-    val indicator: (@Composable () -> Unit) = {
-      CircularProgressIndicator(Modifier.size(32.dp))
-    }
+    val indicator: (@Composable () -> Unit) = { CircularProgressIndicator(Modifier.size(32.dp)) }
     mutableStateOf(indicator)
   }
   LaunchedEffect(Unit) {
@@ -93,16 +80,29 @@ fun SubtitleSettingsTypographyCard(
       return@LaunchedEffect
     }
     try {
-      val loaded = withContext(Dispatchers.IO) {
-        val folder = fileManager.fromUri(preferences.fontsFolder.get().toUri()) ?: return@withContext emptyList<String>()
-        fileManager.listFiles(folder).filter {
-          fileManager.isFile(it) && fileManager.getName(it).lowercase().matches(".*\\.[ot]tf$".toRegex())
-        }.mapNotNull { file ->
-          kotlinx.coroutines.currentCoroutineContext().ensureActive()
-          runCatching { fileManager.getInputStream(file)?.use { TTFFile.open(it).families.values.firstOrNull() } }.getOrNull()
-        }.distinct()
-      }
-      fonts = (listOf(preferences.font.defaultValue()) + loaded).distinct()
+      val loaded =
+        withContext(Dispatchers.IO) {
+          val folder =
+            fileManager.fromUri(preferences.fontsFolder.get().toUri())
+              ?: return@withContext emptyList<String>()
+          fileManager
+            .listFiles(folder)
+            .filter {
+              fileManager.isFile(it) &&
+                fileManager.getName(it).lowercase().matches(".*\\.[ot]tf$".toRegex())
+            }
+            .mapNotNull { file ->
+              kotlinx.coroutines.currentCoroutineContext().ensureActive()
+              runCatching {
+                  fileManager.getInputStream(file)?.use {
+                    TTFFile.open(it).families.values.firstOrNull()
+                  }
+                }
+                .getOrNull()
+            }
+            .distinct()
+        }
+      fonts = (listOf(preferences.font.defaultValue(), preferences.font.get()) + loaded).distinct()
     } catch (cancelled: kotlinx.coroutines.CancellationException) {
       throw cancelled
     } catch (_: Exception) {
@@ -116,9 +116,7 @@ fun SubtitleSettingsTypographyCard(
     isExpanded = isExpanded,
     onExpand = { isExpanded = !isExpanded },
     title = {
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-      ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
         Icon(Icons.FormatColorText, null)
         Text(stringResource(R.string.player_sheets_sub_typography_card_title))
       }
@@ -131,47 +129,44 @@ fun SubtitleSettingsTypographyCard(
       val isItalic by MpvProperties.propBoolean["sub-italic"].collectAsState()
       val mpvJustify by MpvProperties.propString["sub-justify"].collectAsState()
       val justify by remember {
-        derivedStateOf { SubtitleJustification.entries.firstOrNull { it.value == mpvJustify } ?: preferences.justification.get() }
+        derivedStateOf {
+          SubtitleJustification.entries.firstOrNull { it.value == mpvJustify }
+            ?: preferences.justification.get()
+        }
       }
       val font by MpvProperties.propString["sub-font"].collectAsState()
       val fontSize by MpvProperties.propInt["sub-font-size"].collectAsState()
       val mpvBorderStyle by MpvProperties.propString["sub-border-style"].collectAsState()
       val borderStyle by remember {
-        derivedStateOf { SubtitlesBorderStyle.entries.firstOrNull { it.value == mpvBorderStyle } ?: preferences.borderStyle.get() }
+        derivedStateOf {
+          SubtitlesBorderStyle.entries.firstOrNull { it.value == mpvBorderStyle }
+            ?: preferences.borderStyle.get()
+        }
       }
       val borderSize by MpvProperties.propInt["sub-outline-size"].collectAsState()
       val shadowOffset by MpvProperties.propInt["sub-shadow-offset"].collectAsState()
       FlowRow(
-        Modifier
-          .fillMaxWidth()
+        Modifier.fillMaxWidth()
           .padding(start = MaterialTheme.spacing.extraSmall, end = MaterialTheme.spacing.medium),
         verticalArrangement = Arrangement.Center,
       ) {
         IconToggleButton(
-          checked = isBold == true,
+          checked = isBold ?: preferences.bold.get(),
           onCheckedChange = {
             preferences.bold.set(it)
             PanelProperties.setBoolean("sub-bold", it)
           },
         ) {
-          Icon(
-            Icons.FormatBold,
-            null,
-            modifier = Modifier.size(32.dp),
-          )
+          Icon(Icons.FormatBold, null, modifier = Modifier.size(24.dp))
         }
         IconToggleButton(
-          checked = isItalic == true,
+          checked = isItalic ?: preferences.italic.get(),
           onCheckedChange = {
             preferences.italic.set(it)
             PanelProperties.setBoolean("sub-italic", it)
           },
         ) {
-          Icon(
-            Icons.FormatItalic,
-            null,
-            modifier = Modifier.size(32.dp),
-          )
+          Icon(Icons.FormatItalic, null, modifier = Modifier.size(24.dp))
         }
         SubtitleJustification.entries.minus(SubtitleJustification.Auto).forEach { justification ->
           IconToggleButton(
@@ -190,9 +185,7 @@ fun SubtitleSettingsTypographyCard(
             Icon(justification.icon, null)
           }
         }
-        TextButton(
-          onClick = { resetTypography(preferences) },
-        ) {
+        TextButton(onClick = { resetTypography(preferences) }) {
           Row(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
             verticalAlignment = Alignment.CenterVertically,
@@ -207,11 +200,7 @@ fun SubtitleSettingsTypographyCard(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        Icon(
-          Icons.FormatColorText,
-          null,
-          modifier = Modifier.size(32.dp),
-        )
+        Icon(Icons.FormatColorText, null, modifier = Modifier.size(24.dp))
         ExposedTextDropDownMenu(
           selectedValue = font ?: preferences.font.get(),
           options = fonts.toImmutableList(),
@@ -236,21 +225,26 @@ fun SubtitleSettingsTypographyCard(
       ) {
         Icon(Icons.FormatSize, null)
       }
-      ProvidePreferenceLocals(
-        theme = preferenceTheme(iconContainerMinWidth = 64.dp),
+      Row(
+        Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
       ) {
-        ListPreference(
-          borderStyle,
-          onValueChange = {
-            preferences.borderStyle.set(it)
-            PanelProperties.setString("sub-border-style", it.value)
+        Icon(Icons.BorderStyle, null, Modifier.size(24.dp))
+        ExposedTextDropDownMenu(
+          selectedValue = context.getString(borderStyle.titleRes),
+          options =
+            SubtitlesBorderStyle.entries.map { context.getString(it.titleRes) }.toImmutableList(),
+          label = stringResource(R.string.player_sheets_subtitles_border_style),
+          onValueChangedEvent = { label ->
+            SubtitlesBorderStyle.entries
+              .firstOrNull { context.getString(it.titleRes) == label }
+              ?.let { selected ->
+                preferences.borderStyle.set(selected)
+                PanelProperties.setString("sub-border-style", selected.value)
+              }
           },
-          title = { Text(stringResource(R.string.player_sheets_subtitles_border_style)) },
-          valueToText = { AnnotatedString(context.getString(it.titleRes)) },
-          values = SubtitlesBorderStyle.entries,
-          type = ListPreferenceType.DROPDOWN_MENU,
-          summary = { Text(stringResource(borderStyle.titleRes)) },
-          icon = { Icon(Icons.BorderStyle, null) },
+          modifier = Modifier.weight(1f),
         )
       }
       SliderItem(
@@ -286,16 +280,16 @@ fun resetTypography(preferences: SubtitlesPreferences) {
   PanelProperties.setString("sub-justify", preferences.justification.deleteAndGet().value)
   PanelProperties.setString("sub-font", preferences.font.deleteAndGet())
   PanelProperties.setInt("sub-font-size", preferences.fontSize.deleteAndGet())
+  PanelProperties.setString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
   PanelProperties.setInt("sub-outline-size", preferences.borderSize.deleteAndGet())
   PanelProperties.setInt("sub-shadow-offset", preferences.shadowOffset.deleteAndGet())
-  PanelProperties.setString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
 }
 
-enum class SubtitlesBorderStyle(
-  val value: String,
-  @StringRes val titleRes: Int,
-) {
-  OutlineAndShadow("outline-and-shadow", R.string.player_sheets_subtitles_border_style_outline_and_shadow),
+enum class SubtitlesBorderStyle(val value: String, @StringRes val titleRes: Int) {
+  OutlineAndShadow(
+    "outline-and-shadow",
+    R.string.player_sheets_subtitles_border_style_outline_and_shadow,
+  ),
   OpaqueBox("opaque-box", R.string.player_sheets_subtitles_border_style_opaque_box),
-  BackgroundBox("background-box", R.string.player_sheets_subtitles_border_style_background_box)
+  BackgroundBox("background-box", R.string.player_sheets_subtitles_border_style_background_box),
 }

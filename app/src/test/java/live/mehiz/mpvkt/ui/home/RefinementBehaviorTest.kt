@@ -29,24 +29,26 @@ class RefinementBehaviorTest {
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
   @Test
-  fun sortSheetKeepsItsBoundsAcrossCardAndFieldsChanges() {
+  fun sortSheetUsesCompactContentHeightWithoutLosingItsHeader() {
     var display by mutableStateOf(LibraryDisplayOptions())
     compose.setContent {
-      MaterialTheme {
-        StableBottomSheet(
-          {},
-          Modifier.testTag("sort-sheet"),
-          reduceMotion = true,
-          fixedHeight = true,
-        ) {
-          LibrarySortMenuContent(
-            LibrarySort(),
-            true,
-            Modifier.fillMaxWidth().weight(1f, false),
-            display = display,
-            onDisplay = { display = it },
-            onSelect = {},
-          )
+      MaterialTheme(colorScheme = darkColorScheme()) {
+        Surface(Modifier.fillMaxSize()) {
+          StableBottomSheet(
+            {},
+            Modifier.testTag("sort-sheet"),
+            reduceMotion = true,
+            compact = true,
+          ) {
+            LibrarySortMenuContent(
+              LibrarySort(),
+              true,
+              Modifier.fillMaxWidth().weight(1f, false),
+              display = display,
+              onDisplay = { display = it },
+              onSelect = {},
+            )
+          }
         }
       }
     }
@@ -54,13 +56,21 @@ class RefinementBehaviorTest {
     val original = compose.onNodeWithTag("sort-sheet").getUnclippedBoundsInRoot()
     compose.onNodeWithText("Card").performClick()
     compose.waitForIdle()
-    assertEquals(original, compose.onNodeWithTag("sort-sheet").getUnclippedBoundsInRoot())
+    val bounds = compose.onNodeWithTag("sort-sheet").fetchSemanticsNode().boundsInRoot
+    assertTrue(bounds.height <= 614f)
+    assertEquals((original.right - original.left).value, bounds.width, .5f)
+    compose.onNodeWithText("Sort by").assertIsDisplayed()
     compose.onNodeWithContentDescription("Fields").performClick()
     compose.waitForIdle()
-    assertEquals(original, compose.onNodeWithTag("sort-sheet").getUnclippedBoundsInRoot())
+    assertTrue(compose.onNodeWithTag("sort-sheet").fetchSemanticsNode().boundsInRoot.height <= 614f)
+    compose.onNodeWithText("Sort by").assertIsDisplayed()
     compose.onNodeWithContentDescription("Fields").performClick()
     compose.waitForIdle()
-    assertEquals(original, compose.onNodeWithTag("sort-sheet").getUnclippedBoundsInRoot())
+    assertTrue(compose.onNodeWithTag("sort-sheet").fetchSemanticsNode().boundsInRoot.height <= 614f)
+    compose.onNodeWithText("Sort by").assertIsDisplayed()
+    compose.runOnUiThread {
+      live.mehiz.mpvkt.testutils.captureWindow(compose.activity, "sort-compact")
+    }
   }
 
   @Test
@@ -83,13 +93,15 @@ class RefinementBehaviorTest {
       )
     compose.setContent {
       MaterialTheme {
-        Surface {
-          Box(Modifier.width(156.dp)) {
-            LibraryFolderItem(
-              folder,
-              LibraryDisplayOptions(prefs.libraryCardFields.get(), true),
-              Modifier.testTag("card"),
-            ) {}
+        Surface(Modifier.fillMaxSize()) {
+          Box(Modifier.fillMaxSize()) {
+            Box(Modifier.width(156.dp)) {
+              LibraryFolderItem(
+                folder,
+                LibraryDisplayOptions(prefs.libraryCardFields.get(), true),
+                Modifier.testTag("card"),
+              ) {}
+            }
           }
         }
       }

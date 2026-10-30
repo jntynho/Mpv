@@ -154,6 +154,7 @@ object HomeScreen : Screen {
             }
           },
           onSettings = { backstack.add(PreferencesScreen) },
+          onSecureFolder = { backstack.add(live.mehiz.mpvkt.ui.secure.SecureFolderScreen) },
           viewMode = viewMode,
           display = display,
           onDisplay = { choice ->

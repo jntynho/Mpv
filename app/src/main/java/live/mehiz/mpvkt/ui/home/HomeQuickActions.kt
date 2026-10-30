@@ -31,7 +31,6 @@ import live.mehiz.mpvkt.ui.player.controls.components.PlayerLazyScrollArea
 private enum class QuickAction {
   File,
   Recent,
-  Instagram,
   Link,
 }
 
@@ -68,21 +67,6 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
       when (pending) {
         QuickAction.File -> picker.launch(arrayOf("*/*"))
         QuickAction.Recent -> recent = true
-        QuickAction.Instagram -> {
-          runCatching {
-              context.startActivity(
-                Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.instagram.com/"))
-              )
-            }
-            .onFailure {
-              android.widget.Toast.makeText(
-                  context,
-                  R.string.update_operation_failed,
-                  android.widget.Toast.LENGTH_SHORT,
-                )
-                .show()
-            }
-        }
         QuickAction.Link -> {
           invalid = false
           link = true
@@ -116,78 +100,74 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
       ) {
         AnimatedVisibility(
           visibleState = visibility,
-          enter =
-            fadeIn(tween(if (reduceMotion) 0 else 220)) +
-              slideInVertically(tween(if (reduceMotion) 0 else 220)) { it / 8 },
-          exit =
-            fadeOut(tween(if (reduceMotion) 0 else 180)) +
-              slideOutVertically(tween(if (reduceMotion) 0 else 180)) { it / 10 },
+          enter = fadeIn(tween(if (reduceMotion) 0 else 220)),
+          exit = fadeOut(tween(if (reduceMotion) 0 else 180)),
         ) {
           Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(10.dp),
           ) {
-            listOf(QuickAction.File, QuickAction.Recent, QuickAction.Instagram, QuickAction.Link)
-              .forEachIndexed { index, action ->
-                Surface(
-                  Modifier.animateEnterExit(
-                    enter =
-                      fadeIn(
+            listOf(QuickAction.File, QuickAction.Recent, QuickAction.Link).forEachIndexed {
+              index,
+              action ->
+              Surface(
+                Modifier.animateEnterExit(
+                  enter =
+                    fadeIn(
+                      tween(
+                        if (reduceMotion) 0 else 180,
+                        delayMillis = if (reduceMotion) 0 else (2 - index) * 30,
+                      )
+                    ) +
+                      slideInVertically(
                         tween(
-                          if (reduceMotion) 0 else 180,
-                          delayMillis = if (reduceMotion) 0 else (3 - index) * 30,
+                          if (reduceMotion) 0 else 220,
+                          delayMillis = if (reduceMotion) 0 else (2 - index) * 30,
                         )
-                      ) +
-                        slideInVertically(
-                          tween(
-                            if (reduceMotion) 0 else 220,
-                            delayMillis = if (reduceMotion) 0 else (3 - index) * 30,
-                          )
-                        ) {
-                          it / 3
-                        },
-                    exit = fadeOut(tween(if (reduceMotion) 0 else 140)),
-                  ),
-                  shape = RoundedCornerShape(20.dp),
-                  color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                  shadowElevation = 3.dp,
-                ) {
-                  Row(
-                    Modifier.widthIn(min = 208.dp, max = 280.dp)
-                      .clickable {
-                        if (expanded) {
-                          pending = action
-                          expanded = false
-                        }
-                      }
-                      .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                  ) {
-                    Text(
-                      stringResource(
-                        when (action) {
-                          QuickAction.File -> R.string.mpv_open_file
-                          QuickAction.Recent -> R.string.mpv_recently_played
-                          QuickAction.Instagram -> R.string.update_instagram
-                          QuickAction.Link -> R.string.mpv_open_link
-                        }
-                      ),
-                      Modifier.weight(1f),
-                    )
-                    Icon(
-                      when (action) {
-                        QuickAction.File -> Icons.FolderOpen
-                        QuickAction.Recent -> Icons.History
-                        QuickAction.Instagram -> Icons.Instagram
-                        QuickAction.Link -> Icons.Link
+                      ) {
+                        it / 3
                       },
-                      null,
-                      Modifier.size(22.dp),
-                    )
-                  }
+                  exit = fadeOut(tween(if (reduceMotion) 0 else 140)),
+                ),
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shadowElevation = 3.dp,
+              ) {
+                Row(
+                  Modifier.widthIn(max = 280.dp)
+                    .heightIn(min = 56.dp)
+                    .clickable {
+                      if (expanded) {
+                        pending = action
+                        expanded = false
+                      }
+                    }
+                    .padding(16.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                  Text(
+                    stringResource(
+                      when (action) {
+                        QuickAction.File -> R.string.mpv_open_file
+                        QuickAction.Recent -> R.string.mpv_recently_played
+                        QuickAction.Link -> R.string.mpv_open_link
+                      }
+                    ),
+                    Modifier,
+                  )
+                  Icon(
+                    when (action) {
+                      QuickAction.File -> Icons.FolderOpen
+                      QuickAction.Recent -> Icons.History
+                      QuickAction.Link -> Icons.Link
+                    },
+                    null,
+                    Modifier.size(22.dp),
+                  )
                 }
               }
+            }
           }
         }
       }

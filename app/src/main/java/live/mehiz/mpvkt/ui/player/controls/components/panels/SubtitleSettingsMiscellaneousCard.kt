@@ -1,37 +1,36 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
-import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.AlignVerticalCenter
-import live.mehiz.mpvkt.ui.icons.EditOff
-import live.mehiz.mpvkt.ui.icons.FormatSize
-import live.mehiz.mpvkt.ui.icons.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import live.mehiz.mpvkt.preferences.preference.collectAsState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import live.mehiz.mpvkt.ui.player.PanelProperties
-import `is`.xyz.mpv.MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
+import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.presentation.components.ExpandableCard
 import live.mehiz.mpvkt.presentation.components.SliderItem
+import live.mehiz.mpvkt.ui.icons.AlignVerticalCenter
+import live.mehiz.mpvkt.ui.icons.EditOff
+import live.mehiz.mpvkt.ui.icons.FormatSize
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Tune
+import live.mehiz.mpvkt.ui.player.MpvProperties
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.ui.player.controls.CARDS_MAX_WIDTH
 import live.mehiz.mpvkt.ui.player.controls.components.sheets.toFixed
 import live.mehiz.mpvkt.ui.player.controls.panelCardsColors
@@ -43,7 +42,7 @@ import org.koin.compose.koinInject
 @Composable
 fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
   val preferences = koinInject<SubtitlesPreferences>()
-  var isExpanded by remember { mutableStateOf(true) }
+  var isExpanded by rememberSaveable { mutableStateOf(true) }
   ExpandableCard(
     isExpanded,
     title = {
@@ -78,12 +77,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
             PanelProperties.setFloat("sub-scale", it)
           },
           max = 5f,
-          icon = {
-            Icon(
-              Icons.FormatSize,
-              null,
-            )
-          },
+          icon = { Icon(Icons.FormatSize, null) },
         )
         SliderItem(
           label = stringResource(R.string.player_sheets_sub_position),
@@ -94,30 +88,21 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
             PanelProperties.setInt("sub-pos", it)
           },
           max = 150,
-          icon = {
-            Icon(
-              Icons.AlignVerticalCenter,
-              null,
-            )
-          },
+          icon = { Icon(Icons.AlignVerticalCenter, null) },
         )
         Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(end = MaterialTheme.spacing.medium, bottom = MaterialTheme.spacing.medium),
+          modifier =
+            Modifier.fillMaxWidth()
+              .padding(end = MaterialTheme.spacing.medium, bottom = MaterialTheme.spacing.medium),
           horizontalArrangement = Arrangement.End,
         ) {
           TextButton(
             onClick = {
-              preferences.subPos.deleteAndGet().let {
-                PanelProperties.setInt("sub-pos", it)
-              }
-              preferences.subScale.deleteAndGet().let {
-                PanelProperties.setFloat("sub-scale", it)
-              }
+              preferences.subPos.deleteAndGet().let { PanelProperties.setInt("sub-pos", it) }
+              preferences.subScale.deleteAndGet().let { PanelProperties.setFloat("sub-scale", it) }
               preferences.overrideAssSubs.deleteAndGet()
               PanelProperties.setString("sub-ass-override", "scale") // mpv's default is 'scale'
-            },
+            }
           ) {
             Row {
               Icon(Icons.EditOff, null)

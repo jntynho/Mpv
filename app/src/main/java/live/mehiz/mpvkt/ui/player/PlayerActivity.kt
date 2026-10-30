@@ -106,7 +106,8 @@ class PlayerActivity : AppCompatActivity() {
   private var volumeBeforeDuck: Double? = null
 
   private var pipRect: android.graphics.Rect? = null
-  val isPipSupported by lazy {
+  val isPipSupported: Boolean get() = !securePlayback && platformPipSupported
+  private val platformPipSupported by lazy {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
       false
     } else {

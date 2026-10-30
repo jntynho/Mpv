@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import dev.vivvvek.seeker.Segment
 import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.ui.player.controls.LocalPlayerButtonsClickEvent
 import live.mehiz.mpvkt.ui.theme.spacing
 
@@ -42,15 +44,34 @@ fun SeekbarWithTimers(
   style: SeekbarStyle = SeekbarStyle.Normal,
   paused: Boolean = true,
   reduceMotion: Boolean = false,
+  mediaKey: Long = 0L,
+  onScrubbingChanged: (Boolean) -> Unit = {},
 ) {
   val clickEvent = LocalPlayerButtonsClickEvent.current
+  val scrub = remember(mediaKey) { ScrubSession() }
+  val scrubChanged by rememberUpdatedState(onScrubbingChanged)
+  val displayed = scrub.draft ?: position
+  LaunchedEffect(position, scrub.awaiting) { scrub.acknowledge(position) }
+  LaunchedEffect(scrub.revision, scrub.awaiting) {
+    if (scrub.awaiting) {
+      delay(1200)
+      scrub.cancel()
+    }
+  }
+  DisposableEffect(mediaKey) {
+    onDispose {
+      scrub.cancel()
+      scrubChanged(false)
+    }
+  }
+
   Row(
     modifier = modifier.height(48.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
   ) {
     VideoTimer(
-      value = position,
+      value = displayed,
       timersInverted.first,
       onClick = {
         clickEvent()
@@ -59,19 +80,37 @@ fun SeekbarWithTimers(
       modifier = Modifier.width(92.dp),
     )
     StyledSeeker(
-      position,
+      displayed,
       duration,
       readAheadValue,
       chapters,
-      onValueChange,
-      onValueChangeFinished,
+      {
+        scrub.preview(it, duration)
+        scrubChanged(scrub.dragging)
+      },
+      {
+        val target = scrub.release()
+        if (target != null) {
+          onValueChange(target)
+          onValueChangeFinished()
+        }
+        scrubChanged(false)
+      },
       Modifier.weight(1f),
       style,
       paused,
       reduceMotion,
+      inputKey = mediaKey,
+      onCancel = {
+        scrub.cancel()
+        scrubChanged(false)
+      },
     )
     VideoTimer(
-      value = if (timersInverted.second) -remaining else duration,
+      value =
+        if (timersInverted.second)
+          -(if (scrub.draft != null) (duration - displayed).coerceAtLeast(0f) else remaining)
+        else duration,
       isInverted = timersInverted.second,
       onClick = {
         clickEvent()

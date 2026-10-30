@@ -24,6 +24,8 @@ internal class StablePropertySession {
           }
       }
 
+    internal fun cached(name: String): T? = synchronized(lock) { values[name]?.value }
+
     internal fun emit(name: String, value: T?) {
       values[name]?.value = value
     }

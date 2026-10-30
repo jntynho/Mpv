@@ -1,7 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,13 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.BorderColor
-import live.mehiz.mpvkt.ui.icons.FormatColorFill
-import live.mehiz.mpvkt.ui.icons.FormatColorReset
-import live.mehiz.mpvkt.ui.icons.FormatColorText
-import live.mehiz.mpvkt.ui.icons.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -27,41 +19,47 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import androidx.core.graphics.toColorInt
-import `is`.xyz.mpv.MPVLib
+import kotlinx.coroutines.flow.collect
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.Preference
 import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.presentation.components.ExpandableCard
 import live.mehiz.mpvkt.presentation.components.TintedSliderItem
+import live.mehiz.mpvkt.ui.icons.BorderColor
+import live.mehiz.mpvkt.ui.icons.FormatColorFill
+import live.mehiz.mpvkt.ui.icons.FormatColorReset
+import live.mehiz.mpvkt.ui.icons.FormatColorText
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Palette
+import live.mehiz.mpvkt.ui.player.MpvProperties
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.ui.player.controls.CARDS_MAX_WIDTH
 import live.mehiz.mpvkt.ui.player.controls.panelCardsColors
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
 
 @Composable
-fun SubtitleSettingsColorsCard(
-  modifier: Modifier = Modifier,
-) {
+fun SubtitleSettingsColorsCard(modifier: Modifier = Modifier) {
   val preferences = koinInject<SubtitlesPreferences>()
-  var isExpanded by remember { mutableStateOf(true) }
+  var isExpanded by rememberSaveable { mutableStateOf(true) }
   ExpandableCard(
     isExpanded = isExpanded,
     onExpand = { isExpanded = !isExpanded },
     title = {
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-      ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
         Icon(Icons.Palette, null)
         Text(stringResource(R.string.player_sheets_sub_colors_card_title))
       }
@@ -70,18 +68,32 @@ fun SubtitleSettingsColorsCard(
     colors = panelCardsColors(),
   ) {
     Column {
-      var currentColorType by remember { mutableStateOf(SubColorType.Text) }
-      var currentColor by remember { mutableIntStateOf(getCurrentMPVColor(currentColorType)) }
+      var currentColorType by rememberSaveable { mutableStateOf(SubColorType.Text) }
+      var edited by remember(currentColorType) { mutableStateOf(false) }
+      var currentColor by
+        remember(currentColorType) {
+          mutableIntStateOf(
+            getCurrentMPVColor(currentColorType, currentColorType.preference(preferences).get())
+          )
+        }
       LaunchedEffect(currentColorType) {
-        currentColor = getCurrentMPVColor(currentColorType)
+        val observed =
+          kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            MpvProperties.propString[currentColorType.property]
+          }
+        observed.collect { value ->
+          if (!edited)
+            currentColor =
+              runCatching { value?.toColorInt() }.getOrNull()
+                ?: currentColorType.preference(preferences).get()
+        }
       }
       Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-          .fillMaxWidth()
-          .horizontalScroll(rememberScrollState())
-          .padding(start = MaterialTheme.spacing.extraSmall, end = MaterialTheme.spacing.medium),
+        modifier =
+          Modifier.fillMaxWidth()
+            .padding(start = MaterialTheme.spacing.extraSmall, end = MaterialTheme.spacing.medium),
       ) {
         SubColorType.entries.forEach { type ->
           IconToggleButton(
@@ -94,17 +106,16 @@ fun SubtitleSettingsColorsCard(
                 SubColorType.Border -> Icons.BorderColor
                 SubColorType.Background -> Icons.FormatColorFill
               },
-              null,
+              stringResource(type.titleRes),
             )
           }
         }
-        Text(stringResource(currentColorType.titleRes))
         Spacer(Modifier.weight(1f))
         TextButton(
           onClick = {
-            resetColors(preferences, currentColorType)
-            currentColor = getCurrentMPVColor(currentColorType)
-          },
+            edited = true
+            currentColor = resetColors(preferences, currentColorType)
+          }
         ) {
           Row(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
@@ -115,12 +126,18 @@ fun SubtitleSettingsColorsCard(
           }
         }
       }
+      Text(
+        stringResource(currentColorType.titleRes),
+        Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        style = MaterialTheme.typography.labelLarge,
+      )
       SubtitlesColorPicker(
         currentColor,
         onColorChange = {
+          edited = true
           currentColor = it
           currentColorType.preference(preferences).set(it)
-          MPVLib.setPropertyString(currentColorType.property, it.toColorHexString())
+          PanelProperties.setString(currentColorType.property, it.toColorHexString())
         },
       )
     }
@@ -156,36 +173,24 @@ enum class SubColorType(
     R.string.player_sheets_subtitles_color_background,
     "sub-back-color",
     preference = SubtitlesPreferences::backgroundColor,
-  )
+  ),
 }
 
-fun resetColors(preferences: SubtitlesPreferences, type: SubColorType) {
-  when (type) {
-    SubColorType.Text -> {
-      MPVLib.setPropertyString("sub-color", preferences.textColor.deleteAndGet().toColorHexString())
-    }
-
-    SubColorType.Border -> {
-      MPVLib.setPropertyString("sub-border-color", preferences.borderColor.deleteAndGet().toColorHexString())
-    }
-
-    SubColorType.Background -> {
-      MPVLib.setPropertyString("sub-back-color", preferences.backgroundColor.deleteAndGet().toColorHexString())
-    }
-  }
+fun resetColors(preferences: SubtitlesPreferences, type: SubColorType): Int {
+  val value = type.preference(preferences).deleteAndGet()
+  PanelProperties.setString(type.property, value.toColorHexString())
+  return value
 }
 
-val getCurrentMPVColor: (SubColorType) -> Int = { type ->
-  runCatching { MPVLib.getPropertyString(type.property)?.uppercase()?.toColorInt() }.getOrNull()
-    ?: if (type == SubColorType.Text) android.graphics.Color.WHITE else android.graphics.Color.TRANSPARENT
-}
+/** Cached observations only: opening a card never reads JNI on the main thread. */
+internal fun getCurrentMPVColor(type: SubColorType, fallback: Int): Int =
+  runCatching {
+      live.mehiz.mpvkt.ui.player.MpvProperties.propString.cached(type.property)?.toColorInt()
+    }
+    .getOrNull() ?: fallback
 
 @Composable
-fun SubtitlesColorPicker(
-  color: Int,
-  onColorChange: (Int) -> Unit,
-  modifier: Modifier = Modifier,
-) {
+fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Modifier = Modifier) {
   Column(modifier) {
     TintedSliderItem(
       stringResource(R.string.player_sheets_sub_color_red),

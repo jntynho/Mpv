@@ -12,16 +12,8 @@ internal enum class IconKey(
 ) {
   Add(R.drawable.iconsax_outline_add, R.drawable.iconsax_broken_add),
   AddCircle(R.drawable.iconsax_outline_add_circle, R.drawable.iconsax_broken_add_circle),
-  AlignVerticalCenter(
-    R.drawable.iconsax_outline_align_vertically,
-    R.drawable.iconsax_broken_align_vertically,
-  ),
-  ArrowBack(
-    R.drawable.iconsax_outline_arrow_left,
-    R.drawable.iconsax_broken_arrow_left_1,
-    R.drawable.iconsax_outline_arrow_left_rtl,
-    R.drawable.iconsax_broken_arrow_left_1_rtl,
-  ),
+  AlignVerticalCenter(R.drawable.iconsax_outline_align_vertically, R.drawable.iconsax_broken_align_vertically),
+  ArrowBack(R.drawable.iconsax_outline_arrow_left, R.drawable.iconsax_broken_arrow_left_1, R.drawable.iconsax_outline_arrow_left_rtl, R.drawable.iconsax_broken_arrow_left_1_rtl),
   ArrowDropDown(R.drawable.iconsax_outline_arrow_down_1, R.drawable.iconsax_broken_arrow_down_1),
   ArrowDropUp(R.drawable.iconsax_outline_arrow_up_2, R.drawable.iconsax_broken_arrow_up_2),
   AspectRatio(R.drawable.iconsax_outline_maximize_4, R.drawable.iconsax_broken_maximize_4),
@@ -43,26 +35,10 @@ internal enum class IconKey(
   Edit(R.drawable.iconsax_outline_edit_2, R.drawable.iconsax_broken_edit_2),
   EditOff(R.drawable.iconsax_outline_refresh_2, R.drawable.iconsax_broken_refresh_2),
   Folder(R.drawable.iconsax_outline_folder, R.drawable.iconsax_broken_folder),
-  FormatAlignCenter(
-    R.drawable.iconsax_outline_textalign_center,
-    R.drawable.iconsax_broken_textalign_center,
-  ),
-  FormatAlignJustify(
-    R.drawable.iconsax_outline_textalign_justifycenter,
-    R.drawable.iconsax_broken_textalign_justifycenter,
-  ),
-  FormatAlignLeft(
-    R.drawable.iconsax_outline_textalign_left,
-    R.drawable.iconsax_broken_textalign_left,
-    R.drawable.iconsax_outline_textalign_left_rtl,
-    R.drawable.iconsax_broken_textalign_left_rtl,
-  ),
-  FormatAlignRight(
-    R.drawable.iconsax_outline_textalign_right,
-    R.drawable.iconsax_broken_textalign_right,
-    R.drawable.iconsax_outline_textalign_right_rtl,
-    R.drawable.iconsax_broken_textalign_right_rtl,
-  ),
+  FormatAlignCenter(R.drawable.iconsax_outline_textalign_center, R.drawable.iconsax_broken_textalign_center),
+  FormatAlignJustify(R.drawable.iconsax_outline_textalign_justifycenter, R.drawable.iconsax_broken_textalign_justifycenter),
+  FormatAlignLeft(R.drawable.iconsax_outline_textalign_left, R.drawable.iconsax_broken_textalign_left, R.drawable.iconsax_outline_textalign_left_rtl, R.drawable.iconsax_broken_textalign_left_rtl),
+  FormatAlignRight(R.drawable.iconsax_outline_textalign_right, R.drawable.iconsax_broken_textalign_right, R.drawable.iconsax_outline_textalign_right_rtl, R.drawable.iconsax_broken_textalign_right_rtl),
   FormatBold(R.drawable.iconsax_outline_text_bold, R.drawable.iconsax_broken_text_bold),
   FormatClear(R.drawable.iconsax_outline_eraser, R.drawable.iconsax_broken_eraser),
   FormatColorFill(R.drawable.iconsax_outline_paintbucket, R.drawable.iconsax_broken_paintbucket),
@@ -74,10 +50,7 @@ internal enum class IconKey(
   Gradient(R.drawable.iconsax_outline_colorfilter, R.drawable.iconsax_broken_colorfilter),
   Headset(R.drawable.iconsax_outline_headphone, R.drawable.iconsax_broken_headphone),
   HeadsetOff(R.drawable.iconsax_outline_volume_slash, R.drawable.iconsax_broken_volume_slash),
-  HelpOutline(
-    R.drawable.iconsax_outline_message_question,
-    R.drawable.iconsax_broken_message_question,
-  ),
+  HelpOutline(R.drawable.iconsax_outline_message_question, R.drawable.iconsax_broken_message_question),
   Image(R.drawable.iconsax_outline_image, R.drawable.iconsax_broken_image),
   Info(R.drawable.iconsax_outline_info_circle, R.drawable.iconsax_broken_info_circle),
   InsertDriveFile(R.drawable.iconsax_outline_document, R.drawable.iconsax_broken_document),
@@ -91,10 +64,7 @@ internal enum class IconKey(
   Movie(R.drawable.iconsax_outline_video_play, R.drawable.iconsax_broken_video_play),
   NotInterested(R.drawable.iconsax_outline_forbidden, R.drawable.iconsax_broken_forbidden),
   Palette(R.drawable.iconsax_outline_color_swatch, R.drawable.iconsax_broken_color_swatch),
-  PictureInPictureAlt(
-    R.drawable.iconsax_outline_screenmirroring,
-    R.drawable.iconsax_broken_screenmirroring,
-  ),
+  PictureInPictureAlt(R.drawable.iconsax_outline_screenmirroring, R.drawable.iconsax_broken_screenmirroring),
   PlayCircle(R.drawable.iconsax_outline_play_circle, R.drawable.iconsax_broken_play_circle),
   Refresh(R.drawable.iconsax_outline_refresh_2, R.drawable.iconsax_broken_refresh_2),
   RemoveCircle(R.drawable.iconsax_outline_minus_cirlce, R.drawable.iconsax_broken_minus_cirlce),
@@ -138,18 +108,13 @@ internal enum class IconKey(
   Touch(R.drawable.iconsax_outline_finger_scan, R.drawable.iconsax_broken_finger_scan),
   List(R.drawable.iconsax_outline_menu, R.drawable.iconsax_broken_menu),
   Grid(R.drawable.iconsax_outline_element_4, R.drawable.iconsax_broken_element_4),
-  Resolution(
-    R.drawable.iconsax_outline_video_horizontal,
-    R.drawable.iconsax_broken_video_horizontal,
-  ),
+  Resolution(R.drawable.iconsax_outline_video_horizontal, R.drawable.iconsax_broken_video_horizontal),
   Audio(R.drawable.iconsax_outline_sound, R.drawable.iconsax_broken_sound),
-  Save(R.drawable.iconsax_outline_archive_tick, R.drawable.iconsax_broken_archive_tick),
-  Instagram(R.drawable.iconsax_outline_instagram, R.drawable.iconsax_broken_instagram);
+  Save(R.drawable.iconsax_outline_archive_tick, R.drawable.iconsax_broken_archive_tick);
 
   @DrawableRes
-  fun drawable(style: IconStyle, mirrored: Boolean = false): Int =
-    when (style) {
-      IconStyle.Outline -> if (mirrored) outlineRtl else outline
-      IconStyle.Broken -> if (mirrored) brokenRtl else broken
-    }
+  fun drawable(style: IconStyle, mirrored: Boolean = false): Int = when (style) {
+    IconStyle.Outline -> if (mirrored) outlineRtl else outline
+    IconStyle.Broken -> if (mirrored) brokenRtl else broken
+  }
 }
