@@ -1,0 +1,26 @@
+<resources>
+    <string name="panel_decrease">Decrease</string>
+    <string name="panel_increase">Increase</string>
+    <string name="panel_invalid_number">Enter a number within the allowed range.</string>
+    <string name="panel_no_chapters">This video has no chapters.</string>
+    <string name="panel_external_failed">Could not add this file. Check its format, availability and file access, then try again.</string>
+    <string name="panel_config_owned">Some options are controlled by mpv.conf. Those controls are unavailable here.</string>
+    <string name="panel_cpu_radius">CPU filter radius</string>
+    <string name="panel_hours">Hours</string>
+    <string name="panel_minutes">Minutes</string>
+    <string name="panel_seconds">Seconds</string>
+    <string name="panel_stop_timer">Stop timer</string>
+    <string name="panel_bold">Bold text</string>
+    <string name="panel_italic">Italic text</string>
+    <string name="panel_alignment">Text alignment: %1$s</string>
+    <string name="panel_sources_failed">Could not load sources. Check your connection and try again.</string>
+    <string name="panel_retry">Retry</string>
+    <string name="panel_add_speed">Add speed preset</string>
+    <string name="panel_remove_speed">Remove speed preset</string>
+    <string name="panel_write_failed">The player could not apply a change. Check the option and try again.</string>
+    <string name="panel_align_left">Left</string>
+    <string name="panel_align_center">Center</string>
+    <string name="panel_align_right">Right</string>
+    <string name="panel_align_auto">Automatic</string>
+    <string name="panel_file_context_changed">The video changed while choosing the file. Choose the file again for the current video.</string>
+</resources>

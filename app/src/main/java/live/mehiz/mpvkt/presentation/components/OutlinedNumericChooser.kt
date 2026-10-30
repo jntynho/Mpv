@@ -1,26 +1,18 @@
 package live.mehiz.mpvkt.presentation.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.AddCircle
-import live.mehiz.mpvkt.ui.icons.RemoveCircle
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.player.controls.components.PanelTextField
 import live.mehiz.mpvkt.ui.theme.spacing
 
 @Composable
@@ -33,48 +25,23 @@ fun OutlinedNumericChooser(
   min: Int = 0,
   suffix: (@Composable () -> Unit)? = null,
   label: (@Composable () -> Unit)? = null,
+  enabled: Boolean = true,
 ) {
-  assert(max > min) { "min can't be larger than max ($min > $max)" }
-  Row(
-    modifier = modifier,
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-  ) {
-    RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.RemoveCircle, null)
-    }
-    var valueString by remember { mutableStateOf("$value") }
-    LaunchedEffect(value) {
-      if (valueString.isBlank() && value == 0) return@LaunchedEffect
-      valueString = value.toString()
-    }
-    OutlinedTextField(
-      label = label,
-      value = valueString,
-      onValueChange = { newValue ->
-        if (newValue.isBlank()) {
-          valueString = newValue
-          onChange(0)
-        }
-        runCatching {
-          val intValue = if (newValue.trimStart() == "-") -0 else newValue.toInt()
-          onChange(intValue)
-          valueString = newValue
-        }
-      },
-      isError = value > max || value < min,
-      supportingText = {
-        if (value > max) Text(stringResource(R.string.numeric_chooser_value_too_big))
-        if (value < min) Text(stringResource(R.string.numeric_chooser_value_too_small))
-      },
-      suffix = suffix,
-      modifier = Modifier.weight(1f),
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    )
-    RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.AddCircle, null)
-    }
-  }
+  require(max > min && step > 0)
+  NumericChooser(
+    value.toString(),
+    { validInteger(it, min, max)?.let(onChange) },
+    { validInteger(it, min, max) != null },
+    { onChange(steppedInteger(value, -step.toLong(), min, max)) },
+    { onChange(steppedInteger(value, step.toLong(), min, max)) },
+    enabled && value > min,
+    enabled && value < max,
+    min < 0,
+    modifier,
+    label,
+    suffix,
+    enabled,
+  )
 }
 
 @Composable
@@ -87,48 +54,104 @@ fun OutlinedNumericChooser(
   min: Float = 0f,
   suffix: (@Composable () -> Unit)? = null,
   label: (@Composable () -> Unit)? = null,
+  enabled: Boolean = true,
 ) {
-  assert(max > min) { "min can't be larger than max ($min > $max)" }
-  Row(
+  require(min.isFinite() && max.isFinite() && max > min && step.isFinite() && step > 0)
+  val safe = value.takeIf { it.isFinite() }?.coerceIn(min, max) ?: min
+  NumericChooser(
+    safe.toString(),
+    { validDecimal(it, min, max)?.let(onChange) },
+    { validDecimal(it, min, max) != null },
+    { onChange((safe.toDouble() - step).coerceIn(min.toDouble(), max.toDouble()).toFloat()) },
+    { onChange((safe.toDouble() + step).coerceIn(min.toDouble(), max.toDouble()).toFloat()) },
+    enabled && safe > min,
+    enabled && safe < max,
+    min < 0,
     modifier,
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-  ) {
-    RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.RemoveCircle, null)
+    label,
+    suffix,
+    enabled,
+  )
+}
+
+@Composable
+private fun NumericChooser(
+  value: String,
+  change: (String) -> Unit,
+  valid: (String) -> Boolean,
+  decrease: () -> Unit,
+  increase: () -> Unit,
+  canDecrease: Boolean,
+  canIncrease: Boolean,
+  signed: Boolean,
+  modifier: Modifier,
+  label: (@Composable () -> Unit)?,
+  suffix: (@Composable () -> Unit)?,
+  enabled: Boolean,
+) {
+  var draft by remember { mutableStateOf(value) }
+  val focus = androidx.compose.ui.platform.LocalFocusManager.current
+  val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+  // Preserve in-progress signs/decimal points; only valid values are sent to the caller.
+  LaunchedEffect(value) {
+    if (valid(draft) && normalizedNumber(draft).toDoubleOrNull() == value.toDoubleOrNull())
+      return@LaunchedEffect
+    draft = value
+  }
+  Column(modifier) {
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+    ) {
+      RepeatingIconButton(decrease, enabled = canDecrease) {
+        Icon(Icons.RemoveCircle, stringResource(R.string.panel_decrease))
+      }
+      PanelTextField(
+        draft,
+        {
+          draft = it.take(32)
+          if (valid(draft)) change(draft)
+        },
+        Modifier.weight(1f),
+        enabled = enabled,
+        label = label,
+        isError = draft.isNotBlank() && draft !in listOf("-", ".", "-.") && !valid(draft),
+        leadingIcon =
+          if (signed)
+            ({
+              TextButton(
+                onClick = {
+                  draft = if (draft.startsWith('-')) draft.drop(1) else "-$draft"
+                  if (valid(draft)) change(draft)
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(),
+              ) {
+                Text("±")
+              }
+            })
+          else null,
+        trailingIcon = suffix,
+        keyboardOptions =
+          KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+        keyboardActions =
+          KeyboardActions(
+            onDone = {
+              if (valid(draft)) change(draft) else draft = value
+              focus.clearFocus()
+              keyboard?.hide()
+            }
+          ),
+      )
+      RepeatingIconButton(increase, enabled = canIncrease) {
+        Icon(Icons.AddCircle, stringResource(R.string.panel_increase))
+      }
     }
-    var valueString by remember { mutableStateOf("$value") }
-    LaunchedEffect(value) {
-      if (valueString.isBlank() && value == 0f) return@LaunchedEffect
-      valueString = value.toString().dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
-    }
-    OutlinedTextField(
-      value = valueString,
-      label = label,
-      onValueChange = { newValue ->
-        if (newValue.isBlank()) {
-          valueString = newValue
-          onChange(0f)
-        }
-        runCatching {
-          if (newValue.startsWith('.')) return@runCatching
-          val floatValue = if (newValue.trimStart() == "-") -0f else newValue.toFloat()
-          onChange(floatValue)
-          valueString = newValue
-        }
-      },
-      isError = value > max || value < min,
-      supportingText = {
-        if (value > max) Text(stringResource(R.string.numeric_chooser_value_too_big))
-        if (value < min) Text(stringResource(R.string.numeric_chooser_value_too_small))
-      },
-      modifier = Modifier.weight(1f),
-      maxLines = 1,
-      suffix = suffix,
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    )
-    RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.AddCircle, null)
-    }
+    if (draft.isNotBlank() && draft !in listOf("-", ".", "-.") && !valid(draft))
+      Text(
+        stringResource(R.string.panel_invalid_number),
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.labelSmall,
+      )
   }
 }

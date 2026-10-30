@@ -87,6 +87,9 @@ fun PlayerActionRow(
   subtitle: String? = null,
   trailing: (@Composable () -> Unit)? = null,
 ) {
+  val rtl =
+    androidx.compose.ui.platform.LocalLayoutDirection.current ==
+      androidx.compose.ui.unit.LayoutDirection.Rtl
   Row(
     Modifier.fillMaxWidth()
       .clickable(onClick = onClick)
@@ -118,7 +121,7 @@ fun PlayerActionRow(
       Icon(
         Icons.ArrowDropDown,
         null,
-        Modifier.size(18.dp).graphicsLayer { rotationZ = -90f },
+        Modifier.size(18.dp).graphicsLayer { rotationZ = if (rtl) 90f else -90f },
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
       )
     }
@@ -254,7 +257,13 @@ private fun BoxScope.ThinPlayerScrollbar(
       visible = false
     }
   }
-  val alpha by animateFloatAsState(if (visible && overflow) 1f else 0f, label = "player_scrollbar")
+  val reduceMotion = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
+  val alpha by
+    animateFloatAsState(
+      if (visible && overflow) 1f else 0f,
+      animationSpec = tween(if (reduceMotion) 0 else 180),
+      label = "player_scrollbar",
+    )
   val color = MaterialTheme.colorScheme.primary.copy(alpha = .65f)
   if (overflow)
     Canvas(

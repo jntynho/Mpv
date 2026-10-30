@@ -1,5 +1,11 @@
 # MPV
 
+### Pending source update: player panel stability
+
+Panel fixes cover native property dispatch, external track ownership, subtitle targets and delay measurement, numeric/import validation, audio filter isolation, accessibility, pane geometry/opacity, expandable sections, search/poster states and a monotonic sleep timer. See [implementation and validation status](docs/panel-stability.md).
+
+**No APK build or new Release was requested for this update. Twenty isolated JVM tests passed without Gradle. Android compilation and Compose/import integration tests remain pending.**
+
 ### MPV 0.21.0
 
 - Sort returns to a compact, content-driven sheet with a single size-animation owner. Its size freezes during dismissal. View, order and field options use semantic Iconsax symbols.

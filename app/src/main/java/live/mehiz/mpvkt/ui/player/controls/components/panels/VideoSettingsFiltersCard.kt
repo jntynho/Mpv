@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,17 +11,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.DecoderPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.preferences.preference.deleteAndGet
 import live.mehiz.mpvkt.presentation.components.ExpandableCard
 import live.mehiz.mpvkt.presentation.components.SliderItem
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Tune
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.ui.player.VideoFilters
 import live.mehiz.mpvkt.ui.player.controls.CARDS_MAX_WIDTH
 import live.mehiz.mpvkt.ui.player.controls.panelCardsColors
@@ -33,19 +33,15 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import org.koin.compose.koinInject
 
 @Composable
-fun VideoSettingsFiltersCard(
-  modifier: Modifier = Modifier,
-) {
+fun VideoSettingsFiltersCard(modifier: Modifier = Modifier) {
   val decoderPreferences = koinInject<DecoderPreferences>()
-  var isExpanded by remember { mutableStateOf(true) }
+  var isExpanded by rememberSaveable { mutableStateOf(true) }
 
   ExpandableCard(
     isExpanded = isExpanded,
     onExpand = { isExpanded = !isExpanded },
     title = {
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-      ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
         Icon(Icons.Tune, null)
         Text(stringResource(R.string.player_sheets_filters_title))
       }
@@ -58,9 +54,13 @@ fun VideoSettingsFiltersCard(
         TextButton(
           onClick = {
             VideoFilters.entries.forEach {
-              PanelProperties.setInt(it.mpvProperty, it.preference(decoderPreferences).deleteAndGet())
+              if (PanelProperties.editable(it.mpvProperty))
+                PanelProperties.setInt(
+                  it.mpvProperty,
+                  it.preference(decoderPreferences).deleteAndGet(),
+                )
             }
-          },
+          }
         ) {
           Text(text = stringResource(id = R.string.generic_reset))
         }
@@ -77,14 +77,13 @@ fun VideoSettingsFiltersCard(
             },
             max = 100,
             min = -100,
+            property = filter.mpvProperty,
           )
         }
 
         if (!decoderPreferences.gpuNext.get()) {
           FooterPreference(
-            summary = {
-              Text(text = stringResource(id = R.string.player_sheets_filters_warning))
-            },
+            summary = { Text(text = stringResource(id = R.string.player_sheets_filters_warning)) }
           )
         }
       }

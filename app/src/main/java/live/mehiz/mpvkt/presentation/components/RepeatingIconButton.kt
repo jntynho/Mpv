@@ -1,21 +1,14 @@
 package live.mehiz.mpvkt.presentation.components
 
-import android.view.MotionEvent
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.*
 import androidx.compose.material3.IconButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalComposeUiApi::class)
+/** Normal clicks remain accessible; a held press adds repeats after the long-press delay. */
 @Composable
 fun RepeatingIconButton(
   onClick: () -> Unit,
@@ -23,38 +16,45 @@ fun RepeatingIconButton(
   enabled: Boolean = true,
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
   maxDelayMillis: Long = 750,
-  minDelayMillis: Long = 5,
+  minDelayMillis: Long = 40,
   delayDecayFactor: Float = .25f,
   content: @Composable () -> Unit,
 ) {
-  val currentClickListener by rememberUpdatedState(onClick)
-  var pressed by remember { mutableStateOf(false) }
-
+  val click by rememberUpdatedState(onClick)
+  val pressed by interactionSource.collectIsPressedAsState()
+  var repeated by remember { mutableStateOf(false) }
   IconButton(
-    modifier = modifier.pointerInteropFilter {
-      pressed = when (it.action) {
-        MotionEvent.ACTION_DOWN -> true
-
-        else -> false
-      }
-
-      true
+    onClick = {
+      if (!repeated) click()
+      repeated = false
     },
-    onClick = {},
+    modifier =
+      modifier.semantics {
+        onClick {
+          if (enabled) {
+            click()
+            true
+          } else false
+        }
+      },
     enabled = enabled,
     interactionSource = interactionSource,
     content = content,
   )
-
   LaunchedEffect(pressed, enabled) {
-    var currentDelayMillis = maxDelayMillis
-
-    while (enabled && pressed) {
-      currentClickListener()
-      delay(currentDelayMillis)
-      currentDelayMillis =
-        (currentDelayMillis - (currentDelayMillis * delayDecayFactor))
-          .toLong().coerceAtLeast(minDelayMillis)
+    if (pressed && enabled) {
+      repeated = false
+      var interval = maxDelayMillis.coerceAtLeast(1)
+      delay(interval)
+      while (true) {
+        repeated = true
+        click()
+        interval =
+          (interval * (1 - delayDecayFactor.coerceIn(0f, .9f)))
+            .toLong()
+            .coerceAtLeast(minDelayMillis.coerceAtLeast(16))
+        delay(interval)
+      }
     }
   }
 }

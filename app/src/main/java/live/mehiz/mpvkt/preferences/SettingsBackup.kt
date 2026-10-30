@@ -125,18 +125,47 @@ internal object SettingsBackup {
       context.contentResolver.openInputStream(uri)?.use(::read) ?: error("Cannot open backup")
     val prefs = PreferenceManager.getDefaultSharedPreferences(context)
     // Matching known runtime types prevents a foreign backup from causing ClassCastExceptions.
-    val baseline = supportedTypes(context)
+    val domain = mutableMapOf<String, (Any) -> Any>()
+    val baseline = supportedTypes(domain)
     values.forEach { (key, value) ->
       require(baseline[key]?.let { sameType(it, value) } == true) {
         "Unknown or incompatible setting: $key"
       }
     }
+    val validated =
+      values
+        .mapValues { (key, original) ->
+          val value = domain[key]?.invoke(original) ?: original
+          when (key) {
+            "default_speed_presets" -> SpeedPresets.checked(value as Set<*>)
+            "default_speed" -> (value as Float).also { require(it.isFinite() && it in .01f..100f) }
+            "hold_for_multiple_speed" ->
+              (value as Float).also { require(it.isFinite() && it in 0f..6f) }
+            "sub_default_speed" ->
+              (value as Float).also { require(it.isFinite() && it in .1f..10f) }
+            "deband_cpu_radius" -> (value as Int).also { require(it in 4..32) }
+            "panel_transparency" -> (value as Float).also { require(it.isFinite() && it in 0f..1f) }
+            else -> value
+          }
+        }
+        .toMutableMap()
+    if (values.containsKey("audio_channels")) {
+      if (values["audio_channels_semantics_v2"] != true) {
+        validated["audio_channels"] =
+          when (validated["audio_channels"]) {
+            "Auto" -> "AutoSafe"
+            "AutoSafe" -> "Auto"
+            else -> validated.getValue("audio_channels")
+          }
+      }
+      validated["audio_channels_semantics_v2"] = true
+    }
     val editor = prefs.edit()
-    values.forEach { (key, value) -> put(editor, key, value) }
+    validated.forEach { (key, value) -> put(editor, key, value) }
     check(editor.commit())
   }
 
-  private fun supportedTypes(context: Context): Map<String, Any> {
+  private fun supportedTypes(domain: MutableMap<String, (Any) -> Any>): Map<String, Any> {
     val entries = linkedMapOf<String, Any>()
     val store =
       object : live.mehiz.mpvkt.preferences.preference.PreferenceStore {
@@ -187,9 +216,37 @@ internal object SettingsBackup {
           deserializer: (String) -> T,
         ): live.mehiz.mpvkt.preferences.preference.Preference<T> {
           entries[key] = serializer(defaultValue)
-          return live.mehiz.mpvkt.preferences.preference
-            .AndroidPreferenceStore(context)
-            .getObject(key, defaultValue, serializer, deserializer)
+          domain[key] = { raw ->
+            require(raw is String)
+            if (defaultValue is Enum<*>) {
+              val kind: Class<*> =
+                defaultValue.javaClass.let { if (it.isEnum) it else requireNotNull(it.superclass) }
+              require(kind.enumConstants.orEmpty().any { (it as Enum<*>).name == raw }) {
+                "Invalid enum value: $key"
+              }
+            }
+            serializer(deserializer(raw))
+          }
+          return object : live.mehiz.mpvkt.preferences.preference.Preference<T> {
+            override fun key() = key
+
+            override fun get() = defaultValue
+
+            override fun set(value: T) {}
+
+            override fun isSet() = false
+
+            override fun delete() {}
+
+            override fun defaultValue() = defaultValue
+
+            override fun changes() = kotlinx.coroutines.flow.flowOf(defaultValue)
+
+            override fun stateIn(
+              scope: kotlinx.coroutines.CoroutineScope
+            ): kotlinx.coroutines.flow.StateFlow<T> =
+              kotlinx.coroutines.flow.MutableStateFlow(defaultValue)
+          }
         }
 
         override fun getAll() = entries

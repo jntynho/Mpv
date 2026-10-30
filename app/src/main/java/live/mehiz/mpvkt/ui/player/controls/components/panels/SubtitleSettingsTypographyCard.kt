@@ -69,7 +69,9 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
   val preferences = koinInject<SubtitlesPreferences>()
   val fileManager = koinInject<FileManager>()
   var isExpanded by rememberSaveable { mutableStateOf(true) }
-  var fonts by remember { mutableStateOf(listOf(preferences.font.defaultValue())) }
+  var fonts by remember {
+    mutableStateOf(listOf(preferences.font.defaultValue(), preferences.font.get()).distinct())
+  }
   var fontsLoadingIndicator: (@Composable () -> Unit)? by remember {
     val indicator: (@Composable () -> Unit) = { CircularProgressIndicator(Modifier.size(32.dp)) }
     mutableStateOf(indicator)
@@ -152,25 +154,40 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
       ) {
         IconToggleButton(
           checked = isBold ?: preferences.bold.get(),
+          enabled = live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-bold"),
           onCheckedChange = {
             preferences.bold.set(it)
             PanelProperties.setBoolean("sub-bold", it)
           },
         ) {
-          Icon(Icons.FormatBold, null, modifier = Modifier.size(24.dp))
+          Icon(
+            Icons.FormatBold,
+            stringResource(R.string.panel_bold),
+            modifier = Modifier.size(24.dp),
+          )
         }
         IconToggleButton(
           checked = isItalic ?: preferences.italic.get(),
+          enabled = live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-italic"),
           onCheckedChange = {
             preferences.italic.set(it)
             PanelProperties.setBoolean("sub-italic", it)
           },
         ) {
-          Icon(Icons.FormatItalic, null, modifier = Modifier.size(24.dp))
+          Icon(
+            Icons.FormatItalic,
+            stringResource(R.string.panel_italic),
+            modifier = Modifier.size(24.dp),
+          )
         }
         SubtitleJustification.entries.minus(SubtitleJustification.Auto).forEach { justification ->
           IconToggleButton(
             checked = justify == justification,
+            enabled =
+              live.mehiz.mpvkt.ui.player.controls.components.propertyEditable(
+                "sub-ass-justify",
+                "sub-justify",
+              ),
             onCheckedChange = {
               PanelProperties.setBoolean("sub-ass-justify", it)
               if (it) {
@@ -182,7 +199,20 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
               }
             },
           ) {
-            Icon(justification.icon, null)
+            Icon(
+              justification.icon,
+              stringResource(
+                R.string.panel_alignment,
+                stringResource(
+                  when (justification) {
+                    SubtitleJustification.Left -> R.string.panel_align_left
+                    SubtitleJustification.Center -> R.string.panel_align_center
+                    SubtitleJustification.Right -> R.string.panel_align_right
+                    SubtitleJustification.Auto -> R.string.panel_align_auto
+                  }
+                ),
+              ),
+            )
           }
         }
         TextButton(onClick = { resetTypography(preferences) }) {
@@ -203,6 +233,7 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
         Icon(Icons.FormatColorText, null, modifier = Modifier.size(24.dp))
         ExposedTextDropDownMenu(
           selectedValue = font ?: preferences.font.get(),
+          enabled = live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-font"),
           options = fonts.toImmutableList(),
           label = stringResource(R.string.player_sheets_sub_typography_font),
           onValueChangedEvent = {
@@ -216,6 +247,7 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
         label = stringResource(R.string.player_sheets_sub_typography_font_size),
         max = 100,
         min = 1,
+        property = "sub-font-size",
         value = fontSize ?: preferences.fontSize.get(),
         valueText = (fontSize ?: preferences.fontSize.get()).toString(),
         onChange = {
@@ -233,6 +265,8 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
         Icon(Icons.BorderStyle, null, Modifier.size(24.dp))
         ExposedTextDropDownMenu(
           selectedValue = context.getString(borderStyle.titleRes),
+          enabled =
+            live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-border-style"),
           options =
             SubtitlesBorderStyle.entries.map { context.getString(it.titleRes) }.toImmutableList(),
           label = stringResource(R.string.player_sheets_subtitles_border_style),
@@ -249,6 +283,7 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
       }
       SliderItem(
         stringResource(R.string.player_sheets_sub_typography_border_size),
+        property = "sub-outline-size",
         value = borderSize ?: preferences.borderSize.get(),
         valueText = (borderSize ?: preferences.borderSize.get()).toString(),
         onChange = {
@@ -260,6 +295,7 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
       )
       SliderItem(
         stringResource(R.string.player_sheets_subtitles_shadow_offset),
+        property = "sub-shadow-offset",
         value = shadowOffset ?: preferences.shadowOffset.get(),
         valueText = (shadowOffset ?: preferences.shadowOffset.get()).toString(),
         onChange = {
@@ -274,15 +310,24 @@ fun SubtitleSettingsTypographyCard(modifier: Modifier = Modifier) {
 }
 
 fun resetTypography(preferences: SubtitlesPreferences) {
-  PanelProperties.setBoolean("sub-bold", preferences.bold.deleteAndGet())
-  PanelProperties.setBoolean("sub-italic", preferences.italic.deleteAndGet())
-  PanelProperties.setBoolean("sub-ass-justify", false)
-  PanelProperties.setString("sub-justify", preferences.justification.deleteAndGet().value)
-  PanelProperties.setString("sub-font", preferences.font.deleteAndGet())
-  PanelProperties.setInt("sub-font-size", preferences.fontSize.deleteAndGet())
-  PanelProperties.setString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
-  PanelProperties.setInt("sub-outline-size", preferences.borderSize.deleteAndGet())
-  PanelProperties.setInt("sub-shadow-offset", preferences.shadowOffset.deleteAndGet())
+  if (PanelProperties.editable("sub-bold"))
+    PanelProperties.setBoolean("sub-bold", preferences.bold.deleteAndGet())
+  if (PanelProperties.editable("sub-italic"))
+    PanelProperties.setBoolean("sub-italic", preferences.italic.deleteAndGet())
+  if (PanelProperties.editable("sub-ass-justify"))
+    PanelProperties.setBoolean("sub-ass-justify", false)
+  if (PanelProperties.editable("sub-justify"))
+    PanelProperties.setString("sub-justify", preferences.justification.deleteAndGet().value)
+  if (PanelProperties.editable("sub-font"))
+    PanelProperties.setString("sub-font", preferences.font.deleteAndGet())
+  if (PanelProperties.editable("sub-font-size"))
+    PanelProperties.setInt("sub-font-size", preferences.fontSize.deleteAndGet())
+  if (PanelProperties.editable("sub-border-style"))
+    PanelProperties.setString("sub-border-style", preferences.borderStyle.deleteAndGet().value)
+  if (PanelProperties.editable("sub-outline-size"))
+    PanelProperties.setInt("sub-outline-size", preferences.borderSize.deleteAndGet())
+  if (PanelProperties.editable("sub-shadow-offset"))
+    PanelProperties.setInt("sub-shadow-offset", preferences.shadowOffset.deleteAndGet())
 }
 
 enum class SubtitlesBorderStyle(val value: String, @StringRes val titleRes: Int) {

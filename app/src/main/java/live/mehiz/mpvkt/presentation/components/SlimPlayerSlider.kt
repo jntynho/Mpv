@@ -39,8 +39,8 @@ fun SlimPlayerSlider(
   var editing by remember { mutableStateOf(false) }
   var pending by remember { mutableStateOf<Float?>(null) }
   LaunchedEffect(dragged) { if (!dragged) editing = false }
-  val min = valueRange.start
-  val max = valueRange.endInclusive.coerceAtLeast(min)
+  val min = valueRange.start.takeIf { it.isFinite() } ?: 0f
+  val max = valueRange.endInclusive.takeIf { it.isFinite() }?.coerceAtLeast(min) ?: min
   val range = min..max
   LaunchedEffect(value, pending, editing, dragged) {
     if (!editing && !dragged && pending != null) {
@@ -50,12 +50,14 @@ fun SlimPlayerSlider(
   }
   val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
   Slider(
-    value = (pending ?: value).coerceIn(range),
-    onValueChange = {
-      editing = true
-      pending = it
-      onValueChange(it)
-    },
+    value =
+      (pending?.takeIf { it.isFinite() } ?: value.takeIf { it.isFinite() } ?: min).coerceIn(range),
+    onValueChange = change@{
+        if (!it.isFinite()) return@change
+        editing = true
+        pending = it
+        onValueChange(it)
+      },
     modifier = modifier.heightIn(min = 48.dp),
     enabled = enabled && max > min,
     valueRange = range,

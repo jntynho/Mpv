@@ -24,7 +24,17 @@ internal val LocalSubtitlePosters = staticCompositionLocalOf { SubtitlePosters.S
 internal fun SubtitlePoster(url: String?, reduceMotion: Boolean, modifier: Modifier = Modifier) {
   val loader = LocalSubtitlePosters.current
   key(url, loader) {
-    val bitmap by produceState(loader.peek(url), url, loader) { value = loader.load(url) }
+    var retry by remember { mutableIntStateOf(0) }
+    var loading by remember { mutableStateOf(loader.peek(url) == null && url != null) }
+    val bitmap by
+      produceState(loader.peek(url), url, loader, retry) {
+        loading = true
+        try {
+          value = loader.load(url)
+        } finally {
+          loading = false
+        }
+      }
     var revealed by remember { mutableStateOf(false) }
     LaunchedEffect(bitmap) { revealed = bitmap != null }
     val alpha by
@@ -40,12 +50,23 @@ internal fun SubtitlePoster(url: String?, reduceMotion: Boolean, modifier: Modif
         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
       contentAlignment = Alignment.Center,
     ) {
-      Icon(
-        Icons.Movie,
-        null,
-        Modifier.size(24.dp),
-        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f),
-      )
+      if (bitmap != null || url == null)
+        Icon(
+          Icons.Movie,
+          null,
+          Modifier.size(24.dp),
+          tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f),
+        )
+      if (bitmap == null && url != null) {
+        if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+        else
+          IconButton(onClick = { retry++ }) {
+            Icon(
+              Icons.Refresh,
+              androidx.compose.ui.res.stringResource(live.mehiz.mpvkt.R.string.panel_retry),
+            )
+          }
+      }
       bitmap?.let {
         Image(
           it.asImageBitmap(),

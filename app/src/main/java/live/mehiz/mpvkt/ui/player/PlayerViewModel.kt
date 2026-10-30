@@ -127,11 +127,34 @@ class PlayerViewModel(
   private val subtitleNavigationGeneration = AtomicLong()
   private var subtitleOwnerPath: String? = null
   private var subtitleOwnerGeneration = -1L
-  internal fun subtitleMediaStarted() {
-    seekMediaGeneration.value=subtitleVideoGeneration.incrementAndGet()
-    subtitleSearch.stop()
-    if(panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true) panelNavigator.openSheet(Sheets.SubtitleTracks)
+  private val externalFilesLock = Any()
+  private val externalFiles = mutableListOf<ExternalTrackFile>()
+  @Volatile private var externalFilesClosed = false
+
+  private fun releaseExternalFiles(keep: Long? = null) {
+    val closing =
+      synchronized(externalFilesLock) {
+        externalFiles.filter { it.generation != keep }.also { externalFiles.removeAll(it.toSet()) }
+      }
+    closing.forEach { it.close() }
   }
+
+  override fun onCleared() {
+    synchronized(timerLock) { timerVersion++; timerJob?.cancel() }
+    synchronized(externalFilesLock) { externalFilesClosed=true }
+    releaseExternalFiles()
+    super.onCleared()
+  }
+
+  internal fun subtitleMediaStarted() {
+    PanelProperties.clearFailures()
+    seekMediaGeneration.value = subtitleVideoGeneration.incrementAndGet()
+    viewModelScope.launch(Dispatchers.IO) { releaseExternalFiles(subtitleVideoGeneration.get()) }
+    subtitleSearch.stop()
+    if (panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch") == true)
+      panelNavigator.openSheet(Sheets.SubtitleTracks)
+  }
+
   internal fun closeSubtitleSearch() { subtitleNavigationGeneration.incrementAndGet();subtitleSearch.stop() }
   internal fun openSubtitleSearch(title: String, slot: Int) {
     val navigation=subtitleNavigationGeneration.get()
@@ -204,18 +227,48 @@ class PlayerViewModel(
   private val _remainingTime = MutableStateFlow(0)
   val remainingTime = _remainingTime.asStateFlow()
 
+  private val timerLock = Any()
+  private var timerVersion = 0L
+
   fun startTimer(seconds: Int) {
-    timerJob?.cancel()
-    _remainingTime.value = seconds
-    if (seconds < 1) return
-    timerJob = viewModelScope.launch {
-      for (time in seconds downTo 1) {
-        _remainingTime.value = time
-        delay(1000)
-      }
-      _remainingTime.value = 0
-      pause()
-      Toast.makeText(activity, activity.getString(R.string.toast_sleep_timer_ended), Toast.LENGTH_SHORT).show()
+    synchronized(timerLock) {
+      timerJob?.cancel()
+      val ticket = ++timerVersion
+      _remainingTime.value = seconds.coerceAtLeast(0)
+      if (seconds < 1) return
+      val deadline = SleepDeadline.after(seconds, android.os.SystemClock.elapsedRealtime())
+      timerJob =
+        viewModelScope.launch(Dispatchers.Default) {
+          while (true) {
+            val now = android.os.SystemClock.elapsedRealtime()
+            val left = deadline.millisecondsAt(now)
+            if (left <= 0) break
+            synchronized(timerLock) {
+              if(ticket!=timerVersion)return@launch
+              _remainingTime.value = deadline.secondsAt(now)
+            }
+            delay(minOf(left, 250L))
+          }
+          synchronized(timerLock) {
+            if (ticket != timerVersion) return@launch
+            _remainingTime.value = 0
+          }
+          // Wait across a core recreation instead of losing an expiry during rotation.
+          PlaybackControl.state.first { it.attached && it.ready }
+          synchronized(timerLock) {
+            if(ticket!=timerVersion)return@launch
+            pause()
+          }
+          kotlinx.coroutines.withContext(Dispatchers.Main) {
+            if(ticket!=synchronized(timerLock){timerVersion})return@withContext
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.toast_sleep_timer_ended),
+                Toast.LENGTH_SHORT,
+              )
+              .show()
+          }
+        }
     }
   }
 
@@ -230,16 +283,79 @@ class PlayerViewModel(
     PlaybackControl.enqueue("decoder") { MPVLib.setPropertyString("hwdec", decoder.value) }
   }
 
-  fun addAudio(uri: Uri) {
-    val url = uri.toString()
-    val path = if (url.startsWith("content://")) url.toUri().openContentFd(activity) else url
-    MPVLib.command("audio-add", path ?: return, "cached")
+  fun addAudio(uri: Uri, owner: Long = subtitleVideoGeneration.get()) =
+    addExternalTrack(uri, null, owner)
+
+  fun addSubtitle(uri: Uri, slot: Int = 0, owner: Long = subtitleVideoGeneration.get()) =
+    addExternalTrack(uri, slot.coerceIn(0, 1), owner)
+
+  private fun addExternalTrack(uri: Uri, slot: Int?, owner: Long) {
+    viewModelScope.launch {
+      try {
+        val asset = ExternalTrackFile.open(activity.applicationContext, uri, owner, slot != null)
+        val accepted =
+          synchronized(externalFilesLock) {
+            if (externalFilesClosed || owner != subtitleVideoGeneration.get()) false
+            else {
+              externalFiles += asset
+              true
+            }
+          }
+        if (!accepted) {
+          asset.close()
+          if(!externalFilesClosed) Toast.makeText(activity,R.string.panel_file_context_changed,Toast.LENGTH_LONG).show()
+          return@launch
+        }
+        PlaybackControl.enqueueSession {
+          if (externalFilesClosed || owner != subtitleVideoGeneration.get()) {
+            synchronized(externalFilesLock) { externalFiles.remove(asset) }
+            asset.close()
+            viewModelScope.launch { if(!externalFilesClosed) Toast.makeText(activity,R.string.panel_file_context_changed,Toast.LENGTH_LONG).show() }
+            return@enqueueSession
+          }
+          try {
+            val previousIds=MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty().map { it.id }.toSet()
+            if (slot == null) {
+              MPVLib.command("audio-add", asset.path, "select")
+              val added=MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
+                .any { it.isAudio && (it.externalFilename?.removePrefix("file://")==asset.path || it.id !in previousIds) }
+              check(added) { "Audio was not added" }
+            } else {
+              val oldPrimary = MPVLib.getPropertyInt("sid")
+              MPVLib.command("sub-add", asset.path, "cached")
+              val added =
+                MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json)?.lastOrNull {
+                  it.isSubtitle && (it.externalFilename?.removePrefix("file://") == asset.path || it.id !in previousIds)
+                } ?: error("Subtitle was not added")
+              if (slot == 1) {
+                if (oldPrimary != null && oldPrimary != added.id)
+                  MPVLib.setPropertyInt("sid", oldPrimary)
+                else MPVLib.setPropertyBoolean("sid", false)
+                MPVLib.setPropertyInt("secondary-sid", added.id)
+              } else {
+                if (MPVLib.getPropertyInt("secondary-sid") == added.id)
+                  MPVLib.setPropertyBoolean("secondary-sid", false)
+                MPVLib.setPropertyInt("sid", added.id)
+              }
+            }
+          } catch (_: Exception) {
+            synchronized(externalFilesLock) { externalFiles.remove(asset) }
+            asset.close()
+            viewModelScope.launch {
+              if (owner == subtitleVideoGeneration.get()) showExternalTrackError()
+            }
+          }
+        }
+      } catch (cancelled: kotlinx.coroutines.CancellationException) {
+        throw cancelled
+      } catch (_: Exception) {
+        if (owner == subtitleVideoGeneration.get()) showExternalTrackError()
+      }
+    }
   }
 
-  fun addSubtitle(uri: Uri) {
-    val url = uri.toString()
-    val path = if (url.startsWith("content://")) url.toUri().openContentFd(activity) else url
-    MPVLib.command("sub-add", path ?: return, "cached")
+  private fun showExternalTrackError() {
+    Toast.makeText(activity, R.string.panel_external_failed, Toast.LENGTH_LONG).show()
   }
 
   fun selectSub(id: Int, slot: Int) {

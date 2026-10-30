@@ -121,6 +121,10 @@ internal object PlaybackControl {
     controller?.endSeek()
   }
 
+  fun enqueueSession(action: () -> Unit) {
+    controller?.enqueueSession(action)
+  }
+
   fun enqueue(key: String? = null, action: () -> Unit) {
     controller?.enqueue(key, action)
   }

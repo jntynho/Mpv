@@ -97,9 +97,11 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   }
 
   override fun postInitOptions() {
+    if(audioPreferences.audioChannels.get()==live.mehiz.mpvkt.preferences.AudioChannels.ReverseStereo)
+      AudioChannelRouting.apply(live.mehiz.mpvkt.preferences.AudioChannels.ReverseStereo)
     when (decoderPreferences.debanding.get()) {
       Debanding.None -> {}
-      Debanding.CPU -> MPVLib.command("vf", "add", "@deband:gradfun=radius=12")
+      Debanding.CPU -> MPVLib.command("vf", "add", "@deband:gradfun=radius=${decoderPreferences.debandCpuRadius.get().coerceIn(4,32)}")
       Debanding.GPU -> MPVLib.setOptionString("deband", "yes")
     }
 
@@ -171,6 +173,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   )
 
   private fun setupAudioOptions() {
+    val channelPolicy=audioPreferences.audioChannels.get()
+    MPVLib.setOptionString("audio-channels",if(channelPolicy==live.mehiz.mpvkt.preferences.AudioChannels.ReverseStereo) "stereo" else channelPolicy.value)
     MPVLib.setOptionString("alang", audioPreferences.preferredLanguages.get())
     MPVLib.setOptionString("audio-delay", (audioPreferences.defaultAudioDelay.get() / 1000.0).toString())
     MPVLib.setOptionString("audio-pitch-correction", audioPreferences.audioPitchCorrection.get().toString())

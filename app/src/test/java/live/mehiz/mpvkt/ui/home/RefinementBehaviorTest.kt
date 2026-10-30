@@ -123,7 +123,7 @@ class RefinementBehaviorTest {
         }
       }
     }
-    compose.onNodeWithTag("unsafe").performTouchInput { click() }
+    compose.onNodeWithTag("unsafe").assertDoesNotExist()
     assertEquals(0, calls)
   }
 

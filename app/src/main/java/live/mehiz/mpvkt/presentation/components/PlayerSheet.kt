@@ -25,18 +25,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import live.mehiz.mpvkt.R
-import live.mehiz.mpvkt.ui.motion.SpringEngine
-import live.mehiz.mpvkt.ui.motion.runSettleAnimation
 
 private val paneEasing = CubicBezierEasing(.3f, 0f, .2f, 1f)
 
@@ -48,10 +51,14 @@ internal class PaneMotion {
 
   private var job: Job? = null
   private var reboundFraction = 0f
+  private var velocity = 0f
 
   fun open(scope: CoroutineScope, distance: Float, rebound: Float, reduceMotion: Boolean) {
     stop()
-    reboundFraction = rebound / distance.coerceAtLeast(1f)
+    reboundFraction = (rebound / distance.coerceAtLeast(1f)).coerceIn(0f, .04f)
+    val logRatio = -ln(reboundFraction.coerceAtLeast(.00001f))
+    val damping =
+      (logRatio / sqrt(PI.toFloat() * PI.toFloat() + logRatio * logRatio)).coerceIn(.82f, 1f)
     job =
       scope.launch {
         if (reduceMotion) {
@@ -61,11 +68,13 @@ internal class PaneMotion {
         // A single analytical spring has continuous velocity, including at its overshoot.
         AnimationState(position).animateTo(
           0f,
-          spring(dampingRatio = .72f, stiffness = 320f, visibilityThreshold = .0005f),
+          spring(dampingRatio = damping, stiffness = 320f, visibilityThreshold = .0005f),
         ) {
           position = value
+          velocity = this.velocity
         }
         position = 0f
+        velocity = 0f
       }
   }
 
@@ -73,14 +82,19 @@ internal class PaneMotion {
     stop()
     job =
       scope.launch {
-        if (!reduceMotion)
-          SpringEngine()
-            .runSettleAnimation(
-              position * distance,
-              initialVelocity = 0f,
-              onFrame = { position = it / distance },
-              onSettle = {},
-            )
+        if (!reduceMotion) {
+          AnimationState(position).animateTo(
+            0f,
+            spring(
+              dampingRatio = 1f,
+              stiffness = 320f,
+              visibilityThreshold = .5f / distance.coerceAtLeast(1f),
+            ),
+          ) {
+            position = value
+            velocity = this.velocity
+          }
+        }
         position = 0f
       }
   }
@@ -88,16 +102,22 @@ internal class PaneMotion {
   fun finishOpen() {
     stop()
     position = 0f
+    velocity = 0f
   }
 
   fun animate(scope: CoroutineScope, target: Float, duration: Int, finished: () -> Unit = {}) {
     stop()
     job =
       scope.launch {
-        AnimationState(position).animateTo(target, tween(duration, easing = paneEasing)) {
+        AnimationState(position, initialVelocity = velocity).animateTo(
+          target,
+          tween(duration, easing = paneEasing),
+        ) {
           position = value
+          velocity = this.velocity
         }
         position = target
+        velocity = 0f
         finished()
       }
   }
@@ -106,7 +126,13 @@ internal class PaneMotion {
     job?.cancel()
   }
 
+  fun updateBounds(distance: Float, rebound: Float) {
+    reboundFraction = (rebound / distance.coerceAtLeast(1f)).coerceIn(0f, .04f)
+    if (position < -reboundFraction) position = -reboundFraction
+  }
+
   fun drag(delta: Float) {
+    velocity = 0f
     position = (position + delta).coerceIn(-reboundFraction, 1f)
   }
 }
@@ -121,6 +147,7 @@ fun PlayerSheet(
   reduceMotion: Boolean = false,
   onCloseStart: () -> Unit = {},
   interactive: Boolean = true,
+  containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
   content: @Composable (onClose: () -> Unit, headerDrag: Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -130,7 +157,12 @@ fun PlayerSheet(
   val motion = remember { PaneMotion() }
   val dismissVelocity = with(LocalDensity.current) { 550.dp.toPx() }
   var widthPx by remember { mutableFloatStateOf(0f) }
-  val reboundPx = with(LocalDensity.current) { 24.dp.toPx() }
+  val reboundPx = with(LocalDensity.current) { 8.dp.toPx() }
+  val landscape =
+    LocalConfiguration.current.orientation ==
+      android.content.res.Configuration.ORIENTATION_LANDSCAPE
+  val focus = LocalFocusManager.current
+  val keyboard = LocalSoftwareKeyboardController.current
   val extraPx = with(LocalDensity.current) { 24.dp.toPx() }
   var laidOut by remember { mutableStateOf(false) }
   var closing by remember { mutableStateOf(false) }
@@ -147,6 +179,12 @@ fun PlayerSheet(
     if (laidOut && !closing) motion.open(scope, widthPx + extraPx, reboundPx, reduceMotion)
   }
   LaunchedEffect(reduceMotion) { if (reduceMotion && laidOut && !closing) motion.finishOpen() }
+  LaunchedEffect(closing, interactive) {
+    if (closing || !interactive) {
+      focus.clearFocus(force = true)
+      keyboard?.hide()
+    }
+  }
   DisposableEffect(motion) { onDispose(motion::stop) }
   BackHandler(enabled = interactive) { if (!closing) latestBack?.invoke() ?: close() }
   val closeLabel = stringResource(R.string.generic_close)
@@ -175,7 +213,7 @@ fun PlayerSheet(
         .clickable(
           remember { MutableInteractionSource() },
           indication = null,
-          enabled = interactive,
+          enabled = interactive && !closing,
           onClick = close,
         )
     )
@@ -186,7 +224,7 @@ fun PlayerSheet(
         .padding(12.dp)
     ) {
       val width =
-        if (maxWidth > maxHeight) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
+        if (landscape) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
         else maxWidth.coerceAtMost(504.dp)
       Surface(
         modifier =
@@ -195,6 +233,7 @@ fun PlayerSheet(
             .fillMaxHeight()
             .onSizeChanged {
               widthPx = it.width.toFloat().coerceAtLeast(1f)
+              motion.updateBounds(widthPx + extraPx, reboundPx)
               laidOut = true
             }
             .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }
@@ -208,10 +247,11 @@ fun PlayerSheet(
                 }
             }
             .then(modifier)
+            .then(if (closing || !interactive) Modifier.clearAndSetSemantics {} else Modifier)
             .pointerInput(Unit) { detectTapGestures(onTap = {}) },
         shape = RoundedCornerShape(24.dp),
         tonalElevation = tonalElevation,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = containerColor,
       ) {
         content(close, headerDrag)
       }
