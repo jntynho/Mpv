@@ -23,12 +23,20 @@ fun TintedSliderItem(
   tint: Color,
   modifier: Modifier = Modifier,
   min: Int = 0,
+  enabled: Boolean = true,
   icon: @Composable () -> Unit = {},
 ) {
 
   PlayerSliderLayout(label, valueText, modifier, icon) {
-    TintedSlider(value.toFloat(), { onChange(kotlin.math.round(it).toInt()) }, Modifier.fillMaxWidth(),
-      valueRange = min.toFloat()..max.toFloat(), steps = (max - min - 1).coerceAtLeast(0), tint = tint)
+    TintedSlider(
+      value.toFloat(),
+      { onChange(kotlin.math.round(it).toInt()) },
+      Modifier.fillMaxWidth(),
+      enabled = enabled,
+      valueRange = min.toFloat()..max.toFloat(),
+      steps = (max - min - 1).coerceAtLeast(0),
+      tint = tint,
+    )
   }
 }
 
@@ -42,7 +50,7 @@ fun TintedSlider(
   @IntRange steps: Int = 0,
   onValueChangeFinished: (() -> Unit)? = null,
   tint: Color = MaterialTheme.colorScheme.primaryContainer,
-  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
   SlimPlayerSlider(
     value = value,
@@ -53,31 +61,20 @@ fun TintedSlider(
     steps = steps,
     onValueChangeFinished = onValueChangeFinished,
     colors = generateSliderColors(tint),
-    interactionSource = interactionSource
+    interactionSource = interactionSource,
   )
 }
 
 @Preview
 @Composable
 private fun PreviewTintedSliderRed() {
-  TintedSlider(
-    0.5f,
-    {},
-    tint = Color.Red
-  )
+  TintedSlider(0.5f, {}, tint = Color.Red)
 }
 
 @Preview
 @Composable
 private fun PreviewTintedSliderItemRed() {
-  TintedSliderItem(
-    "slideritem red",
-    1,
-    "1",
-    {},
-    20,
-    tint = Color.Red
-  )
+  TintedSliderItem("slideritem red", 1, "1", {}, 20, tint = Color.Red)
 }
 
 fun generateSliderColors(baseColor: Color): SliderColors {
@@ -107,6 +104,6 @@ fun generateSliderColors(baseColor: Color): SliderColors {
     disabledActiveTrackColor = lighten(baseColor, 0.2f).copy(alpha = 0.5f),
     disabledActiveTickColor = lighten(baseColor, 0.4f).copy(alpha = 0.5f),
     disabledInactiveTrackColor = darken(baseColor, 0.2f).copy(alpha = 0.5f),
-    disabledInactiveTickColor = darken(baseColor, 0.4f).copy(alpha = 0.5f)
+    disabledInactiveTickColor = darken(baseColor, 0.4f).copy(alpha = 0.5f),
   )
 }

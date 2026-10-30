@@ -4,15 +4,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import dev.vivvvek.seeker.Segment
 import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.ImmutableList
@@ -22,7 +25,7 @@ import live.mehiz.mpvkt.ui.theme.spacing
 @Composable
 fun ChaptersSheet(
   chapters: ImmutableList<Segment>,
-  currentChapter: Segment,
+  currentChapter: Segment?,
   onClick: (Segment) -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -36,8 +39,7 @@ fun ChaptersSheet(
         onClick = { onClick(it) },
       )
     },
-    modifier = modifier
-      .padding(vertical = MaterialTheme.spacing.medium)
+    modifier = modifier.padding(vertical = MaterialTheme.spacing.medium),
   )
 }
 
@@ -47,14 +49,20 @@ fun ChapterTrack(
   index: Int,
   selected: Boolean,
   onClick: () -> Unit,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
 ) {
   Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .clickable(onClick = onClick)
-      .padding(vertical = MaterialTheme.spacing.smaller, horizontal = MaterialTheme.spacing.medium),
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .clickable(onClick = onClick)
+        .heightIn(min = 48.dp)
+        .padding(
+          vertical = MaterialTheme.spacing.smaller,
+          horizontal = MaterialTheme.spacing.medium,
+        ),
     horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically,
   ) {
     Text(
       stringResource(R.string.player_sheets_track_title_wo_lang, index + 1, chapter.name),
@@ -62,7 +70,7 @@ fun ChapterTrack(
       fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Normal,
       maxLines = 1,
       modifier = Modifier.weight(1f),
-      overflow = TextOverflow.Ellipsis
+      overflow = TextOverflow.Ellipsis,
     )
     Text(
       Utils.prettyTime(chapter.start.toInt()),

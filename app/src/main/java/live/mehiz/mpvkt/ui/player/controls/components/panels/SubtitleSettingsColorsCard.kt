@@ -15,8 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +31,6 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import androidx.core.graphics.toColorInt
-import kotlinx.coroutines.flow.collect
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.preferences.preference.Preference
@@ -69,23 +68,20 @@ fun SubtitleSettingsColorsCard(modifier: Modifier = Modifier) {
   ) {
     Column {
       var currentColorType by rememberSaveable { mutableStateOf(SubColorType.Text) }
-      var edited by remember(currentColorType) { mutableStateOf(false) }
-      var currentColor by
-        remember(currentColorType) {
-          mutableIntStateOf(
-            getCurrentMPVColor(currentColorType, currentColorType.preference(preferences).get())
-          )
-        }
-      LaunchedEffect(currentColorType) {
-        val observed =
-          kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            MpvProperties.propString[currentColorType.property]
-          }
-        observed.collect { value ->
-          if (!edited)
-            currentColor =
-              runCatching { value?.toColorInt() }.getOrNull()
-                ?: currentColorType.preference(preferences).get()
+      val mediaKey = live.mehiz.mpvkt.ui.player.controls.components.LocalPanelMediaKey.current
+      val editable =
+        live.mehiz.mpvkt.ui.player.controls.components.propertyEditable(currentColorType.property)
+      val native by MpvProperties.propString[currentColorType.property].collectAsState()
+      val actual =
+        runCatching { native?.toColorInt() }.getOrNull()
+          ?: currentColorType.preference(preferences).get()
+      var pending by remember(mediaKey, currentColorType) { mutableStateOf<Int?>(null) }
+      val currentColor = pending ?: actual
+      LaunchedEffect(actual, pending) { if (pending == actual) pending = null }
+      LaunchedEffect(pending) {
+        if (pending != null) {
+          kotlinx.coroutines.delay(1500)
+          pending = null
         }
       }
       Row(
@@ -112,10 +108,8 @@ fun SubtitleSettingsColorsCard(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.weight(1f))
         TextButton(
-          onClick = {
-            edited = true
-            currentColor = resetColors(preferences, currentColorType)
-          }
+          enabled = editable,
+          onClick = { pending = resetColors(preferences, currentColorType) },
         ) {
           Row(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
@@ -133,9 +127,9 @@ fun SubtitleSettingsColorsCard(modifier: Modifier = Modifier) {
       )
       SubtitlesColorPicker(
         currentColor,
+        enabled = editable,
         onColorChange = {
-          edited = true
-          currentColor = it
+          pending = it
           currentColorType.preference(preferences).set(it)
           PanelProperties.setString(currentColorType.property, it.toColorHexString())
         },
@@ -177,6 +171,8 @@ enum class SubColorType(
 }
 
 fun resetColors(preferences: SubtitlesPreferences, type: SubColorType): Int {
+  if (!PanelProperties.editable(type.property))
+    return getCurrentMPVColor(type, type.preference(preferences).get())
   val value = type.preference(preferences).deleteAndGet()
   PanelProperties.setString(type.property, value.toColorHexString())
   return value
@@ -190,7 +186,12 @@ internal fun getCurrentMPVColor(type: SubColorType, fallback: Int): Int =
     .getOrNull() ?: fallback
 
 @Composable
-fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun SubtitlesColorPicker(
+  color: Int,
+  onColorChange: (Int) -> Unit,
+  modifier: Modifier = Modifier,
+  enabled: Boolean = true,
+) {
   Column(modifier) {
     TintedSliderItem(
       stringResource(R.string.player_sheets_sub_color_red),
@@ -198,6 +199,7 @@ fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Mod
       color.red.toString(),
       onChange = { onColorChange(color.copyAsArgb(red = it)) },
       max = 255,
+      enabled = enabled,
       tint = Color.Red,
     )
 
@@ -207,6 +209,7 @@ fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Mod
       color.green.toString(),
       onChange = { onColorChange(color.copyAsArgb(green = it)) },
       max = 255,
+      enabled = enabled,
       tint = Color.Green,
     )
 
@@ -216,6 +219,7 @@ fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Mod
       color.blue.toString(),
       onChange = { onColorChange(color.copyAsArgb(blue = it)) },
       max = 255,
+      enabled = enabled,
       tint = Color.Blue,
     )
 
@@ -225,6 +229,7 @@ fun SubtitlesColorPicker(color: Int, onColorChange: (Int) -> Unit, modifier: Mod
       color.alpha.toString(),
       onChange = { onColorChange(color.copyAsArgb(alpha = it)) },
       max = 255,
+      enabled = enabled,
       tint = Color.White,
     )
   }

@@ -318,8 +318,6 @@ class PlayerActivity : AppCompatActivity() {
   }
 
   private fun setupAudio() {
-    audioPreferences.audioChannels.get().let { MPVLib.setPropertyString(it.property, it.value) }
-
     val request = AudioFocusRequestCompat.Builder(AudioManagerCompat.AUDIOFOCUS_GAIN).also {
       it.setAudioAttributes(
         AudioAttributesCompat.Builder().setUsage(AudioAttributesCompat.USAGE_MEDIA)

@@ -1,8 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
-import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.annotation.StringRes
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.ArrowDropDown
-import live.mehiz.mpvkt.ui.icons.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -36,34 +31,44 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
-import live.mehiz.mpvkt.ui.player.PanelProperties
 import `is`.xyz.mpv.MPVLib
+import kotlin.math.round
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.presentation.components.OutlinedNumericChooser
+import live.mehiz.mpvkt.ui.icons.ArrowDropDown
+import live.mehiz.mpvkt.ui.icons.Icons
+import live.mehiz.mpvkt.ui.icons.Refresh
+import live.mehiz.mpvkt.ui.player.MpvProperties
+import live.mehiz.mpvkt.ui.player.PanelProperties
 import live.mehiz.mpvkt.ui.player.controls.CARDS_MAX_WIDTH
+import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 import live.mehiz.mpvkt.ui.player.controls.panelCardsColors
 import live.mehiz.mpvkt.ui.theme.spacing
 import org.koin.compose.koinInject
-import kotlin.math.round
 
 @Composable
-fun SubtitleDelayPanel(
-  modifier: Modifier = Modifier,
-) {
+fun SubtitleDelayPanel(modifier: Modifier = Modifier, initialSlot: Int = 0) {
   val preferences = koinInject<SubtitlesPreferences>()
 
   PlayerScrollArea(modifier.fillMaxSize()) {
-    var affectedSubtitle by remember { mutableStateOf(SubtitleDelayType.Primary) }
+    var affectedSubtitle by
+      remember(initialSlot) {
+        mutableStateOf(
+          if (initialSlot == 1) SubtitleDelayType.Secondary else SubtitleDelayType.Primary
+        )
+      }
     val delay by MpvProperties.propDouble["sub-delay"].collectAsState()
     val delayInt by remember { derivedStateOf { ((delay ?: 0.0) * 1000).toInt() } }
     val secondaryDelay by MpvProperties.propDouble["secondary-sub-delay"].collectAsState()
-    val secondaryDelayInt by remember { derivedStateOf { ((secondaryDelay ?: 0.0) * 1000).toInt() } }
+    val secondaryDelayInt by remember {
+      derivedStateOf { ((secondaryDelay ?: 0.0) * 1000).toInt() }
+    }
     val speed by MpvProperties.propFloat["sub-speed"].collectAsState()
     SubtitleDelayCard(
-      delayMs = if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelayInt else delayInt,
+      delayMs =
+        if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelayInt else delayInt,
       onDelayChange = {
         when (affectedSubtitle) {
           SubtitleDelayType.Both -> {
@@ -80,14 +85,32 @@ fun SubtitleDelayPanel(
       affectedSubtitle = affectedSubtitle,
       onTypeChange = { affectedSubtitle = it },
       onApply = {
-        if (affectedSubtitle != SubtitleDelayType.Secondary) preferences.defaultSubDelay.set(delayInt)
-        if (affectedSubtitle != SubtitleDelayType.Primary) preferences.defaultSecondarySubDelay.set(secondaryDelayInt)
-        speed?.takeIf { it in 0.1f..10f }?.let { preferences.defaultSubSpeed.set(it) }
+        val target = affectedSubtitle
+        live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("subtitle-delay-default") {
+          if (target != SubtitleDelayType.Secondary) {
+            MPVLib.getPropertyDouble("sub-delay")
+              ?.takeIf { it.isFinite() }
+              ?.let { preferences.defaultSubDelay.set((it * 1000).toInt()) }
+            MPVLib.getPropertyFloat("sub-speed")
+              ?.takeIf { it.isFinite() && it in .1f..10f }
+              ?.let(preferences.defaultSubSpeed::set)
+          }
+          if (target != SubtitleDelayType.Primary)
+            MPVLib.getPropertyDouble("secondary-sub-delay")
+              ?.takeIf { it.isFinite() }
+              ?.let { preferences.defaultSecondarySubDelay.set((it * 1000).toInt()) }
+        }
       },
       onReset = {
-        PanelProperties.setFloat("sub-delay", preferences.defaultSubDelay.get() / 1000f)
-        PanelProperties.setFloat("secondary-sub-delay", preferences.defaultSecondarySubDelay.get() / 1000f)
-        PanelProperties.setFloat("sub-speed", preferences.defaultSubSpeed.get())
+        if (affectedSubtitle != SubtitleDelayType.Secondary) {
+          PanelProperties.setFloat("sub-delay", preferences.defaultSubDelay.get() / 1000f)
+          PanelProperties.setFloat("sub-speed", preferences.defaultSubSpeed.get())
+        }
+        if (affectedSubtitle != SubtitleDelayType.Primary)
+          PanelProperties.setFloat(
+            "secondary-sub-delay",
+            preferences.defaultSecondarySubDelay.get() / 1000f,
+          )
       },
       modifier = Modifier.fillMaxWidth().padding(12.dp),
     )
@@ -106,31 +129,38 @@ fun SubtitleDelayCard(
   onReset: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val primaryEditable = live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-delay")
+  val secondaryEditable =
+    live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("secondary-sub-delay")
+  val editable =
+    when (affectedSubtitle) {
+      SubtitleDelayType.Primary -> primaryEditable
+      SubtitleDelayType.Secondary -> secondaryEditable
+      SubtitleDelayType.Both -> primaryEditable && secondaryEditable
+    }
   DelayCard(
     delayMs = delayMs,
+    measurementKey = affectedSubtitle,
+    editable = editable,
     onDelayChange = onDelayChange,
     onApply = onApply,
     onReset = onReset,
     title = {
-      SubtitleDelayTitle(
-        affectedSubtitle = affectedSubtitle,
-        onTypeChange = onTypeChange,
-      )
+      SubtitleDelayTitle(affectedSubtitle = affectedSubtitle, onTypeChange = onTypeChange)
     },
     extraSettings = {
-      when (affectedSubtitle) {
-        SubtitleDelayType.Primary -> {
-          OutlinedNumericChooser(
-            label = { Text(stringResource(R.string.player_sheets_sub_delay_card_speed)) },
-            value = speed,
-            onChange = onSpeedChange,
-            max = 10f,
-            step = .01f,
-            min = .1f,
-          )
-        }
-
-        else -> {}
+      live.mehiz.mpvkt.ui.preferences.ExpandableSettingsContent(
+        affectedSubtitle == SubtitleDelayType.Primary
+      ) {
+        OutlinedNumericChooser(
+          label = { Text(stringResource(R.string.player_sheets_sub_delay_card_speed)) },
+          value = speed,
+          onChange = onSpeedChange,
+          max = 10f,
+          step = .01f,
+          min = .1f,
+          enabled = live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-speed"),
+        )
       }
     },
     delayType = DelayType.Subtitle,
@@ -138,9 +168,7 @@ fun SubtitleDelayCard(
   )
 }
 
-enum class SubtitleDelayType(
-  @StringRes val title: Int,
-) {
+enum class SubtitleDelayType(@StringRes val title: Int) {
   Primary(R.string.player_sheets_sub_delay_subtitle_type_primary),
   Secondary(R.string.player_sheets_sub_delay_subtitle_type_secondary),
   Both(R.string.player_sheets_sub_delay_subtitle_type_primary_and_secondary),
@@ -157,62 +185,62 @@ fun DelayCard(
   delayType: DelayType,
   modifier: Modifier = Modifier,
   extraSettings: @Composable ColumnScope.() -> Unit = {},
+  measurementKey: Any? = delayType,
+  editable: Boolean = true,
 ) {
-  Card(
-    modifier = modifier
-      .widthIn(max = CARDS_MAX_WIDTH)
-      .animateContentSize(),
-    colors = panelCardsColors(),
-  ) {
+  val mediaKey = live.mehiz.mpvkt.ui.player.controls.components.LocalPanelMediaKey.current
+  var measurement by
+    remember(measurementKey, mediaKey, editable) { mutableStateOf<DelayMeasurement?>(null) }
+  var preview by remember(measurementKey, mediaKey) { mutableIntStateOf(delayMs) }
+  LaunchedEffect(measurement) {
+    val active = measurement ?: return@LaunchedEffect
+    while (true) {
+      preview = active.valueAt(android.os.SystemClock.elapsedRealtime())
+      delay(50)
+    }
+  }
+  fun press(positive: Boolean) {
+    if (!editable) return
+    val active = measurement
+    if (active == null) {
+      measurement = DelayMeasurement(android.os.SystemClock.elapsedRealtime(), delayMs, positive)
+      preview = delayMs
+    } else {
+      val result = active.valueAt(android.os.SystemClock.elapsedRealtime())
+      measurement = null
+      onDelayChange(result)
+    }
+  }
+  Card(modifier = modifier.widthIn(max = CARDS_MAX_WIDTH), colors = panelCardsColors()) {
     Column(
-      Modifier
-        .padding(
-          horizontal = MaterialTheme.spacing.medium,
-          vertical = MaterialTheme.spacing.smaller,
-        ),
+      Modifier.padding(
+        horizontal = MaterialTheme.spacing.medium,
+        vertical = MaterialTheme.spacing.smaller,
+      ),
       verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
     ) {
       title()
       OutlinedNumericChooser(
         label = { Text(stringResource(R.string.player_sheets_sub_delay_card_delay)) },
-        value = delayMs,
+        value = if (measurement == null) delayMs else preview,
+        enabled = editable && measurement == null,
         onChange = onDelayChange,
         step = 50,
         min = Int.MIN_VALUE,
         max = Int.MAX_VALUE,
         suffix = { Text(stringResource(R.string.generic_unit_ms)) },
       )
-      Column(
-        modifier = Modifier.animateContentSize(),
-      ) { extraSettings() }
-      // true (heard -> spotted), false (spotted -> heard)
-      var isDirectionPositive by remember { mutableStateOf<Boolean?>(null) }
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-      ) {
-        var timerStart by remember { mutableStateOf<Long?>(null) }
-        var finalDelay by remember { mutableIntStateOf(delayMs) }
-        LaunchedEffect(isDirectionPositive) {
-          if (isDirectionPositive == null) {
-            onDelayChange(finalDelay)
-            return@LaunchedEffect
-          }
-          finalDelay = delayMs
-          timerStart = System.currentTimeMillis()
-          val startingDelay: Int = finalDelay
-          while (isDirectionPositive != null && timerStart != null) {
-            val elapsed = System.currentTimeMillis() - timerStart!!
-            finalDelay = startingDelay + (if (isDirectionPositive!!) elapsed else -elapsed).toInt()
-            // Arbitrary delay of 20ms
-            delay(20)
-          }
-        }
+      extraSettings()
+      if (!editable)
+        Text(
+          stringResource(R.string.panel_config_owned),
+          style = MaterialTheme.typography.bodySmall,
+        )
+      Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller)) {
         Button(
-          onClick = {
-            isDirectionPositive = if (isDirectionPositive == null) delayType == DelayType.Audio else null
-          },
+          onClick = { press(delayType == DelayType.Audio) },
           modifier = Modifier.weight(1f),
-          enabled = isDirectionPositive != (delayType == DelayType.Audio),
+          enabled = editable && measurement?.positive != (delayType == DelayType.Audio),
         ) {
           Text(
             stringResource(
@@ -220,16 +248,14 @@ fun DelayCard(
                 R.string.player_sheets_sub_delay_audio_sound_heard
               } else {
                 R.string.player_sheets_sub_delay_subtitle_voice_heard
-              },
-            ),
+              }
+            )
           )
         }
         Button(
-          onClick = {
-            isDirectionPositive = if (isDirectionPositive == null) delayType != DelayType.Audio else null
-          },
+          onClick = { press(delayType != DelayType.Audio) },
           modifier = Modifier.weight(1f),
-          enabled = isDirectionPositive != (delayType == DelayType.Subtitle),
+          enabled = editable && measurement?.positive != (delayType == DelayType.Subtitle),
         ) {
           Text(
             stringResource(
@@ -237,26 +263,21 @@ fun DelayCard(
                 R.string.player_sheets_sub_delay_sound_sound_spotted
               } else {
                 R.string.player_sheets_sub_delay_subtitle_text_seen
-              },
-            ),
+              }
+            )
           )
         }
       }
-      Row(
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-      ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller)) {
         Button(
           onClick = onApply,
           modifier = Modifier.weight(1f),
-          enabled = isDirectionPositive == null,
+          enabled = editable && measurement == null,
         ) {
           Text(stringResource(R.string.player_sheets_delay_set_as_default))
         }
-        FilledIconButton(
-          onClick = onReset,
-          enabled = isDirectionPositive == null,
-        ) {
-          Icon(Icons.Refresh, null)
+        FilledIconButton(onClick = onReset, enabled = editable && measurement == null) {
+          Icon(Icons.Refresh, stringResource(R.string.generic_reset))
         }
       }
     }
@@ -287,10 +308,7 @@ fun SubtitleDelayTitle(
         style = MaterialTheme.typography.bodyMedium,
       )
       Icon(Icons.ArrowDropDown, null)
-      DropdownMenu(
-        expanded = showDropDownMenu,
-        onDismissRequest = { showDropDownMenu = false },
-      ) {
+      DropdownMenu(expanded = showDropDownMenu, onDismissRequest = { showDropDownMenu = false }) {
         SubtitleDelayType.entries.forEach {
           DropdownMenuItem(
             text = { Text(stringResource(it.title)) },
@@ -306,5 +324,6 @@ fun SubtitleDelayTitle(
 }
 
 enum class DelayType {
-  Audio, Subtitle
+  Audio,
+  Subtitle,
 }

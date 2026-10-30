@@ -10,6 +10,7 @@ class DecoderPreferences(preferenceStore: PreferenceStore) {
   val useYUV420P = preferenceStore.getBoolean("use_yuv420p", true)
 
   val debanding = preferenceStore.getEnum("debanding", Debanding.None)
+  val debandCpuRadius = preferenceStore.getInt("deband_cpu_radius", 12)
   val debandIterations = preferenceStore.getInt("deband_iterations", 1)
   val debandThreshold = preferenceStore.getInt("deband_threshold", 48)
   val debandRange = preferenceStore.getInt("deband_range", 16)

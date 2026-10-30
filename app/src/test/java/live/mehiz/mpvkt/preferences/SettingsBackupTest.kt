@@ -79,4 +79,36 @@ class SettingsBackupTest {
       runCatching { SettingsBackup.read(ByteArray(4 * 1024 * 1024 + 1).inputStream()) }.isFailure
     )
   }
+
+  @Test
+  fun invalidDomainValuesNeverPartiallyRestore() {
+    val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+    val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+    prefs.edit().clear().putBoolean("show_video_thumbnails", true).commit()
+    val file = java.io.File(context.cacheDir, "domain-backup.xml")
+    listOf(
+        mapOf("show_video_thumbnails" to false, "default_speed_presets" to setOf("bad")),
+        mapOf("show_video_thumbnails" to false, "icon_style" to "NotAnIconStyle"),
+        mapOf("show_video_thumbnails" to false, "sub_default_speed" to 99f),
+      )
+      .forEach { values ->
+        val before = prefs.all.toMap()
+        file.outputStream().use { SettingsBackup.write(values, it) }
+        assertThrows(Exception::class.java) {
+          SettingsBackup.restore(context, android.net.Uri.fromFile(file))
+        }
+        assertEquals(before, prefs.all)
+      }
+  }
+
+  @Test
+  fun channelMigrationPreservesThePreviousNativePolicyExactlyOnce() {
+    val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<Application>()
+    val store = live.mehiz.mpvkt.preferences.preference.AndroidPreferenceStore(context)
+    val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+    prefs.edit().clear().putString("audio_channels", "Auto").commit()
+    assertEquals(AudioChannels.AutoSafe, AudioPreferences(store).audioChannels.get())
+    assertEquals(AudioChannels.AutoSafe, AudioPreferences(store).audioChannels.get())
+    assertEquals("auto-safe", AudioPreferences(store).audioChannels.get().value)
+  }
 }

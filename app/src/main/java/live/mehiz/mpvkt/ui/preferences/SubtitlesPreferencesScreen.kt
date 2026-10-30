@@ -721,25 +721,51 @@ internal fun ProviderKeyRow(
       Column {
         Text(stringResource(R.string.subtitle_key_hint), style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-          draft,
-          { draft = it.take(4096) },
-          Modifier.fillMaxWidth(),
-          singleLine = true,
-          label = { Text("API key") },
-          enabled = !saving,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-          visualTransformation =
-            if (show) VisualTransformation.None else PasswordVisualTransformation(),
-          trailingIcon = {
-            IconButton(onClick = { show = !show }) {
-              Icon(
-                if (show) Icons.LockOpen else Icons.Lock,
-                stringResource(if (show) R.string.subtitle_hide_key else R.string.subtitle_show_key),
-              )
-            }
-          },
-        )
+        if (inline) {
+          live.mehiz.mpvkt.ui.player.controls.components.PanelTextField(
+            draft,
+            { draft = it.take(4096) },
+            Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("API key") },
+            enabled = !saving,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+              if (show) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+              IconButton(onClick = { show = !show }) {
+                Icon(
+                  if (show) Icons.LockOpen else Icons.Lock,
+                  stringResource(
+                    if (show) R.string.subtitle_hide_key else R.string.subtitle_show_key
+                  ),
+                )
+              }
+            },
+          )
+        } else {
+          OutlinedTextField(
+            draft,
+            { draft = it.take(4096) },
+            Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("API key") },
+            enabled = !saving,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation =
+              if (show) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+              IconButton(onClick = { show = !show }) {
+                Icon(
+                  if (show) Icons.LockOpen else Icons.Lock,
+                  stringResource(
+                    if (show) R.string.subtitle_hide_key else R.string.subtitle_show_key
+                  ),
+                )
+              }
+            },
+          )
+        }
         TextButton(
           onClick = {
             val clipboard =

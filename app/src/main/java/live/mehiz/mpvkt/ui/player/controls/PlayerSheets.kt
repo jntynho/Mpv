@@ -3,7 +3,9 @@ package live.mehiz.mpvkt.ui.player.controls
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import dev.vivvvek.seeker.Segment
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -25,12 +27,12 @@ fun PlayerSheets(
 
   // subtitles sheet
   subtitles: ImmutableList<TrackNode>,
-  onAddSubtitle: (Uri) -> Unit,
+  onAddSubtitle: (Uri, Int, Long) -> Unit,
   onSelectSubtitle: (Int, Int) -> Unit,
   onSearchSubtitle: (Int) -> Unit,
   // audio sheet
   audioTracks: ImmutableList<TrackNode>,
-  onAddAudio: (Uri) -> Unit,
+  onAddAudio: (Uri, Long) -> Unit,
   onSelectAudio: (TrackNode?) -> Unit,
   // chapters sheet
   chapter: Segment?,
@@ -51,45 +53,66 @@ fun PlayerSheets(
   // More sheet
   sleepTimerTimeRemaining: Int,
   buttons: ImmutableList<CustomButtonEntity>,
-
   onOpenPanel: (Panels) -> Unit,
+  mediaGeneration: Long = 0L,
+  onOpenSubtitlePanel: (Panels, Int) -> Unit = { panel, _ -> onOpenPanel(panel) },
 ) {
   when (sheetShown) {
     Sheets.None -> {}
     Sheets.SubtitleTracks -> {
-      val subtitlesPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-      ) {
-        if (it == null) return@rememberLauncherForActivityResult
-        onAddSubtitle(it)
-      }
+      var owner by rememberSaveable { mutableStateOf<Long?>(null) }
+      var target by rememberSaveable { mutableIntStateOf(0) }
+      val subtitlesPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+          val generation = owner
+          owner = null
+          if (it != null && generation != null) onAddSubtitle(it, target, generation)
+        }
       SubtitlesSheet(
         tracks = subtitles.toImmutableList(),
         onSelect = onSelectSubtitle,
         onSearchOnline = onSearchSubtitle,
-        onAddSubtitle = { subtitlesPicker.launch(arrayOf("*/*")) },
-        onOpenSubtitleSettings = { onOpenPanel(Panels.SubtitleSettings) },
-        onOpenSubtitleDelay = { onOpenPanel(Panels.SubtitleDelay) },
+        onAddSubtitle = { slot ->
+          owner = mediaGeneration
+          target = slot
+          subtitlesPicker.launch(arrayOf("*/*"))
+        },
+        onOpenSubtitleSettings = { onOpenSubtitlePanel(Panels.SubtitleSettings, it) },
+        onOpenSubtitleDelay = { onOpenSubtitlePanel(Panels.SubtitleDelay, it) },
       )
     }
 
     Sheets.AudioTracks -> {
-      val audioPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-      ) {
-        if (it == null) return@rememberLauncherForActivityResult
-        onAddAudio(it)
-      }
+      var owner by rememberSaveable { mutableStateOf<Long?>(null) }
+      val audioPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+          val generation = owner
+          owner = null
+          if (it != null && generation != null) onAddAudio(it, generation)
+        }
       AudioTracksSheet(
         tracks = audioTracks,
         onSelect = onSelectAudio,
-        onAddAudioTrack = { audioPicker.launch(arrayOf("*/*")) },
+        onAddAudioTrack = {
+          owner = mediaGeneration
+          audioPicker.launch(arrayOf("audio/*", "video/*", "application/octet-stream"))
+        },
         onOpenDelayPanel = { onOpenPanel(Panels.AudioDelay) },
       )
     }
 
     Sheets.Chapters -> {
-      if (chapter == null) return
+      if (chapters.isEmpty()) {
+        androidx.compose.foundation.layout.Box(
+          androidx.compose.ui.Modifier.fillMaxSize(),
+          contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) {
+          androidx.compose.material3.Text(
+            androidx.compose.ui.res.stringResource(live.mehiz.mpvkt.R.string.panel_no_chapters)
+          )
+        }
+        return
+      }
       ChaptersSheet(
         chapters,
         currentChapter = chapter,
@@ -98,10 +121,7 @@ fun PlayerSheets(
     }
 
     Sheets.Decoders -> {
-      DecodersSheet(
-        selectedDecoder = decoder,
-        onSelect = onUpdateDecoder,
-      )
+      DecodersSheet(selectedDecoder = decoder, onSelect = onUpdateDecoder)
     }
 
     Sheets.More -> {

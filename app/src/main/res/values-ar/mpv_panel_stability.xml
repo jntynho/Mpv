@@ -1,0 +1,26 @@
+<resources>
+    <string name="panel_decrease">تقليل</string>
+    <string name="panel_increase">زيادة</string>
+    <string name="panel_invalid_number">أدخل رقمًا ضمن المجال المسموح.</string>
+    <string name="panel_no_chapters">هذا الفيديو لا يحتوي على فصول.</string>
+    <string name="panel_external_failed">تعذرت إضافة الملف. تحقق من تنسيقه وتوفره وصلاحية قراءته، ثم أعد المحاولة.</string>
+    <string name="panel_config_owned">بعض الخيارات محددة بواسطة mpv.conf، لذا لا يمكن تعديلها من هنا.</string>
+    <string name="panel_cpu_radius">نطاق فلتر المعالج</string>
+    <string name="panel_hours">ساعات</string>
+    <string name="panel_minutes">دقائق</string>
+    <string name="panel_seconds">ثوانٍ</string>
+    <string name="panel_stop_timer">إيقاف المؤقّت</string>
+    <string name="panel_bold">نص عريض</string>
+    <string name="panel_italic">نص مائل</string>
+    <string name="panel_alignment">محاذاة النص: %1$s</string>
+    <string name="panel_sources_failed">تعذر تحميل المصادر. تحقق من الاتصال وأعد المحاولة.</string>
+    <string name="panel_retry">إعادة المحاولة</string>
+    <string name="panel_add_speed">إضافة سرعة مفضّلة</string>
+    <string name="panel_remove_speed">حذف السرعة المفضّلة</string>
+    <string name="panel_write_failed">تعذر على المشغل تطبيق أحد التعديلات. راجع الخيار وأعد المحاولة.</string>
+    <string name="panel_align_left">يسار</string>
+    <string name="panel_align_center">وسط</string>
+    <string name="panel_align_right">يمين</string>
+    <string name="panel_align_auto">تلقائي</string>
+    <string name="panel_file_context_changed">تغيّر الفيديو أثناء اختيار الملف. أعد اختياره لإضافته إلى الفيديو الحالي.</string>
+</resources>

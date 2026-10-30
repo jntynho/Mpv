@@ -6,18 +6,24 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
@@ -38,22 +44,33 @@ internal fun PlayerPane(
   onDismiss: () -> Unit,
   onBack: () -> Unit,
   onCloseStart: () -> Unit = {},
+  mediaKey: Long = 0L,
   content: @Composable (PlayerPanelRoute) -> Unit,
 ) {
   val page = pages.lastOrNull() ?: return
-  val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
+  val prefs = koinInject<PlayerPreferences>()
+  val reduceMotion by prefs.reduceMotion.collectAsState()
+  val opacity by prefs.panelTransparency.collectAsState()
+  val directionSign = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
   val focus = androidx.compose.ui.platform.LocalFocusManager.current
   LaunchedEffect(page.key) { focus.clearFocus() }
-  val savedPages = rememberSaveableStateHolder()
+  val savedPages = key(mediaKey) { rememberSaveableStateHolder() }
   PlayerSheet(
     onDismissRequest = onDismiss,
     onNavigateBack = onBack.takeIf { pages.size > 1 },
     reduceMotion = reduceMotion,
     onCloseStart = onCloseStart,
+    containerColor =
+      androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(
+        alpha = opacity.coerceIn(0f, 1f)
+      ),
   ) { close, headerDrag ->
     CompositionLocalProvider(
+      live.mehiz.mpvkt.ui.player.controls.components.LocalPanelMediaKey provides mediaKey,
+      live.mehiz.mpvkt.ui.player.controls.components.LocalPanelOpacity provides
+        opacity.coerceIn(0f, 1f),
       LocalOverscrollFactory provides
-        if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
+        if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
     ) {
       Column(Modifier.fillMaxSize()) {
         PlayerPanelHeader(
@@ -64,12 +81,21 @@ internal fun PlayerPane(
           animateTitle = !reduceMotion,
           modifier = headerDrag,
         )
+        val rejected by
+          live.mehiz.mpvkt.ui.player.PanelProperties.rejectedProperties.collectAsState()
+        if (rejected.isNotEmpty())
+          androidx.compose.material3.Text(
+            stringResource(R.string.panel_write_failed),
+            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+          )
         AnimatedContent(
           targetState = pages,
           contentKey = { it.last().key },
           modifier = Modifier.weight(1f).fillMaxSize().clipToBounds(),
           transitionSpec = {
-            val direction = if (targetState.size < initialState.size) -1 else 1
+            val direction = (if (targetState.size < initialState.size) -1 else 1) * directionSign
             val duration = if (reduceMotion) 0 else 240
             val enter =
               fadeIn(tween(duration)) +
@@ -88,21 +114,23 @@ internal fun PlayerPane(
           label = "player_pane_page",
         ) { history ->
           val destination = history.last()
-          savedPages.SaveableStateProvider(destination.key) {
-            val inactive = destination.key != page.key
-            androidx.compose.foundation.layout.Box(
-              Modifier.fillMaxSize()
-                .then(if (inactive) Modifier.clearAndSetSemantics {} else Modifier)
-                .pointerInput(inactive) {
-                  if (inactive)
-                    awaitPointerEventScope {
-                      while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach {
-                        it.consume()
+          key(mediaKey) {
+            savedPages.SaveableStateProvider(destination.key) {
+              val inactive = destination.key != page.key
+              androidx.compose.foundation.layout.Box(
+                Modifier.fillMaxSize()
+                  .then(if (inactive) Modifier.clearAndSetSemantics {} else Modifier)
+                  .pointerInput(inactive) {
+                    if (inactive)
+                      awaitPointerEventScope {
+                        while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach {
+                          it.consume()
+                        }
                       }
-                    }
-                }
-            ) {
-              content(destination)
+                  }
+              ) {
+                content(destination)
+              }
             }
           }
         }
