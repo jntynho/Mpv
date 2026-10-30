@@ -148,6 +148,7 @@ class ModernPanelsAndLibraryTest {
       }
     }
     compose.onNodeWithContentDescription("Playback actions").performClick()
+    compose.onNodeWithText("Instagram").assertDoesNotExist()
     compose.onNodeWithText("Open File").assertIsDisplayed()
     compose.onNodeWithText("Recently Played").assertIsDisplayed()
     capture("quick-actions")

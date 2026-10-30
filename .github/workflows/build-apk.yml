@@ -134,6 +134,8 @@ jobs:
 
           These APKs use automatic test signing, not a permanent production signing identity.
           Updates across builds may require uninstalling the previous version.
+          Before uninstalling, export private files from the installed Secure Folder and verify the copies.
+          Uninstalling removes private media and device-bound encryption keys. Settings XML does not include private media.
           No user-configured Secrets are required; publication uses GitHub's automatic workflow token.
           NOTES
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then

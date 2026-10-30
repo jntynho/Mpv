@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="secure_manage">إعدادات المجلد الآمن</string>
+  <string name="secure_recover">استرداد رمز الدخول</string>
+  <string name="secure_recovery_hint">أجب عن سؤال الاسترداد واختر رمز دخول جديدًا.</string>
+  <string name="secure_gate_hint">مساحة خاصة بملفاتك، تفتحها بطريقتك.</string>
+  <string name="secure_pin">رمز الدخول</string>
+  <string name="secure_new_pin">رمز دخول جديد</string>
+  <string name="secure_reset_pin">إعادة تعيين الرمز</string>
+  <string name="secure_question">سؤال الاسترداد</string>
+  <string name="secure_answer">إجابتك</string>
+  <string name="secure_forgot">نسيت الرمز؟</string>
+  <string name="secure_digits">%1$d أرقام</string>
+  <string name="secure_reveal_pin">إظهار الرمز أو إخفاؤه</string>
+  <string name="secure_change_pin">تغيير رمز الدخول</string>
+  <string name="secure_device_unlock">البصمة أو قفل الجهاز</string>
+  <string name="secure_device_unavailable">أُلغي التحقق أو لم يكن قفل الجهاز متاحًا. يمكنك استخدام رمز الدخول.</string>
+  <string name="secure_legacy_recovery">افتح المجلد بالرمز الحالي، ثم أضف سؤال استرداد من إعدادات المجلد الآمن.</string>
+  <string name="secure_hide">إخفاء المدخل من الإعدادات</string>
+  <string name="secure_hide_hint">اضغط مطولًا أو مرتين على العنوان في الرئيسية لفتح المجلد الآمن.</string>
+  <string name="secure_move_files">نقل ملفات إلى المجلد</string>
+  <string name="secure_move_confirm">تُشفّر الملفات وتُحفظ أولًا، ثم يُحذف الأصل عندما يسمح Android بذلك. إذا رُفض الحذف، تبقى النسخة المشفرة والملف الأصلي.</string>
+  <string name="secure_moved">نُقلت الملفات إلى المجلد الآمن.</string>
+  <string name="secure_partial_move">حُفظت النسخ المشفرة. لم يسمح Android بحذف بعض الملفات الأصلية.</string>
+  <string name="secure_restore">استعادة</string>
+  <string name="secure_restored">استُعيدت الملفات وتم التحقق منها.</string>
+  <string name="secure_delete">حذف نهائي</string>
+  <string name="secure_delete_confirm">هل تريد حذف %1$d من الملفات الخاصة المحددة نهائيًا؟</string>
+  <string name="secure_select_all">تحديد الكل</string>
+  <string name="secure_original_retained">الملف الأصلي باقٍ</string>
+  <string name="secure_empty">انقل الفيديوهات إلى هنا لإبقائها خاصة.</string>
+  <string name="secure_storage_hint">تبقى الملفات مشفرة. عند الاستعادة، يُتحقق من النسخة المستعادة قبل حذف النسخة المشفرة. تظل الملفات والرموز السابقة قابلة للاستخدام.</string>
+  <string name="secure_operation_failed">تعذر إكمال العملية. تحقق من الرمز أو الإجابة أو صلاحية الملفات. تبقى الملفات المشفرة السابقة محفوظة.</string>
+</resources>

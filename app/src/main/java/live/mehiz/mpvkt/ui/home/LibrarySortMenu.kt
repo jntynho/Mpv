@@ -23,7 +23,6 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.StableBottomSheet
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
-import live.mehiz.mpvkt.ui.preferences.ExpandableSettingsContent
 
 internal data class LibraryDisplayOptions(
   val fields: Set<String> = setOf("Path", "Thumbnails", "Extension", "Duration"),
@@ -59,7 +58,7 @@ internal fun LibrarySortButton(
       onDismissRequest = { expanded = false },
       dismissRequested = closing,
       reduceMotion = reduceMotion,
-      fixedHeight = true,
+      compact = true,
       title = stringResource(R.string.mpv_sort),
     ) {
       CompositionLocalProvider(
@@ -146,6 +145,7 @@ internal fun LibrarySortMenuContent(
           stringResource(labels.first),
           sort.ascending,
           duration,
+          Icons.ArrowDropUp,
           modifier = Modifier.weight(1f),
         ) {
           onSelect(sort.copy(ascending = true))
@@ -154,6 +154,7 @@ internal fun LibrarySortMenuContent(
           stringResource(labels.second),
           !sort.ascending,
           duration,
+          Icons.ArrowDropDown,
           modifier = Modifier.weight(1f),
         ) {
           onSelect(sort.copy(ascending = false))
@@ -180,6 +181,12 @@ internal fun LibrarySortMenuContent(
             ),
             viewMode == mode,
             duration,
+            icon =
+              when (mode) {
+                LibraryViewMode.Folder -> Icons.Folder
+                LibraryViewMode.Tree -> Icons.Layers
+                LibraryViewMode.Videos -> Icons.Movie
+              },
             modifier = Modifier.weight(1f),
           ) {
             onViewMode(mode)
@@ -209,7 +216,7 @@ internal fun LibrarySortMenuContent(
           onDisplay(display.copy(grid = true))
         }
       }
-      ExpandableSettingsContent(display.grid) {
+      if (display.grid) {
         FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
           val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
           val limit = ((width - 40) / 144).coerceIn(1, 5)
@@ -225,6 +232,8 @@ internal fun LibrarySortMenuContent(
         }
       }
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Tune, null, Modifier.size(20.dp))
+        Spacer(Modifier.width(10.dp))
         Text(
           stringResource(R.string.mpv_fields),
           Modifier.weight(1f),
@@ -237,7 +246,7 @@ internal fun LibrarySortMenuContent(
           )
         }
       }
-      ExpandableSettingsContent(fieldsExpanded) {
+      if (fieldsExpanded) {
         FadingHorizontalRow(Modifier.fillMaxWidth()) {
           LibraryField.entries
             .filter {
@@ -257,6 +266,7 @@ internal fun LibrarySortMenuContent(
                   )
                 },
                 label = { Text(stringResource(field.titleRes)) },
+                leadingIcon = { Icon(field.icon(), null, Modifier.size(18.dp)) },
                 shape = RoundedCornerShape(18.dp),
               )
             }
@@ -304,7 +314,13 @@ private fun SortChip(
       Icon(icon, null, Modifier.size(20.dp), tint = fg)
       Spacer(Modifier.width(8.dp))
     }
-    Text(title, color = fg, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+    Text(
+      title,
+      color = fg,
+      style = MaterialTheme.typography.labelLarge,
+      maxLines = 1,
+      overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+    )
   }
 }
 
@@ -335,4 +351,24 @@ internal fun LibrarySort.orderLabels() =
     LibrarySortKey.Size -> R.string.mpv_order_smallest to R.string.mpv_order_largest
     LibrarySortKey.Count -> R.string.mpv_order_fewest to R.string.mpv_order_most
     LibrarySortKey.Duration -> R.string.mpv_order_shortest to R.string.mpv_order_longest
+  }
+
+@Composable
+private fun LibraryField.icon() =
+  when (this) {
+    LibraryField.FullName,
+    LibraryField.Extension -> Icons.FormatSize
+    LibraryField.Path -> Icons.FolderOpen
+    LibraryField.Count -> Icons.Movie
+    LibraryField.TotalDuration,
+    LibraryField.Duration -> Icons.Schedule
+    LibraryField.Size -> Icons.Data
+    LibraryField.Date -> Icons.Calendar
+    LibraryField.Thumbnails -> Icons.Image
+    LibraryField.Resolution -> Icons.Resolution
+    LibraryField.Framerate -> Icons.Speed
+    LibraryField.Subtitles -> Icons.Subtitles
+    LibraryField.Codec -> Icons.Memory
+    LibraryField.Progress -> Icons.History
+    LibraryField.CenterTitles -> Icons.FormatAlignCenter
   }

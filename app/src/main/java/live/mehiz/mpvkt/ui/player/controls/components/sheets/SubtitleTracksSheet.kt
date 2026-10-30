@@ -49,7 +49,7 @@ fun SubtitlesSheet(
       verticalAlignment = Alignment.CenterVertically,
     ) {
       IconButton(onClick = onOpenSubtitleSettings) {
-        Icon(Icons.Palette, stringResource(R.string.player_sheets_subtitles_settings_title))
+        Icon(Icons.Tune, stringResource(R.string.player_sheets_subtitles_settings_title))
       }
       IconButton(onClick = onOpenSubtitleDelay) {
         Icon(Icons.MoreTime, stringResource(R.string.player_sheets_sub_delay_card_title))

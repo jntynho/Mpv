@@ -123,11 +123,12 @@ class PlayerViewModel(
   internal val panelNavigator = PlayerPanelNavigator()
   internal val subtitleSearch by lazy { SubtitleSearchController(viewModelScope,subtitleService,subtitlesPreferences::searchOptions) }
   private val subtitleVideoGeneration = AtomicLong()
+  internal val seekMediaGeneration=MutableStateFlow(0L)
   private val subtitleNavigationGeneration = AtomicLong()
   private var subtitleOwnerPath: String? = null
   private var subtitleOwnerGeneration = -1L
   internal fun subtitleMediaStarted() {
-    subtitleVideoGeneration.incrementAndGet()
+    seekMediaGeneration.value=subtitleVideoGeneration.incrementAndGet()
     subtitleSearch.stop()
     if(panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true) panelNavigator.openSheet(Sheets.SubtitleTracks)
   }
@@ -289,9 +290,13 @@ class PlayerViewModel(
     PlaybackControl.enqueue { MPVLib.command("seek", offset.toString(), if (precise) "relative+exact" else "relative") }
   }
 
-  fun seekTo(position: Int, precise: Boolean = true) {
+  fun seekTo(position: Int, precise: Boolean = true, mediaGeneration: Long? = null) {
     if (position < 0 || (duration != null && position > duration!!)) return
-    PlaybackControl.enqueue("seek") { MPVLib.command("seek", position.toString(), if (precise) "absolute" else "absolute+keyframes") }
+    if (mediaGeneration != null && mediaGeneration != subtitleVideoGeneration.get()) return
+    PlaybackControl.enqueue("seek") {
+      if(mediaGeneration != null && mediaGeneration != subtitleVideoGeneration.get()) return@enqueue
+      MPVLib.command("seek", position.toString(), if (precise) "absolute+exact" else "absolute+keyframes")
+    }
   }
 
   fun changeBrightnessBy(change: Float) {

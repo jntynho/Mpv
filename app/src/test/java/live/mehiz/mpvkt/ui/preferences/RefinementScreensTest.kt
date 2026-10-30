@@ -87,7 +87,7 @@ class RefinementScreensTest {
     compose.onNodeWithText("Import Settings").assertIsDisplayed()
     capture("backup")
     compose.runOnIdle { page = SecureFolderScreen }
-    compose.onNodeWithText("6-digit PIN").assertExists()
+    compose.onNodeWithText("PIN").assertExists()
     compose.runOnIdle {
       assertTrue(
         compose.activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0

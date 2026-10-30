@@ -306,6 +306,3 @@ val IconScope.Audio: ImageVector
 
 val IconScope.Save: ImageVector
   @Composable get() = appIcon(IconKey.Save, mirrored)
-
-val IconScope.Instagram: ImageVector
-  @Composable get() = appIcon(IconKey.Instagram, mirrored)

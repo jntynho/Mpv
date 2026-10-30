@@ -1,8 +1,9 @@
 package live.mehiz.mpvkt.ui.player.controls.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
@@ -23,7 +26,7 @@ import kotlin.math.*
 import kotlinx.coroutines.isActive
 import live.mehiz.mpvkt.R
 
-/** Seeker owns input, accessibility and seek commits; the canvas only owns the visual skin. */
+/** One input owner handles touch cancellation, keys and accessibility; the canvas only draws. */
 @Composable
 internal fun StyledSeeker(
   position: Float,
@@ -37,6 +40,8 @@ internal fun StyledSeeker(
   paused: Boolean = true,
   reduceMotion: Boolean = false,
   interactive: Boolean = true,
+  onCancel: () -> Unit = {},
+  inputKey: Any? = null,
 ) {
   val safeDuration = duration.takeIf { it.isFinite() && it > 0f } ?: .001f
   val safePosition = position.takeIf(Float::isFinite)?.coerceIn(0f, safeDuration) ?: 0f
@@ -49,8 +54,10 @@ internal fun StyledSeeker(
           .sortedBy { it.start }
       if (valid.isNotEmpty() && valid.first().start > 0f) listOf(Segment("", 0f)) + valid else valid
     }
-  val interactions = remember { MutableInteractionSource() }
-  val dragging by interactions.collectIsDraggedAsState()
+  var dragging by remember { mutableStateOf(false) }
+  val change by rememberUpdatedState(onChange)
+  val finish by rememberUpdatedState(onFinish)
+  val cancel by rememberUpdatedState(onCancel)
   var phase by remember { mutableFloatStateOf(0f) }
   val moving = !paused && !reduceMotion && !dragging && style == SeekbarStyle.Wavy
   LaunchedEffect(moving) {
@@ -198,17 +205,73 @@ internal fun StyledSeeker(
         }
       }
     }
-    Seeker(
-      value = safePosition,
-      range = 0f..safeDuration,
-      onValueChange = onChange,
-      onValueChangeFinished = onFinish,
-      readAheadValue = (readAhead.takeIf(Float::isFinite) ?: 0f).coerceIn(0f, safeDuration),
-      enabled = interactive && duration.isFinite() && duration > 0f,
-      segments = segments,
-      interactionSource = interactions,
-      modifier = Modifier.fillMaxSize().alpha(0f).clearAndSetSemantics {},
-      dimensions = SeekerDefaults.seekerDimensions(thumbRadius = 8.dp),
-    )
+    if (interactive && duration.isFinite() && duration > 0f)
+      Box(
+        Modifier.fillMaxSize()
+          .focusable()
+          .onKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown) false
+            else {
+              val delta =
+                when (event.key) {
+                  Key.DirectionLeft -> if (rtl) 1 else -1
+                  Key.DirectionRight -> if (rtl) -1 else 1
+                  else -> 0
+                }
+              if (delta == 0) false
+              else {
+                change(
+                  (safePosition + delta * (duration / 100f).coerceAtLeast(1f)).coerceIn(
+                    0f,
+                    duration,
+                  )
+                )
+                finish()
+                true
+              }
+            }
+          }
+          .pointerInput(duration, rtl, inputKey) {
+            val inset = 8.dp.toPx()
+            val slop = viewConfiguration.touchSlop
+            fun value(x: Float): Float {
+              val fraction =
+                ((x - inset) / (size.width - 2 * inset).coerceAtLeast(1f)).coerceIn(0f, 1f)
+              return (if (rtl) 1f - fraction else fraction) * duration
+            }
+            awaitEachGesture {
+              val down = awaitFirstDown()
+              down.consume()
+              var completed = false
+              var horizontal = false
+              dragging = true
+              try {
+                change(value(down.position.x))
+                while (true) {
+                  val event = awaitPointerEvent()
+                  val pointer = event.changes.firstOrNull { it.id == down.id } ?: break
+                  if (pointer.isConsumed) break
+                  val delta = pointer.position - down.position
+                  if (!horizontal) {
+                    if (abs(delta.y) > slop && abs(delta.y) > abs(delta.x)) break
+                    if (abs(delta.x) > slop) horizontal = true
+                  }
+                  if (!pointer.pressed) {
+                    change(value(pointer.position.x))
+                    pointer.consume()
+                    completed = true
+                    finish()
+                    break
+                  }
+                  pointer.consume()
+                  change(value(pointer.position.x))
+                }
+              } finally {
+                dragging = false
+                if (!completed) cancel()
+              }
+            }
+          }
+      )
   }
 }

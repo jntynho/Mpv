@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="secure_manage">Secure Folder settings</string>
+  <string name="secure_recover">Recover your PIN</string>
+  <string name="secure_recovery_hint">Answer your security question and choose a new PIN.</string>
+  <string name="secure_gate_hint">A private space, unlocked your way.</string>
+  <string name="secure_pin">PIN</string>
+  <string name="secure_new_pin">New PIN</string>
+  <string name="secure_reset_pin">Reset PIN</string>
+  <string name="secure_question">Security question</string>
+  <string name="secure_answer">Your answer</string>
+  <string name="secure_forgot">Forgot PIN?</string>
+  <string name="secure_digits">%1$d digits</string>
+  <string name="secure_reveal_pin">Show or hide PIN</string>
+  <string name="secure_change_pin">Change PIN</string>
+  <string name="secure_device_unlock">Biometrics or device lock</string>
+  <string name="secure_device_unavailable">Device authentication was cancelled or unavailable. You can use your PIN.</string>
+  <string name="secure_legacy_recovery">Unlock with your current PIN, then add a security question in Secure Folder settings.</string>
+  <string name="secure_hide">Hide settings entry</string>
+  <string name="secure_hide_hint">Long press or double tap the title on Home to open Secure Folder.</string>
+  <string name="secure_move_files">Move files in</string>
+  <string name="secure_move_confirm">Files are encrypted and saved first, then the app removes the originals where Android permits. If removal is denied, the encrypted copy is kept and the original remains.</string>
+  <string name="secure_moved">Files moved to Secure Folder.</string>
+  <string name="secure_partial_move">Encrypted copies saved. Android did not allow removing some originals.</string>
+  <string name="secure_restore">Restore</string>
+  <string name="secure_restored">Files restored and verified.</string>
+  <string name="secure_delete">Delete forever</string>
+  <string name="secure_delete_confirm">Permanently delete %1$d selected private files?</string>
+  <string name="secure_select_all">Select all</string>
+  <string name="secure_original_retained">Original retained</string>
+  <string name="secure_empty">Move videos here to keep them private.</string>
+  <string name="secure_storage_hint">Files stay encrypted. Restore verifies the public copy before removing its encrypted copy. Existing files and PINs remain compatible.</string>
+  <string name="secure_operation_failed">Could not complete the operation. Check your PIN, answer or file access. Existing encrypted files are preserved.</string>
+</resources>

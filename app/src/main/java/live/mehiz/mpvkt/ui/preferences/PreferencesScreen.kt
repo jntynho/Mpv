@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,13 @@ object PreferencesScreen : Screen {
   @OptIn(ExperimentalMaterial3Api::class)
   @Composable
   override fun Content() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val hiddenFlow =
+      remember(context) { live.mehiz.mpvkt.ui.secure.SecureFolderOptions.observeHidden(context) }
+    val secureHidden by
+      hiddenFlow.collectAsState(
+        initial = live.mehiz.mpvkt.ui.secure.SecureFolderOptions.hidden(context)
+      )
     val backstack = LocalBackStack.current
     val cardColor = MaterialTheme.colorScheme.surfaceContainer
     Scaffold(
@@ -98,14 +106,16 @@ object PreferencesScreen : Screen {
             icon = { Icon(Icons.Monitor, null) },
             onClick = { backstack.add(LandscapeControlsScreen) },
           )
-          preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
-            key = "secure",
-            title = { Text(stringResource(R.string.update_secure)) },
-            summary = { Text(stringResource(R.string.update_secure_summary)) },
-            icon = { Icon(Icons.Lock, null) },
-            onClick = { backstack.add(live.mehiz.mpvkt.ui.secure.SecureFolderScreen) },
-          )
+          if (!secureHidden) {
+            preference(
+              modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+              key = "secure",
+              title = { Text(stringResource(R.string.update_secure)) },
+              summary = { Text(stringResource(R.string.update_secure_summary)) },
+              icon = { Icon(Icons.Lock, null) },
+              onClick = { backstack.add(live.mehiz.mpvkt.ui.secure.SecureFolderScreen) },
+            )
+          }
           preference(
             modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
             key = "gesture",
