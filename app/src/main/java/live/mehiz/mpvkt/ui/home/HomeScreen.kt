@@ -278,7 +278,7 @@ object HomeScreen : Screen {
               val listState = rememberLazyGridState()
               LaunchedEffect(display.grid, display.columns) { listState.requestScrollToItem(0) }
               ResetScrollOnLibrarySort(listState, listing.sort)
-              BoxWithConstraints(Modifier.fillMaxSize()) {
+              Box(Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
                   columns =
                     if (!display.grid) GridCells.Fixed(1)

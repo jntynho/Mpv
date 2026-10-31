@@ -1,6 +1,6 @@
-# Icon, library fields and player input refinement
+# Icon, library fields and player input refinement — v0.23.0
 
-Source update following v0.22.0. The user requested pushing the changes **without building the application**. No Gradle task, APK build, tag or Release is started for this update. Its commit contains `[skip ci]`.
+The initial source update following v0.22.0 was pushed without a build, as requested, using `[skip ci]`. The user subsequently authorized building and publishing v0.23.0.
 
 ## Changes
 
@@ -24,4 +24,4 @@ The local subtitle browser does not launch a system document picker. Browsing sh
 
 Kotlin syntax/parser checks, XML/resource reference checks, icon catalogue/folder-artwork checks, and static source invariants are run without Gradle. Source regressions for direct recent playback, progress bounds/units and subtitle extension filtering are included for the next authorized Android test run.
 
-The Android application and these updated tests have **not been compiled or executed** for this source update. Physical launcher masks/themed icons, large fonts/RTL/IME, special file permission flows on multiple Android releases, SD cards, external subtitle import and real playback still require validation when building is authorized. This source review cannot guarantee stability on every device.
+The authorized v0.23.0 build passes application/resource compilation, all **201 host tests** (including Robolectric/Compose), and `lintDebug` with zero errors and 713 warnings. All three minified APKs pass signatures, 16 KB alignment, ABI sets and exact native-pause-binary checks. The build also updates an obsolete 48dp test expectation to the requested 56dp and removes an unused measurement container. Physical launcher masks/themed icons, large fonts/RTL/IME, special file permission flows on multiple Android releases, SD cards, external subtitle import and real playback still require validation when building is authorized. This source review cannot guarantee stability on every device.
