@@ -696,7 +696,6 @@ fun PlayerControls(
         PlayerSheets(
           sheetShown = page.sheet,
           subtitles = subtitles,
-          onAddSubtitle = { uri, slot, owner -> viewModel.addSubtitle(uri, slot, owner) },
           mediaGeneration = seekMediaGeneration,
           onOpenSubtitlePanel = viewModel.panelNavigator::openSubtitlePanel,
           onSelectSubtitle = viewModel::selectSub,
@@ -748,6 +747,11 @@ fun PlayerControls(
           buttons = customButtons.getButtons().toImmutableList(),
           onOpenPanel = onOpenPanel,
         )
+      else if (page.panel == Panels.SubtitleLocalFiles)
+        live.mehiz.mpvkt.ui.player.controls.components.panels.SubtitleLocalFilesPanel { uri ->
+          viewModel.addSubtitle(uri, page.subtitleSlot ?: 0, seekMediaGeneration)
+          viewModel.panelNavigator.back()
+        }
       else if (page.panel == Panels.SubtitleSearch)
         SubtitleSearchPanel(
           searchController,

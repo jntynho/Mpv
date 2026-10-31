@@ -2,6 +2,7 @@ package live.mehiz.mpvkt.presentation.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.*
@@ -48,6 +49,11 @@ fun SlimPlayerSlider(
       pending = null
     }
   }
+  val usable = enabled && max > min
+  LaunchedEffect(min, max, enabled) {
+    pending = null
+    editing = false
+  }
   val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
   Slider(
     value =
@@ -59,7 +65,7 @@ fun SlimPlayerSlider(
         onValueChange(it)
       },
     modifier = modifier.heightIn(min = 48.dp),
-    enabled = enabled && max > min,
+    enabled = usable,
     valueRange = range,
     steps = steps.coerceAtLeast(0),
     colors = colors,
@@ -71,20 +77,24 @@ fun SlimPlayerSlider(
     thumb = {
       Box(
         Modifier.size(14.dp)
-          .background(if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape)
+          .background(if (usable) colors.thumbColor else colors.disabledThumbColor, CircleShape)
+          .border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = .45f), CircleShape)
       )
     },
     track = { state ->
       Canvas(Modifier.fillMaxWidth().height(4.dp)) {
-        val fraction = if (max > min) ((state.value - min) / (max - min)).coerceIn(0f, 1f) else 0f
+        val fraction =
+          if (max > min)
+            ((state.value.toDouble() - min) / (max.toDouble() - min)).toFloat().coerceIn(0f, 1f)
+          else 0f
         val width = size.width * fraction
         drawRoundRect(
-          if (enabled) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
+          if (usable) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
           size = size,
           cornerRadius = CornerRadius(size.height),
         )
         drawRoundRect(
-          if (enabled) colors.activeTrackColor else colors.disabledActiveTrackColor,
+          if (usable) colors.activeTrackColor else colors.disabledActiveTrackColor,
           topLeft = Offset(if (rtl) size.width - width else 0f, 0f),
           size = Size(width, size.height),
           cornerRadius = CornerRadius(size.height),

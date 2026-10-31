@@ -33,7 +33,6 @@ import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.AppDialog as AlertDialog
 import live.mehiz.mpvkt.presentation.components.DialogButton as TextButton
-import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold
@@ -575,7 +574,11 @@ internal fun SubtitleSettingsPage(
       text = {
         Column {
           Text(stringResource(R.string.subtitle_preferred_hint))
-          OutlinedTextField(text, { text = it.take(500) }, singleLine = true)
+          live.mehiz.mpvkt.presentation.components.AppTextField(
+            text,
+            { text = it.take(500) },
+            singleLine = true,
+          )
         }
       },
       confirmButton = {
@@ -744,7 +747,7 @@ internal fun ProviderKeyRow(
             },
           )
         } else {
-          OutlinedTextField(
+          live.mehiz.mpvkt.presentation.components.AppTextField(
             draft,
             { draft = it.take(4096) },
             Modifier.fillMaxWidth(),

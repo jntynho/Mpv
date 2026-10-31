@@ -9,7 +9,6 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -26,7 +25,6 @@ import androidx.compose.ui.window.PopupProperties
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.*
 import live.mehiz.mpvkt.ui.icons.*
-import live.mehiz.mpvkt.ui.player.controls.components.PlayerLazyScrollArea
 
 private enum class QuickAction {
   File,
@@ -46,7 +44,6 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
   val visibility = remember { MutableTransitionState(false) }
   visibility.targetState = expanded
   var pending by remember { mutableStateOf<QuickAction?>(null) }
-  var recent by rememberSaveable { mutableStateOf(false) }
   var link by rememberSaveable { mutableStateOf(false) }
   var url by rememberSaveable { mutableStateOf("") }
   var invalid by remember { mutableStateOf(false) }
@@ -66,7 +63,20 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
     if (!visibility.currentState && !visibility.targetState) {
       when (pending) {
         QuickAction.File -> picker.launch(arrayOf("*/*"))
-        QuickAction.Recent -> recent = true
+        QuickAction.Recent -> {
+          val entry =
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+              RecentMedia.latest(context)
+            }
+          if (entry != null) HomeScreen.playFile(entry.uri, context)
+          else
+            android.widget.Toast.makeText(
+                context,
+                R.string.mpv_recent_empty,
+                android.widget.Toast.LENGTH_SHORT,
+              )
+              .show()
+        }
         QuickAction.Link -> {
           invalid = false
           link = true
@@ -209,52 +219,4 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
         )
       },
     )
-  if (recent) {
-    val flow = remember(context) { RecentMedia.observe(context) }
-    val entries by flow.collectAsState(initial = emptyList())
-    StableBottomSheet(
-      onDismissRequest = { recent = false },
-      reduceMotion = reduceMotion,
-      title = stringResource(R.string.mpv_recently_played),
-    ) {
-      Text(
-        stringResource(R.string.mpv_recently_played),
-        Modifier.padding(20.dp),
-        style = MaterialTheme.typography.titleLarge,
-      )
-      PlayerLazyScrollArea(Modifier.fillMaxWidth().heightIn(max = 480.dp)) {
-        if (entries.isEmpty())
-          item { Text(stringResource(R.string.mpv_recent_empty), Modifier.padding(24.dp)) }
-        items(entries, key = { it.uri }) { entry ->
-          Row(
-            Modifier.fillMaxWidth()
-              .clickable {
-                recent = false
-                HomeScreen.playFile(entry.uri, context)
-              }
-              .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-          ) {
-            Icon(Icons.History, null)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-              Text(
-                entry.title,
-                maxLines = 2,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-              )
-              Text(
-                entry.uri,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-              )
-            }
-            Icon(Icons.Play, null, Modifier.size(20.dp))
-          }
-        }
-      }
-    }
-  }
 }

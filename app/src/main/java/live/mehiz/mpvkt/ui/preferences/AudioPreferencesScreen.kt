@@ -22,7 +22,6 @@ import live.mehiz.mpvkt.preferences.AudioChannels
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
-import live.mehiz.mpvkt.presentation.components.RoundedTextField as TextField
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.Audiotrack
@@ -74,7 +73,11 @@ object AudioPreferencesScreen : Screen {
                 textField = { value, onValueChange, _ ->
                   Column {
                     Text(stringResource(R.string.pref_audio_preferred_language))
-                    TextField(value, onValueChange, modifier = Modifier.fillMaxWidth())
+                    live.mehiz.mpvkt.presentation.components.AppTextField(
+                      value,
+                      onValueChange,
+                      modifier = Modifier.fillMaxWidth(),
+                    )
                   }
                 },
                 icon = { Icon(optionIcon(R.string.pref_preferred_languages), null) },

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
-import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.presentation.components.StableBottomSheet
 import live.mehiz.mpvkt.ui.icons.*
 import org.koin.compose.koinInject
@@ -168,7 +167,7 @@ internal fun SubtitleChoiceSheet(choice: SubtitleChoice, dismiss: () -> Unit) {
       style = MaterialTheme.typography.titleLarge,
     )
     if (choice.values.size > 8)
-      OutlinedTextField(
+      live.mehiz.mpvkt.presentation.components.AppTextField(
         query,
         { query = it },
         Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),

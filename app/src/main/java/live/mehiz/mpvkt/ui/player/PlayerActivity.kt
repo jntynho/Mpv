@@ -659,10 +659,14 @@ class PlayerActivity : AppCompatActivity() {
       aid = player.aid,
       audioDelay = ((MPVLib.getPropertyDouble("audio-delay") ?: 0.0) * 1000).toInt(),
     )
+    val nativePath = MPVLib.getPropertyString("path")
+    val progressUri = if (nativePath == null || nativePath.startsWith("fd") || nativePath.startsWith("/proc/self/fd"))
+      intent.data?.toString() ?: intent.getStringExtra("uri") else nativePath
     val savePosition = playerPreferences.savePositionOnQuit.get()
     val repository = playbackStateRepository
     playbackWriterScope.launch {
       playbackWriteMutex.withLock {
+        if (savePosition) live.mehiz.mpvkt.ui.home.LibraryProgress.record(applicationContext, progressUri, snapshot.lastPosition)
         val oldState = if (!savePosition) repository.getVideoDataByTitle(mediaTitle) else null
         repository.upsert(if (savePosition) snapshot else snapshot.copy(lastPosition = oldState?.lastPosition ?: 0))
       }

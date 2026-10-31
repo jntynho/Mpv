@@ -90,9 +90,11 @@ internal fun PlayerSliderLayout(
       )
       Text(
         valueText,
+        modifier = Modifier.widthIn(max = 104.dp),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
       )
     }
     slider()

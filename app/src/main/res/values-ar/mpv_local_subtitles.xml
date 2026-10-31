@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_field_invalid">قيمة غير صالحة</string>
+  <string name="local_subtitle_title">ترجمة خارجية</string>
+  <string name="local_subtitle_search">بحث في ملفات الترجمة</string>
+  <string name="local_subtitle_up">المجلد الأعلى</string>
+  <string name="local_subtitle_storage">التخزين %1$d</string>
+  <string name="local_subtitle_permission">لتصفح ملفات الترجمة في التخزين المشترك، اسمح بالوصول إلى الملفات. قد تبقى مجلدات النظام محمية بواسطة Android.</string>
+  <string name="local_subtitle_grant">السماح بالوصول للملفات</string>
+  <string name="local_subtitle_unreadable">تعذرت قراءة هذا المكان. تحقق من صلاحية الملفات أو اختر مجلدًا آخر.</string>
+  <string name="local_subtitle_empty">لا توجد ملفات ترجمة في هذا المجلد.</string>
+</resources>

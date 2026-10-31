@@ -46,7 +46,6 @@ import live.mehiz.mpvkt.preferences.AdvancedPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
 import live.mehiz.mpvkt.presentation.components.ConfirmDialog
-import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.presentation.crash.CrashActivity
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
@@ -145,9 +144,10 @@ object AdvancedPreferencesScreen : Screen {
                 onValueChange = preferences.mpvConf::set,
                 title = { Text(stringResource(R.string.pref_advanced_mpv_conf)) },
                 textField = { value, onValueChange, onOk ->
-                  OutlinedTextField(
+                  live.mehiz.mpvkt.presentation.components.AppTextField(
                     value = value,
                     onValueChange = onValueChange,
+                    singleLine = false,
                     maxLines = 12,
                     keyboardActions = KeyboardActions(onDone = { onOk() }),
                   )
@@ -199,9 +199,10 @@ object AdvancedPreferencesScreen : Screen {
                 onValueChange = preferences.inputConf::set,
                 title = { Text(stringResource(R.string.pref_advanced_input_conf)) },
                 textField = { value, onValueChange, onOk ->
-                  OutlinedTextField(
+                  live.mehiz.mpvkt.presentation.components.AppTextField(
                     value = value,
                     onValueChange = onValueChange,
+                    singleLine = false,
                     maxLines = 12,
                     keyboardActions = KeyboardActions(onDone = { onOk() }),
                   )

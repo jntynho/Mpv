@@ -20,7 +20,8 @@ fun PlayerPanels(
   subtitleSlot: Int = 0,
 ) {
   when (panelShown) {
-    Panels.None -> Unit
+    Panels.None,
+    Panels.SubtitleLocalFiles -> Unit
     Panels.SubtitleSearch,
     Panels.SubtitleSearchOptions,
     Panels.SubtitleSearchLanguages,
