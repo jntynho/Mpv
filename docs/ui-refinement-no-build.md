@@ -1,4 +1,4 @@
-# Icon, library fields and player input refinement — v0.23.1
+# Icon, library fields and player input refinement — v0.23.2
 
 The initial source update following v0.22.0 was pushed without a build, as requested, using `[skip ci]`. The user subsequently authorized building and publishing v0.23.0.
 
@@ -29,3 +29,5 @@ The authorized v0.23.0 build passes application/resource compilation, all **201 
 ## Hosted build follow-up
 
 The first v0.23.0 hosted run failed at its test task, although all 201 tests passed locally. Available public annotations did not identify the individual test failure. The CI workflow now publishes failing JUnit test names and assertion details in annotations for future diagnosis. A subsequent hosted build at `42d4156`, with identical application/test code, passed tests, lint, APK assembly and signature/native checks. The initial failure's cause remains unconfirmed; it is not presented as a diagnosed application bug. The publishable follow-up uses v0.23.1 (base version code 32) without rewriting the unsuccessful v0.23.0 tag.
+
+The enhanced diagnostics identified the later v0.23.1 hosted failure: `ModernPanelsAndLibraryTest.clearingHistoryPreventsLaunchingAnOldVideo` raised `Cannot toast on a thread that has not called Looper.prepare()`. The Recent action now explicitly dispatches Toast creation and activity launch onto `Dispatchers.Main.immediate` after reading history on IO. This fixes UI thread ownership instead of suppressing or removing the regression. The next release attempt is v0.23.2 (base version code 33).

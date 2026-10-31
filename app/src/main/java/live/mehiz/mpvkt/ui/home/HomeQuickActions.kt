@@ -68,14 +68,16 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
               RecentMedia.latest(context)
             }
-          if (entry != null) HomeScreen.playFile(entry.uri, context)
-          else
-            android.widget.Toast.makeText(
-                context,
-                R.string.mpv_recent_empty,
-                android.widget.Toast.LENGTH_SHORT,
-              )
-              .show()
+          kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main.immediate) {
+            if (entry != null) HomeScreen.playFile(entry.uri, context)
+            else
+              android.widget.Toast.makeText(
+                  context,
+                  R.string.mpv_recent_empty,
+                  android.widget.Toast.LENGTH_SHORT,
+                )
+                .show()
+          }
         }
         QuickAction.Link -> {
           invalid = false
