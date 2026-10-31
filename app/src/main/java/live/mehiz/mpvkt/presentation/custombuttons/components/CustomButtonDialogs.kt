@@ -25,6 +25,7 @@ import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.database.entities.CustomButtonEntity
 import live.mehiz.mpvkt.presentation.components.AppDialog as AlertDialog
 import live.mehiz.mpvkt.presentation.components.DialogButton as TextButton
+import live.mehiz.mpvkt.presentation.components.RoundedTextField as OutlinedTextField
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.theme.spacing
 
@@ -64,7 +65,7 @@ fun CustomButtonAddDialog(
     title = { Text(text = stringResource(id = R.string.pref_custom_button_add_button)) },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           modifier = Modifier.focusRequester(focusRequester),
           value = title,
           onValueChange = { title = it },
@@ -84,7 +85,7 @@ fun CustomButtonAddDialog(
           singleLine = true,
         )
 
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           value = content,
           onValueChange = { content = it },
           label = {
@@ -93,12 +94,11 @@ fun CustomButtonAddDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_required))
           },
-          singleLine = false,
           minLines = 3,
           maxLines = 6,
         )
 
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           value = longPressContent,
           onValueChange = { longPressContent = it },
           label = {
@@ -107,7 +107,6 @@ fun CustomButtonAddDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_optional))
           },
-          singleLine = false,
           minLines = 3,
           maxLines = 6,
         )
@@ -198,7 +197,7 @@ fun CustomButtonEditDialog(
     },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           modifier = Modifier.focusRequester(focusRequester),
           value = title,
           onValueChange = { title = it },
@@ -218,7 +217,7 @@ fun CustomButtonEditDialog(
           singleLine = true,
         )
 
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           value = content,
           onValueChange = { content = it },
           label = {
@@ -227,12 +226,11 @@ fun CustomButtonEditDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_required))
           },
-          singleLine = false,
           minLines = 3,
           maxLines = 6,
         )
 
-        live.mehiz.mpvkt.presentation.components.AppTextField(
+        OutlinedTextField(
           value = longPressContent,
           onValueChange = { longPressContent = it },
           label = {
@@ -241,7 +239,6 @@ fun CustomButtonEditDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_optional))
           },
-          singleLine = false,
           minLines = 3,
           maxLines = 6,
         )

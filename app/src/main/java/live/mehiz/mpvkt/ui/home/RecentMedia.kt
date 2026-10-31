@@ -1,6 +1,13 @@
 package live.mehiz.mpvkt.ui.home
 
 import android.content.Context
+import android.content.SharedPreferences
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,11 +32,6 @@ internal object RecentMedia {
   internal fun updated(entries: List<RecentMediaEntry>, next: RecentMediaEntry) =
     (listOf(next) + entries.filter { it.uri != next.uri }).filter { it.uri.isNotBlank() }.take(100)
 
-  fun latest(context: Context): RecentMediaEntry? =
-    synchronized(lock) {
-      runCatching { decode(prefs(context).getString("items", "[]").orEmpty()).maxByOrNull { it.playedAt } }.getOrNull()
-    }
-
   fun clear(context: Context) {
     synchronized(lock) { prefs(context).edit().remove("items").apply() }
   }
@@ -51,6 +53,20 @@ internal object RecentMedia {
         .apply()
     }
   }
+
+  fun observe(context: Context): Flow<List<RecentMediaEntry>> =
+    callbackFlow<String> {
+        val p = prefs(context)
+        fun emit() {
+          trySend(p.getString("items", "[]").orEmpty())
+        }
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> emit() }
+        p.registerOnSharedPreferenceChangeListener(listener)
+        emit()
+        awaitClose { p.unregisterOnSharedPreferenceChangeListener(listener) }
+      }
+      .map { decode(it) }
+      .flowOn(Dispatchers.IO)
 }
 
 internal fun validMediaLink(value: String): Boolean {

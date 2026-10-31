@@ -106,24 +106,19 @@ object HomeScreen : Screen {
     val listFields by appearance.libraryFields.collectAsState()
     val cardFields by appearance.libraryCardFields.collectAsState()
     val grid by appearance.libraryGrid.collectAsState()
-    val fields = if (grid) cardFields else listFields
     val columns by appearance.libraryGridColumns.collectAsState()
-    val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
-    val maximumColumns = ((width - 40) / 144).coerceIn(2, 5)
-    val effectiveColumns = (if (columns in 3..5) columns else 2).coerceAtMost(maximumColumns)
+    val fields = if (grid) cardFields else listFields
+    val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+    val maximumColumns = ((screenWidth - 40) / 144).coerceIn(1, 5)
+    val effectiveColumns = if (columns in 2..5) columns.coerceAtMost(maximumColumns) else 0
     val display = LibraryDisplayOptions(fields, grid, effectiveColumns)
     val positions =
       if (fields.has(LibraryField.Progress)) {
         val dao = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>().videoDataDao()
         val flow = remember(dao) { dao.observeAll() }
         val records by flow.collectAsState(initial = emptyList())
-        remember(records, state.videos) {
-          val unique = state.videos.groupingBy { it.name }.eachCount().filterValues { it == 1 }.keys
-          records.filter { it.mediaTitle in unique }.associate { it.mediaTitle to it.lastPosition }
-        }
+        remember(records) { records.associate { it.mediaTitle to it.lastPosition } }
       } else emptyMap()
-    val progressFlow = remember(context) { LibraryProgress.observe(context) }
-    val uriPositions by progressFlow.collectAsState(initial = emptyMap())
     val colors = MaterialTheme.colorScheme
     val title =
       remember(state.videos, selectedFolder, viewMode) {
@@ -278,11 +273,14 @@ object HomeScreen : Screen {
               val listState = rememberLazyGridState()
               LaunchedEffect(display.grid, display.columns) { listState.requestScrollToItem(0) }
               ResetScrollOnLibrarySort(listState, listing.sort)
-              Box(Modifier.fillMaxSize()) {
+              BoxWithConstraints(Modifier.fillMaxSize()) {
+                val maxColumns = ((maxWidth - 40.dp) / 144.dp).toInt().coerceAtLeast(1)
                 LazyVerticalGrid(
                   columns =
                     if (!display.grid) GridCells.Fixed(1)
-                    else GridCells.Fixed(display.columns.coerceIn(2, 5)),
+                    else if (display.columns in 2..5)
+                      GridCells.Fixed(display.columns.coerceAtMost(maxColumns))
+                    else GridCells.Adaptive(160.dp),
                   modifier = Modifier.fillMaxSize(),
                   state = listState,
                   contentPadding =
@@ -323,10 +321,7 @@ object HomeScreen : Screen {
                     LibraryVideoItem(
                       video,
                       display,
-                      uriPositions[video.uri]
-                        ?: uriPositions[video.path]
-                        ?: positions[video.name]
-                        ?: 0,
+                      positions[video.name] ?: 0,
                       Modifier.animateItem(
                         fadeInSpec = tween(if (reduceMotion) 0 else 180),
                         placementSpec = tween(if (reduceMotion) 0 else 320),

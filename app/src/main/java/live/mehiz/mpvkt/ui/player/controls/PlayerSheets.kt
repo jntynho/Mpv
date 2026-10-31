@@ -27,6 +27,7 @@ fun PlayerSheets(
 
   // subtitles sheet
   subtitles: ImmutableList<TrackNode>,
+  onAddSubtitle: (Uri, Int, Long) -> Unit,
   onSelectSubtitle: (Int, Int) -> Unit,
   onSearchSubtitle: (Int) -> Unit,
   // audio sheet
@@ -59,11 +60,23 @@ fun PlayerSheets(
   when (sheetShown) {
     Sheets.None -> {}
     Sheets.SubtitleTracks -> {
+      var owner by rememberSaveable { mutableStateOf<Long?>(null) }
+      var target by rememberSaveable { mutableIntStateOf(0) }
+      val subtitlesPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+          val generation = owner
+          owner = null
+          if (it != null && generation != null) onAddSubtitle(it, target, generation)
+        }
       SubtitlesSheet(
         tracks = subtitles.toImmutableList(),
         onSelect = onSelectSubtitle,
         onSearchOnline = onSearchSubtitle,
-        onAddSubtitle = { onOpenSubtitlePanel(Panels.SubtitleLocalFiles, it) },
+        onAddSubtitle = { slot ->
+          owner = mediaGeneration
+          target = slot
+          subtitlesPicker.launch(arrayOf("*/*"))
+        },
         onOpenSubtitleSettings = { onOpenSubtitlePanel(Panels.SubtitleSettings, it) },
         onOpenSubtitleDelay = { onOpenSubtitlePanel(Panels.SubtitleDelay, it) },
       )

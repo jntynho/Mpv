@@ -439,7 +439,7 @@ class SubtitleUiTest {
     val episodeBounds = compose.onNodeWithText("Episode 3").fetchSemanticsNode().boundsInRoot
     val searchBounds =
       compose.onNodeWithContentDescription("Search").fetchSemanticsNode().boundsInRoot
-    assertEquals(56f, seasonBounds.height, 1f)
+    assertEquals(48f, seasonBounds.height, 1f)
     assertEquals(seasonBounds.top, searchBounds.top, 1f)
     assertEquals(seasonBounds.height, episodeBounds.height, 1f)
     if (selectedScreenshot) capturePosterPane("poster-selected-series")

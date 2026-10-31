@@ -276,5 +276,4 @@
         <item quantity="one">%1$d second</item>
         <item quantity="other">%1$d seconds</item>
     </plurals>
-    <string name="app_field_invalid">Invalid value</string>
 </resources>

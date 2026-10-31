@@ -39,7 +39,7 @@
     <string name="mpv_open_link">Open Link</string>
     <string name="mpv_link_address">Stream URL</string>
     <string name="mpv_invalid_link">Enter a valid supported stream URL.</string>
-    <string name="mpv_recent_empty">No previously watched video.</string>
+    <string name="mpv_recent_empty">Your played videos will appear here.</string>
     <string name="mpv_media_count">%1$d videos</string>
     <string name="mpv_playback_position">Playback position</string>
 </resources>

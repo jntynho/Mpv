@@ -178,15 +178,15 @@ internal fun RoundedTextField(
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
-  singleLine: Boolean = true,
+  singleLine: Boolean = false,
   maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
   minLines: Int = 1,
   shape: Shape = RoundedCornerShape(16.dp),
 ) {
-  AppTextField(
+  OutlinedTextField(
     value,
     onValueChange,
-    modifier,
+    modifier.fillMaxWidth(),
     enabled,
     readOnly,
     textStyle,
@@ -194,14 +194,31 @@ internal fun RoundedTextField(
     placeholder,
     leadingIcon,
     trailingIcon,
-    supportingText,
-    isError,
-    visualTransformation,
-    keyboardOptions,
-    keyboardActions,
-    singleLine,
-    maxLines,
-    minLines,
-    shape,
+    supportingText = supportingText,
+    isError = isError,
+    visualTransformation = visualTransformation,
+    keyboardOptions = keyboardOptions,
+    keyboardActions = keyboardActions,
+    singleLine = singleLine,
+    maxLines = maxLines,
+    minLines = minLines,
+    shape = shape,
+    colors =
+      OutlinedTextFieldDefaults.colors(
+        unfocusedContainerColor =
+          lerp(
+            MaterialTheme.colorScheme.surfaceContainer,
+            MaterialTheme.colorScheme.onSurface,
+            .025f,
+          ),
+        focusedContainerColor =
+          lerp(
+            MaterialTheme.colorScheme.surfaceContainer,
+            MaterialTheme.colorScheme.onSurface,
+            .025f,
+          ),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f),
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = .7f),
+      ),
   )
 }

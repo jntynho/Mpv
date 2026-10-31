@@ -39,7 +39,7 @@
     <string name="mpv_open_link">فتح رابط</string>
     <string name="mpv_link_address">رابط البث</string>
     <string name="mpv_invalid_link">أدخل رابط بث صالحًا ومدعومًا.</string>
-    <string name="mpv_recent_empty">لا يوجد فيديو تمت مشاهدته سابقًا.</string>
+    <string name="mpv_recent_empty">ستظهر الفيديوهات التي شغّلتها هنا.</string>
     <string name="mpv_media_count">%1$d فيديو</string>
     <string name="mpv_playback_position">موضع التشغيل</string>
 </resources>

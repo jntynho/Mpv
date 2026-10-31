@@ -25,9 +25,9 @@ import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
 
 internal data class LibraryDisplayOptions(
-  val fields: Set<String> = setOf("Path", "Thumbnails", "Extension"),
+  val fields: Set<String> = setOf("Path", "Thumbnails", "Extension", "Duration"),
   val grid: Boolean = false,
-  val columns: Int = 2,
+  val columns: Int = 0,
 )
 
 @Composable
@@ -213,20 +213,23 @@ internal fun LibrarySortMenuContent(
           Icons.Grid,
           Modifier.weight(1f),
         ) {
-          onDisplay(display.copy(grid = true, columns = 2))
+          onDisplay(display.copy(grid = true))
         }
       }
       if (display.grid) {
-        val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
-        val limit = ((width - 40) / 144).coerceIn(2, 5)
-        if (limit >= 3)
-          FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
-            (3..limit).forEach { count ->
-              SortChip(count.toString(), display.columns == count, duration) {
-                onDisplay(display.copy(columns = count))
-              }
+        FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
+          val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+          val limit = ((width - 40) / 144).coerceIn(1, 5)
+          (listOf(0) + (2..limit).toList()).forEach { count ->
+            SortChip(
+              if (count == 0) stringResource(R.string.mpv_grid_auto) else count.toString(),
+              display.columns == count,
+              duration,
+            ) {
+              onDisplay(display.copy(columns = count))
             }
           }
+        }
       }
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Tune, null, Modifier.size(20.dp))
@@ -247,9 +250,8 @@ internal fun LibrarySortMenuContent(
         FadingHorizontalRow(Modifier.fillMaxWidth()) {
           LibraryField.entries
             .filter {
-              it != LibraryField.Duration &&
-                ((it.folder && countEnabled) ||
-                  (it.video && (!countEnabled || viewMode == LibraryViewMode.Tree)))
+              (it.folder && countEnabled) ||
+                (it.video && (!countEnabled || viewMode == LibraryViewMode.Tree))
             }
             .forEach { field ->
               FilterChip(

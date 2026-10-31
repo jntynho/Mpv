@@ -74,7 +74,6 @@ internal class PlayerPanelNavigator {
 
   private fun parentOf(panel: Panels): Sheets =
     when (panel) {
-      Panels.SubtitleLocalFiles,
       Panels.SubtitleSearch,
       Panels.SubtitleSearchOptions,
       Panels.SubtitleSearchLanguages,

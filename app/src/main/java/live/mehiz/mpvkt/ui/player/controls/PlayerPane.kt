@@ -143,7 +143,6 @@ internal fun PlayerPane(
 private fun PlayerPanelRoute.title(): String =
   stringResource(
     when (panel) {
-      Panels.SubtitleLocalFiles -> R.string.local_subtitle_title
       Panels.SubtitleSearch -> R.string.subtitle_search
       Panels.SubtitleSearchOptions -> R.string.subtitle_filters
       Panels.SubtitleSearchLanguages -> R.string.subtitle_languages
