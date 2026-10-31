@@ -1,4 +1,4 @@
-# Icon, library fields and player input refinement — v0.23.0
+# Icon, library fields and player input refinement — v0.23.1
 
 The initial source update following v0.22.0 was pushed without a build, as requested, using `[skip ci]`. The user subsequently authorized building and publishing v0.23.0.
 
@@ -25,3 +25,7 @@ The local subtitle browser does not launch a system document picker. Browsing sh
 Kotlin syntax/parser checks, XML/resource reference checks, icon catalogue/folder-artwork checks, and static source invariants are run without Gradle. Source regressions for direct recent playback, progress bounds/units and subtitle extension filtering are included for the next authorized Android test run.
 
 The authorized v0.23.0 build passes application/resource compilation, all **201 host tests** (including Robolectric/Compose), and `lintDebug` with zero errors and 713 warnings. All three minified APKs pass signatures, 16 KB alignment, ABI sets and exact native-pause-binary checks. The build also updates an obsolete 48dp test expectation to the requested 56dp and removes an unused measurement container. Physical launcher masks/themed icons, large fonts/RTL/IME, special file permission flows on multiple Android releases, SD cards, external subtitle import and real playback still require validation when building is authorized. This source review cannot guarantee stability on every device.
+
+## Hosted build follow-up
+
+The first v0.23.0 hosted run failed at its test task, although all 201 tests passed locally. Available public annotations did not identify the individual test failure. The CI workflow now publishes failing JUnit test names and assertion details in annotations for future diagnosis. A subsequent hosted build at `42d4156`, with identical application/test code, passed tests, lint, APK assembly and signature/native checks. The initial failure's cause remains unconfirmed; it is not presented as a diagnosed application bug. The publishable follow-up uses v0.23.1 (base version code 32) without rewriting the unsuccessful v0.23.0 tag.
