@@ -70,7 +70,7 @@ class PlayerUiRegressionTest {
     val paused = mutableStateOf(true)
     var clicks = 0
     compose.setContent { MaterialTheme {
-      AnimatedPlayPauseButton(paused.value, false, false, true, false, { paused.value = !paused.value; clicks++ })
+      AnimatedPlayPauseButton(paused.value, false, true, false, { paused.value = !paused.value; clicks++ })
     } }
     repeat(8) { compose.onNode(hasClickAction()).performClick() }
     compose.onAllNodes(hasClickAction()).assertCountEquals(1)

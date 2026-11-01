@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_subtitle_storage_explanation">Allow file access to browse subtitle files here. Android protects app-private folders, which remain unavailable.</string>
+  <string name="mpv_subtitle_storage_grant">Allow file access</string>
+  <string name="mpv_subtitle_storage_failed">Cannot read this location. Check access permissions or choose another folder.</string>
+  <string name="mpv_subtitle_storage_retry">Retry</string>
+  <string name="mpv_subtitle_storage_empty">No subtitle files or folders here.</string>
+  <string name="mpv_subtitle_add_failed">Could not load this subtitle. Check that the file is readable and supported.</string>
+</resources>

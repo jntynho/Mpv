@@ -21,7 +21,7 @@ fun PlayerPanels(
   onNavigateBack: () -> Unit,
 ) {
   when (panelShown) {
-    Panels.None -> Unit
+    Panels.None, Panels.ExternalSubtitles -> Unit
     Panels.SubtitleSearch, Panels.SubtitleSearchOptions, Panels.SubtitleSearchLanguages,
     Panels.SubtitleSearchSeason, Panels.SubtitleSearchEpisode, Panels.SubtitleSearchFiles -> Unit // Owned by the persistent subtitle controller.
     Panels.SubtitleSettings -> SubtitleSettingsPanel()

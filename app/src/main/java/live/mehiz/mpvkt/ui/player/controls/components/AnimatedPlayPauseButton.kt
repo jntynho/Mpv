@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +18,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.ui.icons.*
 
@@ -27,21 +25,12 @@ import live.mehiz.mpvkt.ui.icons.*
 @Composable
 fun AnimatedPlayPauseButton(
   paused: Boolean,
-  loading: Boolean,
   pending: Boolean,
   enabled: Boolean,
   reduceMotion: Boolean,
   onClick: () -> Unit,
   pendingPauseTarget: Boolean? = null,
 ) {
-  var showPending by remember { mutableStateOf(false) }
-  LaunchedEffect(pending) {
-    showPending = false
-    if (pending) {
-      delay(120)
-      showPending = true
-    }
-  }
   val actionLabel =
     stringResource(
       if (pending && pendingPauseTarget != null) {
@@ -51,7 +40,7 @@ fun AnimatedPlayPauseButton(
   val progress by
     animateFloatAsState(
       if (paused) 0f else 1f,
-      tween(if (reduceMotion) 0 else 260, easing = FastOutSlowInEasing),
+      tween(if (reduceMotion) 0 else 220, easing = FastOutSlowInEasing),
       label = "play_pause_iconsax",
     )
   Box(
@@ -68,7 +57,6 @@ fun AnimatedPlayPauseButton(
         alpha = 1f - progress
         scaleX = .86f + .14f * (1f - progress)
         scaleY = scaleX
-        rotationZ = -12f * progress
       },
       tint = Color.White,
     )
@@ -79,15 +67,8 @@ fun AnimatedPlayPauseButton(
         alpha = progress
         scaleX = .86f + .14f * progress
         scaleY = scaleX
-        rotationZ = 12f * (1f - progress)
       },
       tint = Color.White,
     )
-    if (loading || showPending)
-      CircularProgressIndicator(
-        Modifier.size(88.dp),
-        color = Color.White.copy(alpha = .8f),
-        strokeWidth = 2.dp,
-      )
   }
 }

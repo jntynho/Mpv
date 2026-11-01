@@ -115,6 +115,7 @@ internal fun PlayerPane(
 private fun PlayerPanelRoute.title(): String =
   stringResource(
     when (panel) {
+      Panels.ExternalSubtitles -> R.string.player_sheets_add_ext_sub
       Panels.SubtitleSearch -> R.string.subtitle_search
       Panels.SubtitleSearchOptions -> R.string.subtitle_filters
       Panels.SubtitleSearchLanguages -> R.string.subtitle_languages

@@ -54,6 +54,9 @@ internal object RecentMedia {
     }
   }
 
+  fun latest(context: Context): RecentMediaEntry? =
+    synchronized(lock) { decode(prefs(context).getString("items", "[]").orEmpty()).firstOrNull() }
+
   fun observe(context: Context): Flow<List<RecentMediaEntry>> =
     callbackFlow<String> {
         val p = prefs(context)

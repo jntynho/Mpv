@@ -120,6 +120,76 @@ class PlayerViewModel(
     }.getOrElse { .5f }.coerceIn(0f, 1f),
   )
 
+  internal val subtitleBrowserPath = MutableStateFlow<List<String>>(emptyList())
+  internal val addingExternalSubtitle = MutableStateFlow(false)
+  private val externalSubtitleRequest = AtomicLong()
+  private var externalSubtitleSlot = 0
+  private var externalSubtitleGeneration = -1L
+  private var externalSubtitleOwnerPath: String? = null
+  internal fun openExternalSubtitles(slot: Int) {
+    externalSubtitleRequest.incrementAndGet()
+    addingExternalSubtitle.value = false
+    externalSubtitleSlot = slot.coerceIn(0, 1)
+    externalSubtitleGeneration = subtitleVideoGeneration.get()
+    subtitleBrowserPath.value = emptyList()
+    val request = externalSubtitleRequest.get()
+    val generation = externalSubtitleGeneration
+    PlaybackControl.enqueue("external-subtitle-context") {
+      val path = MPVLib.getPropertyString("path") ?: return@enqueue
+      viewModelScope.launch {
+        if (request == externalSubtitleRequest.get() && generation == subtitleVideoGeneration.get() &&
+          panelNavigator.state.value.lastOrNull()?.sheet == Sheets.SubtitleTracks) {
+          externalSubtitleOwnerPath = path
+          panelNavigator.openPanel(Panels.ExternalSubtitles)
+        }
+      }
+    }
+  }
+  internal fun applyExternalSubtitle(file: File) {
+    if (addingExternalSubtitle.value) return
+    val request = externalSubtitleRequest.get()
+    val generation = externalSubtitleGeneration
+    val slot = externalSubtitleSlot
+    val ownerPath = externalSubtitleOwnerPath
+    addingExternalSubtitle.value = true
+    PlaybackControl.enqueue("external-subtitle-add") {
+      var success = false
+      try {
+        if (request != externalSubtitleRequest.get() || generation != subtitleVideoGeneration.get() ||
+          ownerPath == null || MPVLib.getPropertyString("path") != ownerPath ||
+          panelNavigator.state.value.lastOrNull()?.panel != Panels.ExternalSubtitles ||
+          !file.isFile || !file.canRead() ||
+          !live.mehiz.mpvkt.ui.player.controls.components.panels.isSubtitleFile(file)) return@enqueue
+        val oldPrimary = MPVLib.getPropertyInt("sid")
+        MPVLib.command("sub-add", file.absolutePath, "cached")
+        val tracks = MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
+        val added = tracks.lastOrNull {
+          it.isSubtitle && it.externalFilename?.removePrefix("file://") == file.absolutePath
+        } ?: return@enqueue
+        if (slot == 1) {
+          if (oldPrimary != null && oldPrimary >= 0 && oldPrimary != added.id) MPVLib.setPropertyInt("sid", oldPrimary)
+          else MPVLib.setPropertyBoolean("sid", false)
+        }
+        val property = if (slot == 1) "secondary-sid" else "sid"
+        val other = if (slot == 1) "sid" else "secondary-sid"
+        if (MPVLib.getPropertyInt(other) == added.id) MPVLib.setPropertyBoolean(other, false)
+        MPVLib.setPropertyInt(property, added.id)
+        success = MPVLib.getPropertyInt(property) == added.id
+      } catch (_: Exception) {
+        success = false
+      } finally {
+        viewModelScope.launch {
+          if (request == externalSubtitleRequest.get()) addingExternalSubtitle.value = false
+          if (request == externalSubtitleRequest.get() && generation == subtitleVideoGeneration.get() &&
+            panelNavigator.state.value.lastOrNull()?.panel == Panels.ExternalSubtitles) {
+            if (success) panelNavigator.openSheet(Sheets.SubtitleTracks)
+            else Toast.makeText(activity, R.string.mpv_subtitle_add_failed, Toast.LENGTH_LONG).show()
+          }
+        }
+      }
+    }
+  }
+
   internal val panelNavigator = PlayerPanelNavigator()
   internal val subtitleSearch by lazy { SubtitleSearchController(viewModelScope,subtitleService,subtitlesPreferences::searchOptions) }
   private val subtitleVideoGeneration = AtomicLong()
@@ -128,11 +198,13 @@ class PlayerViewModel(
   private var subtitleOwnerPath: String? = null
   private var subtitleOwnerGeneration = -1L
   internal fun subtitleMediaStarted() {
+    externalSubtitleRequest.incrementAndGet()
+    addingExternalSubtitle.value = false
     seekMediaGeneration.value=subtitleVideoGeneration.incrementAndGet()
     subtitleSearch.stop()
-    if(panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true) panelNavigator.openSheet(Sheets.SubtitleTracks)
+    if(panelNavigator.state.value.lastOrNull()?.panel == Panels.ExternalSubtitles || panelNavigator.state.value.lastOrNull()?.panel?.name?.startsWith("SubtitleSearch")==true) panelNavigator.openSheet(Sheets.SubtitleTracks)
   }
-  internal fun closeSubtitleSearch() { subtitleNavigationGeneration.incrementAndGet();subtitleSearch.stop() }
+  internal fun closeSubtitleSearch() { externalSubtitleRequest.incrementAndGet();addingExternalSubtitle.value = false;subtitleNavigationGeneration.incrementAndGet();subtitleSearch.stop() }
   internal fun openSubtitleSearch(title: String, slot: Int) {
     val navigation=subtitleNavigationGeneration.get()
     val generation=subtitleVideoGeneration.get()
@@ -148,11 +220,16 @@ class PlayerViewModel(
   }
   internal fun backFromPlayerPanel() {
     val page=panelNavigator.state.value.lastOrNull()?.panel
+    if (page == Panels.ExternalSubtitles && subtitleBrowserPath.value.isNotEmpty()) {
+      subtitleBrowserPath.value = subtitleBrowserPath.value.dropLast(1)
+      return
+    }
     if(page==Panels.SubtitleSearch) {
       if(subtitleSearch.back()) return
       subtitleSearch.stop()
     }
     if(page==Panels.SubtitleSearchFiles) subtitleSearch.clearFiles()
+    if (page == Panels.ExternalSubtitles) externalSubtitleRequest.incrementAndGet()
     panelNavigator.back()
   }
   internal fun applyOnlineSubtitle(file: File, slot: Int) {
@@ -236,11 +313,6 @@ class PlayerViewModel(
     MPVLib.command("audio-add", path ?: return, "cached")
   }
 
-  fun addSubtitle(uri: Uri) {
-    val url = uri.toString()
-    val path = if (url.startsWith("content://")) url.toUri().openContentFd(activity) else url
-    MPVLib.command("sub-add", path ?: return, "cached")
-  }
 
   fun selectSub(id: Int, slot: Int) {
     PlaybackControl.enqueue("subtitle-$slot") {

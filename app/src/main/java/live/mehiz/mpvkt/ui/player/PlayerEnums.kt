@@ -75,6 +75,7 @@ enum class Sheets {
 
 enum class Panels {
   None,
+  ExternalSubtitles,
   SubtitleSettings,
   SubtitleDelay,
   AudioDelay,

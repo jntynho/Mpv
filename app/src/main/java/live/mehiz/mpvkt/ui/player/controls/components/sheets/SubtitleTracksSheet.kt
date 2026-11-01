@@ -26,7 +26,7 @@ import live.mehiz.mpvkt.ui.player.controls.components.*
 fun SubtitlesSheet(
   tracks: ImmutableList<TrackNode>,
   onSelect: (Int, Int) -> Unit,
-  onAddSubtitle: () -> Unit,
+  onAddSubtitle: (Int) -> Unit,
   onSearchOnline: (Int) -> Unit,
   onOpenSubtitleSettings: () -> Unit,
   onOpenSubtitleDelay: () -> Unit,
@@ -54,7 +54,7 @@ fun SubtitlesSheet(
       IconButton(onClick = onOpenSubtitleDelay) {
         Icon(Icons.MoreTime, stringResource(R.string.player_sheets_sub_delay_card_title))
       }
-      IconButton(onClick = onAddSubtitle) {
+      IconButton(onClick = { onAddSubtitle(slot) }) {
         Icon(Icons.Upload, stringResource(R.string.player_sheets_add_ext_sub))
       }
       IconButton(onClick = { onSearchOnline(slot) }) {

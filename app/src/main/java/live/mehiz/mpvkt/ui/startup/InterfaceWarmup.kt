@@ -303,7 +303,7 @@ private fun WarmupScene(
                 )
             ) {
               PlayerPanelHeader(stringResource(R.string.pref_subtitles), Icons.Subtitles, {})
-              AnimatedPlayPauseButton(phase != 1, false, false, false, reduceMotion, {})
+              AnimatedPlayPauseButton(phase != 1, false, false, reduceMotion, {})
               PlayerActionRow(stringResource(R.string.pref_audio), Icons.VolumeUp, {})
               PlayerActionRow(stringResource(R.string.pref_subtitles), Icons.Subtitles, {})
               dev.vivvvek.seeker.Seeker(
@@ -389,7 +389,7 @@ private fun WarmupScene(
             }
           }
           SlimPlayerSlider(if (phase == 1) .9f else .1f, {}, Modifier.fillMaxWidth())
-          AnimatedPlayPauseButton(phase != 1, false, false, false, reduceMotion, {})
+          AnimatedPlayPauseButton(phase != 1, false, false, reduceMotion, {})
         }
     }
   }

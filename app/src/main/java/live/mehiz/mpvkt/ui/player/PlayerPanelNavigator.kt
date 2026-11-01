@@ -49,7 +49,7 @@ internal class PlayerPanelNavigator {
   private fun parentOf(panel: Panels): Sheets = when (panel) {
     Panels.SubtitleSearch, Panels.SubtitleSearchOptions, Panels.SubtitleSearchLanguages,
     Panels.SubtitleSearchSeason, Panels.SubtitleSearchEpisode, Panels.SubtitleSearchFiles,
-    Panels.SubtitleSettings, Panels.SubtitleDelay -> Sheets.SubtitleTracks
+    Panels.ExternalSubtitles, Panels.SubtitleSettings, Panels.SubtitleDelay -> Sheets.SubtitleTracks
     Panels.AudioDelay -> Sheets.AudioTracks
     Panels.VideoFilters, Panels.SleepTimer -> Sheets.More
     Panels.None -> error("None is not a panel page")

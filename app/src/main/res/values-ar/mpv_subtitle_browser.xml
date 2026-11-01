@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_subtitle_storage_explanation">اسمح بالوصول إلى الملفات لتصفح الترجمات هنا. تبقى المجلدات الخاصة بالتطبيقات محمية بواسطة Android.</string>
+  <string name="mpv_subtitle_storage_grant">السماح بالوصول إلى الملفات</string>
+  <string name="mpv_subtitle_storage_failed">تعذّر قراءة هذا الموقع. تحقق من الصلاحيات أو اختر مجلدًا آخر.</string>
+  <string name="mpv_subtitle_storage_retry">إعادة المحاولة</string>
+  <string name="mpv_subtitle_storage_empty">لا توجد ملفات ترجمة أو مجلدات هنا.</string>
+  <string name="mpv_subtitle_add_failed">تعذّر تحميل الترجمة. تأكد من إمكانية قراءة الملف ودعم صيغته.</string>
+</resources>

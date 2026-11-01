@@ -446,7 +446,6 @@ fun PlayerControls(
               AnimatedPlayPauseButton(
                 paused = playback.iconPaused,
                 pendingPauseTarget = playback.needsPause,
-                loading = pausedForCache && showLoadingCircle,
                 pending = playback.pending,
                 enabled = playback.attached,
                 reduceMotion = reduceMotion,
@@ -694,7 +693,7 @@ fun PlayerControls(
         PlayerSheets(
           sheetShown = page.sheet,
           subtitles = subtitles,
-          onAddSubtitle = viewModel::addSubtitle,
+          onBrowseSubtitles = viewModel::openExternalSubtitles,
           onSelectSubtitle = viewModel::selectSub,
           onSearchSubtitle = { slot ->
             viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(), slot)
@@ -732,6 +731,16 @@ fun PlayerControls(
           buttons = customButtons.getButtons().toImmutableList(),
           onOpenPanel = onOpenPanel,
         )
+      else if (page.panel == Panels.ExternalSubtitles) {
+        val folders by viewModel.subtitleBrowserPath.collectAsState()
+        val adding by viewModel.addingExternalSubtitle.collectAsState()
+        live.mehiz.mpvkt.ui.player.controls.components.panels.ExternalSubtitlesPanel(
+          folders, adding,
+          onEnter = { viewModel.subtitleBrowserPath.value = folders + it },
+          onUp = viewModel::backFromPlayerPanel,
+          onSelect = viewModel::applyExternalSubtitle,
+        )
+      }
       else if (page.panel == Panels.SubtitleSearch)
         SubtitleSearchPanel(
           searchController,
