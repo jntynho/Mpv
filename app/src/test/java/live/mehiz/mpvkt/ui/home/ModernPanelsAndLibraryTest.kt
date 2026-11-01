@@ -168,14 +168,13 @@ class ModernPanelsAndLibraryTest {
     theme { HomeQuickActions(true) }
     compose.onNodeWithContentDescription("Playback actions").performClick()
     compose.onNodeWithText("Recently Played").performClick()
+    var launched: android.content.Intent? = null
     compose.waitUntil(5000) {
-      runCatching { compose.onNodeWithText("Played film").assertExists() }.isSuccess
+      launched = shadowOf(compose.activity).nextStartedActivity
+      launched != null
     }
-    compose.onNodeWithText("Played film").performClick()
-    assertEquals(
-      "https://example.invalid/played.mp4",
-      shadowOf(compose.activity).nextStartedActivity.dataString,
-    )
+    compose.onNodeWithText("Played film").assertDoesNotExist()
+    assertEquals("https://example.invalid/played.mp4", launched?.dataString)
   }
 
   @Test
@@ -189,14 +188,17 @@ class ModernPanelsAndLibraryTest {
   }
 
   @Test
-  fun clearingHistoryRemovesItsEntriesFromTheRecentSheet() {
+  fun clearingHistoryPreventsRecentPlaybackAndShowsAnEmptyMessage() {
     RecentMedia.record(compose.activity, "https://example.invalid/x.mp4", "Old film")
     RecentMedia.clear(compose.activity)
     theme { HomeQuickActions(true) }
     compose.onNodeWithContentDescription("Playback actions").performClick()
     compose.onNodeWithText("Recently Played").performClick()
     compose.onNodeWithText("Old film").assertDoesNotExist()
-    compose.onNodeWithText("Your played videos will appear here.").assertIsDisplayed()
+    compose.waitUntil(5000) {
+      org.robolectric.shadows.ShadowToast.getTextOfLatestToast() == "Your played videos will appear here."
+    }
+    assertNull(shadowOf(compose.activity).nextStartedActivity)
   }
 
   private fun capture(name: String) {

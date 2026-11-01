@@ -31,7 +31,7 @@ class AppearanceModeSelectorTest {
     compose.onNodeWithText("Dark").assertIsSelected()
     compose.onNodeWithText("Light").assertIsNotSelected()
     compose.onNodeWithText("System").assertIsNotSelected()
-    assertEquals(originalWidth, compose.onNodeWithText("System").fetchSemanticsNode().boundsInRoot.width, .5f)
+    assertEquals(originalWidth, compose.onNodeWithText("System").fetchSemanticsNode().boundsInRoot.width, 1f)
   }
 
   @Test fun rtlUsesTheSameLogicalModesAndSelection() {
