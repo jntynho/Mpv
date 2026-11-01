@@ -36,8 +36,11 @@ jobs:
         run: |
           set -euo pipefail
           exec > >(tee -a "$RUNNER_TEMP/mpv-publication.log") 2>&1
-          # Bootstrap publishes the already reviewed build without compiling it again.
-          source_run_id="${EVENT_RUN_ID:-${INPUT_RUN_ID:-41264711015}}"
+          # A publication-only update reuses the newest successful main build.
+          source_run_id="${EVENT_RUN_ID:-${INPUT_RUN_ID:-}}"
+          if [ -z "$source_run_id" ]; then
+            source_run_id="$(gh run list --workflow build-apk.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          fi
           [[ "$source_run_id" =~ ^[0-9]+$ ]]
           gh api "repos/$GH_REPO/actions/runs/$source_run_id" > source-run.json
           python3 - <<'PY'
