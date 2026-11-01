@@ -1,0 +1,117 @@
+name: Publish verified APK release
+on:
+  workflow_run:
+    workflows: [Build MPV APKs]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Build MPV APKs run to publish
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-release.yml]
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: publish-mpv-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Select and validate successful source build
+        id: source
+        env:
+          EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Bootstrap publishes the already reviewed build without compiling it again.
+          source_run_id="${EVENT_RUN_ID:-${INPUT_RUN_ID:-41264711015}}"
+          [[ "$source_run_id" =~ ^[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$source_run_id" > source-run.json
+          python3 - <<'PY'
+          import json, os
+          run = json.load(open('source-run.json'))
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['name'] == 'Build MPV APKs'
+          assert run['path'] == '.github/workflows/build-apk.yml'
+          assert run['head_branch'] == 'main'
+          assert run['event'] in ('push', 'workflow_dispatch')
+          assert run['repository']['full_name'] == os.environ['GH_REPO']
+          assert run['head_repository']['full_name'] == os.environ['GH_REPO']
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"run_id={run['id']}\nsha={run['head_sha']}\nnumber={run['run_number']}\n")
+          PY
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.source.outputs.run_id }}
+          pattern: MPV-APK-*
+          path: artifacts
+      - name: Prepare direct APK assets and release metadata
+        id: release
+        env:
+          BUILD_NUMBER: ${{ steps.source.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir release-assets
+          cp artifacts/MPV-APK-arm64/app-arm64-v8a-preview.apk release-assets/arm64-v8a.apk
+          cp artifacts/MPV-APK-arm32/app-armeabi-v7a-preview.apk release-assets/armeabi-v7a.apk
+          cp artifacts/MPV-APK-universal/app-universal-preview.apk release-assets/universal.apk
+          python3 - <<'PY'
+          import os, pathlib, re, zipfile
+          version = re.search(r'versionName = "([^"]+)"', pathlib.Path('app/build.gradle.kts').read_text()).group(1)
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version)
+          for apk in pathlib.Path('release-assets').glob('*.apk'):
+              with zipfile.ZipFile(apk) as archive:
+                  assert 'AndroidManifest.xml' in archive.namelist()
+          number = os.environ['BUILD_NUMBER']
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'tag=v{version}-build.{number}\ntitle=MPV {version} — Build {number}\n')
+          PY
+          cat > release-notes.md <<'NOTES'
+          Direct APK downloads from a successfully tested GitHub Actions build:
+
+          - arm64-v8a.apk: ARM 64-bit
+          - armeabi-v7a.apk: ARM 32-bit
+          - universal.apk: both ARM architectures
+
+          No ZIP extraction or user-configured secrets are required.
+          These APKs use automatic test signing. Before uninstalling an existing version, export private Secure Folder media and verify the copies; uninstalling deletes its private files and device-bound keys.
+          NOTES
+      - name: Publish and verify actual GitHub Release
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/*.apk --clobber
+            gh release edit "$RELEASE_TAG" --latest
+          else
+            gh release create "$RELEASE_TAG" release-assets/*.apk \
+              --target "$SOURCE_SHA" --title "$RELEASE_TITLE" --notes-file release-notes.md --latest
+          fi
+          gh release view "$RELEASE_TAG" --json assets --jq '[.assets[].name] | sort' > published-assets.json
+          python3 - <<'PY'
+          import json
+          assert json.load(open('published-assets.json')) == ['arm64-v8a.apk', 'armeabi-v7a.apk', 'universal.apk']
+          PY
+          gh release view "$RELEASE_TAG" --json url --jq .url >> "$GITHUB_STEP_SUMMARY"
