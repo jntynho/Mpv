@@ -6,6 +6,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import com.android.build.api.variant.FilterConfiguration
 import io.gitlab.arturbosch.detekt.Detekt
 import org.apache.commons.io.output.ByteArrayOutputStream
@@ -23,14 +24,14 @@ plugins {
 
 
 // Resolve the original published library, then replace only its two ARM libmpv binaries.
-// Classes, JNI wrapper, FFmpeg libraries, resources and manifest remain from 0.1.9.
+// Classes, JNI wrapper, FFmpeg libraries, resources and manifest remain from 0.1.12.
 val originalMpvRuntime = configurations.create("originalMpvRuntime") {
   isCanBeConsumed = false
   isCanBeResolved = true
   isTransitive = false
   attributes.attribute(org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE, objects.named(org.gradle.api.attributes.Usage.JAVA_RUNTIME))
 }
-val patchedMpvAar = layout.buildDirectory.file("generated/mpv-runtime/mpv-android-lib-0.1.9-pause2.aar")
+val patchedMpvAar = layout.buildDirectory.file("generated/mpv-runtime/mpv-android-lib-0.1.12-jntynho-pause1.aar")
 val nativePauseDirectory = rootProject.file("third_party/mpv-pause")
 
 fun sha256Of(file: File): String {
@@ -53,8 +54,8 @@ val prepareMpvRuntime = tasks.register("prepareMpvRuntime") {
   outputs.file(patchedMpvAar)
   doLast {
     val original = originalMpvRuntime.singleFile
-    check(sha256Of(original) == "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b") {
-      "Published mpv-android-lib 0.1.9 changed"
+    check(sha256Of(original) == "bb1a007c545cc7ac3304293ae79866b5361a48449ee7648c4030d5355869effc") {
+      "Published mpv-android-lib 0.1.12 changed"
     }
     val hashes = Properties().apply {
       nativePauseDirectory.resolve("native-hashes.properties").inputStream().use(::load)
@@ -229,7 +230,10 @@ dependencies {
   implementation(libs.mediasession)
   implementation(libs.saveable)
 
-  add(originalMpvRuntime.name, libs.mpv.lib)
+  add(originalMpvRuntime.name, "io.github.abdallahmehiz:mpv-android-lib:0.1.12")
+  implementation(libs.mpv.lib) {
+    exclude(group = "io.github.abdallahmehiz", module = "mpv-android-lib")
+  }
   implementation(files(prepareMpvRuntime))
 
   implementation(platform(libs.koin.bom))
@@ -288,6 +292,13 @@ aboutLibraries {
   excludeFields = arrayOf("generated")
 }
 
+// The user-owned integration coordinate resolves locally; no public Maven publication is claimed.
+configurations.configureEach {
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("io.github.jntynho:mpv-android-lib")).using(project(":mpv-android-lib"))
+  }
+}
+
 // Validate the declared upstream runtime and the exact native artifact that enters the APK.
 tasks.register("verifyMpvRuntime") {
   group = "verification"
@@ -296,11 +307,14 @@ tasks.register("verifyMpvRuntime") {
     val modules = configurations.getByName("debugRuntimeClasspath").incoming.resolutionResult
       .allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
     check(modules.none { it.group == "app.gyrolet.mpvlib" }) { "Removed gyrolet runtime is still present" }
+    check(modules.none { it.group == "io.github.abdallahmehiz" && it.module == "mpv-android-lib" })
+    check(configurations.getByName("debugRuntimeClasspath").incoming.resolutionResult.allComponents
+      .any { (it.id as? ProjectComponentIdentifier)?.projectPath == ":mpv-android-lib" })
     val original = originalMpvRuntime.incoming.resolutionResult.allComponents.mapNotNull {
       it.id as? ModuleComponentIdentifier
     }.single { it.group == "io.github.abdallahmehiz" && it.module == "mpv-android-lib" }
-    check(original.version == "0.1.9")
-    check(sha256Of(originalMpvRuntime.singleFile) == "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b")
+    check(original.version == "0.1.12")
+    check(sha256Of(originalMpvRuntime.singleFile) == "bb1a007c545cc7ac3304293ae79866b5361a48449ee7648c4030d5355869effc")
     ZipFile(originalMpvRuntime.singleFile).use { upstream ->
       ZipFile(patchedMpvAar.get().asFile).use { patched ->
         upstream.entries().asSequence().filter { !it.isDirectory }.forEach { entry ->
@@ -314,6 +328,6 @@ tasks.register("verifyMpvRuntime") {
         }
       }
     }
-    logger.lifecycle("Verified io.github.abdallahmehiz:mpv-android-lib:0.1.9 with ARM native pause fix; gyrolet absent")
+    logger.lifecycle("Verified io.github.jntynho:mpv-android-lib:0.1.12 local integration; upstream 0.1.12, ARM native pause fix, gyrolet absent")
   }
 }

@@ -1,5 +1,13 @@
 # MPV
 
+### Runtime integration 0.1.12
+
+- User-owned local coordinate `io.github.jntynho:mpv-android-lib:0.1.12`; no public Maven publication.
+- Matching upstream 0.1.12 JNI/FFmpeg and mpv 0.41 sources, with the native queue-preserving pause correction retained for both ARM architectures.
+- Per-view native instance ownership with a compatibility boundary for existing controls; retiring sessions wait for in-flight property/command accesses.
+- The reviewed OpenSL ES backend remains the default. New audio backends are not forced without device validation.
+- [Integration details](third_party/mpv-android-lib/README.md).
+
 ### MPV 0.21.0
 
 - Sort returns to a compact, content-driven sheet with a single size-animation owner. Its size freezes during dismissal. View, order and field options use semantic Iconsax symbols.
@@ -25,7 +33,7 @@ Signing note: CI uses automatic test signing; v0.19 and v0.20 have different cer
 
 
 مشغل Android مشتق من [mpvKt](https://github.com/abdallahmehiz/mpvKt)، بمحرك
-`io.github.abdallahmehiz:mpv-android-lib:0.1.9` مع تصحيح أصلي لـPause وواجهة Compose بألوان ليلية ونعناعية.
+`io.github.jntynho:mpv-android-lib:0.1.12` كوحدة محلية مبنية على إصدار Abdallah Mehiz 0.1.12، مع تصحيح أصلي لـPause وواجهة Compose بألوان ليلية ونعناعية.
 المصدر الأصلي وترخيص Apache-2.0 محفوظان في `NOTICE` و`LICENSE`.
 
 ## ما تغير في 0.19.0

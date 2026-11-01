@@ -1,8 +1,8 @@
 {
-  "sourceCoordinate": "io.github.abdallahmehiz:mpv-android-lib:0.1.9",
-  "originalAarSha256": "500e6b23fb331b0bf121d23218aa7332f58f042533ecb6685222e667933ed15b",
-  "mpvCommit": "7653cc8f0",
-  "nativeVersion": "0.40.0-276-g7653cc8f0-mpvkt-pause2",
+  "sourceCoordinate": "io.github.abdallahmehiz:mpv-android-lib:0.1.12",
+  "originalAarSha256": "bb1a007c545cc7ac3304293ae79866b5361a48449ee7648c4030d5355869effc",
+  "mpvCommit": "76a5eba99",
+  "nativeVersion": "0.41.0-174-g76a5eba99-jntynho-pause1",
   "ndk": "27.0.12077973",
   "apiLevel": 21,
   "patchSha256": "1133b2d43991c1c61001de788b2b77b3d4391545fe496d88c294aa46c089fe44",
@@ -12,19 +12,20 @@
   },
   "binaries": {
     "arm64-v8a": {
-      "sha256": "fe4655bdc616814d6f59cecd64464c5da9bcb9c3087dc7642de1c68409c9c505",
-      "bytes": 5423304
+      "sha256": "f90aec10b65eae1fa91ef15153ef86fdef6dfede87bcce467059360e79ece9fe",
+      "bytes": 5562704
     },
     "armeabi-v7a": {
-      "sha256": "60b654818fe6d08841370ae50c8b55844bf5440b9f8e9bc15bc055561a686412",
-      "bytes": 4975752
+      "sha256": "029a51c05e5bd238fd37122f4442aaed90bb124e28daad9795fae5d66a51512f",
+      "bytes": 5109148
     }
   },
-  "ffmpeg": "2a22972db3 (unmodified upstream shared libraries)",
-  "libass": "338fd2cea8ac156a910b04838b5f40b868e41160",
-  "libplacebo": "f1cc9dd8",
+  "ffmpeg": "a7522f3fef (unmodified upstream shared libraries)",
+  "libass": "fadc390583f24eb5cf98f16925fd3adee50bca88",
+  "libplacebo": "v7.360.0",
   "lua": "5.2.4; upstream Android portability flags",
   "testScope": "Native C regression harness with simulated clock/device; no physical Android playback measurement",
-  "sourceLockSha256": "bb247f8279a529dd4ffe558822564aedb0cf134642c975dfa152c49150e6c992",
-  "buildScriptSha256": "cccd5975fc5ee7eacf66c458e66ed4f5a140990be8a74cea895b8913bd205c2b"
+  "sourceLockSha256": "15f76a8440439692014fa666ec239bcbff305a25597b099295b59b9b5e4b1fb6",
+  "buildScriptSha256": "cccd5975fc5ee7eacf66c458e66ed4f5a140990be8a74cea895b8913bd205c2b",
+  "integrationCoordinate": "io.github.jntynho:mpv-android-lib:0.1.12 (local project module)"
 }

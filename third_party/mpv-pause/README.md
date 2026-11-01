@@ -1,6 +1,6 @@
-# mpv-android-lib 0.1.9 — native pause correction
+# mpv-android-lib 0.1.12 — native pause correction
 
-The app resolves `io.github.abdallahmehiz:mpv-android-lib:0.1.9` from Maven Central. `prepareMpvRuntime` retains its original classes, JNI wrapper, Android resources/manifest and all FFmpeg/native support libraries. Only `libmpv.so` for ARM64 and ARMv7 is replaced. The generated AAR is a locally patched derivative, not an unmodified upstream publication. The removed `app.gyrolet.mpvlib` runtime is not used.
+The app resolves `io.github.abdallahmehiz:mpv-android-lib:0.1.12` from Maven Central. `prepareMpvRuntime` retains its original classes, JNI wrapper, Android resources/manifest and all FFmpeg/native support libraries. Only `libmpv.so` for ARM64 and ARMv7 is replaced. The generated AAR is a locally patched derivative, not an unmodified upstream publication. The local integration module is named `io.github.jntynho:mpv-android-lib:0.1.12`; this is not a claim of public Maven publication. The removed `app.gyrolet.mpvlib` runtime is not used.
 
 ## Why the native change is needed
 
@@ -14,7 +14,7 @@ The callback's internal mutex is released before calling the Android API, so a s
 
 `provenance.json` records the original AAR checksum, source revisions, patched binary checksums, API level and NDK version. `buildscripts/sources.lock.json` records archive checksums. The source revisions for mpv, FFmpeg headers, libass and libplacebo match the versions embedded in the original AAR; FFmpeg binaries themselves are reused unmodified. Lua keeps the producer's Android portability flags, including the old Android 32-bit file-seek fallback.
 
-Both binaries retain all 54 public `mpv_*` entrypoints from the original library and the same required shared-library names. Codec binaries and formats are not removed. The native marker is `mpvkt-pause2`. API 21 is the minimum, and ARM64 load segments are aligned to 16 KB.
+Both binaries are checked against the public `mpv_*` entrypoints from the matching upstream library and the required shared-library names from 0.1.12. Codec binaries and formats are not removed. The native marker is `jntynho-pause1`. API 21 is the minimum, and ARM64 load segments are aligned to 16 KB.
 
 ## Tests and their limits
 
@@ -48,4 +48,4 @@ The output is `/build/output/<abi>/libmpv.so`. Rebuilding may change build-date 
 
 ## License and complete corresponding source
 
-mpv and these modifications are distributed under the applicable GPL-2.0-or-later terms; see `LICENSE.GPL` and `Copyright`. `LICENSE.LGPL` is retained for relevant upstream components. The patch, original fixtures, source URLs/checksums and build scripts in this directory provide the inputs to rebuild the modified library. Third-party dependency archives retain their own upstream licenses. The application wrapper and unmodified libraries retain the licenses of `mpv-android-lib:0.1.9`.
+mpv and these modifications are distributed under the applicable GPL-2.0-or-later terms; see `LICENSE.GPL` and `Copyright`. `LICENSE.LGPL` is retained for relevant upstream components. The patch, original fixtures, source URLs/checksums and build scripts in this directory provide the inputs to rebuild the modified library. Third-party dependency archives retain their own upstream licenses. The application wrapper and unmodified libraries retain the licenses of `mpv-android-lib:0.1.12`.

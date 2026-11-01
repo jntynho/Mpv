@@ -57,8 +57,8 @@ list(ThreadPoolExecutor(max_workers=4).map(prepare, base))
 list(ThreadPoolExecutor(max_workers=2).map(prepare, nested))
 
 provenance = json.loads((HERE.parent/'provenance.json').read_text())
-coordinate = 'io/github/abdallahmehiz/mpv-android-lib/0.1.9/mpv-android-lib-0.1.9.aar'
-aar = download('mpv-android-lib-0.1.9.aar', 'https://repo.maven.apache.org/maven2/'+coordinate, provenance['originalAarSha256'])
+coordinate = 'io/github/abdallahmehiz/mpv-android-lib/0.1.12/mpv-android-lib-0.1.12.aar'
+aar = download('mpv-android-lib-0.1.12.aar', 'https://repo.maven.apache.org/maven2/'+coordinate, provenance['originalAarSha256'])
 with zipfile.ZipFile(aar) as source:
     for name in source.namelist():
         if name.startswith(('jni/arm64-v8a/', 'jni/armeabi-v7a/')) and name.endswith('.so'):

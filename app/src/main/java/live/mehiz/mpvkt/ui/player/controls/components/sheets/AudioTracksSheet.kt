@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.presentation.components.SlimPlayerSlider

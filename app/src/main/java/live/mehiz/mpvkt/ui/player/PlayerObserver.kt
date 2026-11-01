@@ -1,6 +1,6 @@
 package live.mehiz.mpvkt.ui.player
 
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import `is`.xyz.mpv.MPVNode
 
 class PlayerObserver(private val activity: PlayerActivity) : MPVLib.EventObserver {

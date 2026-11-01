@@ -45,7 +45,7 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import com.github.k1rakishou.fsaf.FileManager
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import `is`.xyz.mpv.MPVNode
 import `is`.xyz.mpv.Utils
 import kotlinx.coroutines.Dispatchers
@@ -210,6 +210,7 @@ class PlayerActivity : AppCompatActivity() {
     MPVLib.removeObserver(playerObserver)
     MpvProperties.detach(this)
     playerObserver.release()
+    MPVLib.unbind(player.mpv)
     player.destroy()
 
     restoreJob?.cancel()

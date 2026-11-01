@@ -23,7 +23,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import `is`.xyz.mpv.MPVNode
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.GesturePreferences

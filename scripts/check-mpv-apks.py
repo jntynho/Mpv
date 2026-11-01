@@ -37,7 +37,7 @@ metadata = json.loads((OUTPUT/'output-metadata.json').read_text())
 expected_architectures = {'arm64-v8a': {'arm64-v8a'}, 'armeabi-v7a': {'armeabi-v7a'},
                           'universal': {'arm64-v8a', 'armeabi-v7a'}}
 assert len(metadata['elements']) == 3
-with zipfile.ZipFile(ROOT/'app/build/generated/mpv-runtime/mpv-android-lib-0.1.9-pause2.aar') as runtime:
+with zipfile.ZipFile(ROOT/'app/build/generated/mpv-runtime/mpv-android-lib-0.1.12-jntynho-pause1.aar') as runtime:
     for element in metadata['elements']:
         path = OUTPUT/element['outputFile']
         kind = next(kind for kind in expected_architectures if path.name == f'app-{kind}-preview.apk')
@@ -67,8 +67,8 @@ with zipfile.ZipFile(ROOT/'app/build/generated/mpv-runtime/mpv-android-lib-0.1.9
                     assert hashlib.sha256(data).hexdigest() == PROVENANCE['binaries'][abi]['sha256']
                     assert PROVENANCE['nativeVersion'].encode() in data and b'Failed to change native pause state' in data
                 if library == 'libplayer.so':
-                    assert b'Java_is_xyz_mpv_MPVLib_destroy\0' in data
-                    assert b'Java_is_xyz_mpv_MPVLib_destroyNative\0' not in data
+                    assert b'Java_is_xyz_mpv_MPV_nativeDestroy\0' in data
+                    assert b'Java_is_xyz_mpv_MPVLib_destroy\0' not in data
                 if library != 'libandroidx.graphics.path.so':
                     upstream = runtime.read('jni/'+name.removeprefix('lib/'))
                     if library == 'libc++_shared.so':
@@ -76,7 +76,7 @@ with zipfile.ZipFile(ROOT/'app/build/generated/mpv-runtime/mpv-android-lib-0.1.9
                     else:
                         assert data == upstream, name
             dex = [apk.read(name) for name in apk.namelist() if re.fullmatch(r'classes\d*\.dex', name)]
-            assert dex and not any(b'destroyNative' in data for data in dex)
+            assert dex and any(b'Lis/xyz/mpv/MPV;' in data for data in dex)
         print(json.dumps({'apk': path.name, 'bytes': path.stat().st_size, 'abis': sorted(abis),
                           'versionCode': element['versionCode'], 'nativePauseFix': 'verified',
                           'otherRuntimeContent': 'unchanged (libc++ debug stripping allowed)',

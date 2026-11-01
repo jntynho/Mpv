@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import org.koin.compose.koinInject
 

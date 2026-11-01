@@ -1,6 +1,6 @@
 package live.mehiz.mpvkt.ui.player
 
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import `is`.xyz.mpv.MPVNode
 
 /** Activity-owned binding; cached Flow references remain usable after a native core recreation. */

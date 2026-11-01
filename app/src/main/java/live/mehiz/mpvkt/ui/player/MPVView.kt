@@ -9,7 +9,7 @@ import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import `is`.xyz.mpv.BaseMPVView
 import `is`.xyz.mpv.KeyMapping
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import live.mehiz.mpvkt.preferences.AdvancedPreferences
 import live.mehiz.mpvkt.preferences.AudioPreferences
 import live.mehiz.mpvkt.preferences.DecoderPreferences
@@ -27,6 +27,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
   private val decoderPreferences: DecoderPreferences by inject()
   private val advancedPreferences: AdvancedPreferences by inject()
   private val subtitlesPreferences: SubtitlesPreferences by inject()
+
+  init { MPVLib.bind(mpv) }
 
   var isExiting = false
 
@@ -55,6 +57,8 @@ class MPVView(context: Context, attributes: AttributeSet) : BaseMPVView(context,
 
   override fun initOptions() {
     setVo(if (decoderPreferences.gpuNext.get()) "gpu-next" else "gpu")
+    // Keep the reviewed queue-preserving backend by default; new backends remain opt-in via config.
+    MPVLib.setOptionString("ao", "opensles")
     MPVLib.setOptionString("profile", "fast")
     MPVLib.setOptionString("hwdec", if (decoderPreferences.tryHWDecoding.get()) "auto" else "no")
 

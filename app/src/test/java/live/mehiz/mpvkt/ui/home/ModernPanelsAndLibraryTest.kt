@@ -195,8 +195,11 @@ class ModernPanelsAndLibraryTest {
     compose.onNodeWithContentDescription("Playback actions").performClick()
     compose.onNodeWithText("Recently Played").performClick()
     compose.onNodeWithText("Old film").assertDoesNotExist()
-    compose.waitUntil(5000) {
-      org.robolectric.shadows.ShadowToast.getTextOfLatestToast() == "Your played videos will appear here."
+    compose.waitUntil(10000) {
+      // This action crosses IO -> Android Main; drain Robolectric's paused Handler queue too.
+      shadowOf(android.os.Looper.getMainLooper()).idle()
+      org.robolectric.shadows.ShadowToast.getTextOfLatestToast() ==
+        compose.activity.getString(live.mehiz.mpvkt.R.string.mpv_recent_empty)
     }
     assertNull(shadowOf(compose.activity).nextStartedActivity)
   }

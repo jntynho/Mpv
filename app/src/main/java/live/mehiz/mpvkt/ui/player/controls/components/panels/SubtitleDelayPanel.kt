@@ -38,7 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 import live.mehiz.mpvkt.ui.player.PanelProperties
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences

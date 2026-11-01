@@ -26,3 +26,6 @@ rootProject.name = "LumaPlayer"
 include(":app")
 
 include(":third_party:seeker", ":third_party:fsaf")
+
+include(":mpv-android-lib")
+project(":mpv-android-lib").projectDir = file("third_party/mpv-android-lib")

@@ -1,0 +1,15 @@
+{
+  "uniqueId": "io.github.jntynho:mpv-android-lib",
+  "artifactVersion": "0.1.12",
+  "name": "jntynho MPV Android integration",
+  "description": "Local integration module with session lifetime protection, adapting the attributed upstream mpv-android-lib 0.1.12. This coordinate is not published to a public Maven repository.",
+  "website": "https://github.com/jntynho/Mpv/tree/main/third_party/mpv-android-lib",
+  "developers": [
+    {
+      "name": "jntynho"
+    }
+  ],
+  "licenses": [
+    "MIT"
+  ]
+}

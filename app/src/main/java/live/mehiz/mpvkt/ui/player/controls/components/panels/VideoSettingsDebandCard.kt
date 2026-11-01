@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import live.mehiz.mpvkt.ui.player.PlaybackControl
 import live.mehiz.mpvkt.ui.player.PanelProperties
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.DecoderPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState

@@ -41,7 +41,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import kotlinx.coroutines.flow.map
 import live.mehiz.mpvkt.preferences.SubtitlesPreferences
 import live.mehiz.mpvkt.ui.player.PlaybackControl

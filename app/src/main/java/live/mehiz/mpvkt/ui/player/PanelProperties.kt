@@ -1,6 +1,6 @@
 package live.mehiz.mpvkt.ui.player
 
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 
 /** Keep synchronous JNI writes off the UI thread, including slider resets. */
 internal object PanelProperties {

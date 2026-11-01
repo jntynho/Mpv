@@ -3,7 +3,7 @@ package live.mehiz.mpvkt.ui.player.controls.components.sheets
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
-import `is`.xyz.mpv.MPVLib
+import io.github.jntynho.mpv.MpvRuntime as MPVLib
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AudioChannels
 import live.mehiz.mpvkt.preferences.AudioPreferences
