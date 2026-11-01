@@ -80,7 +80,7 @@ internal fun InterfaceWarmup(
     // The timeout prevents a lost window/surface from leaving the application behind the loader.
     val finished =
       try {
-        withTimeoutOrNull(9_000) {
+        withTimeoutOrNull(if (firstRun) 12_000L else 9_000L) {
           repeat(6) { index ->
             scene = index
             phase = 0
@@ -99,7 +99,7 @@ internal fun InterfaceWarmup(
               // hold.
               val until =
                 withFrameNanos { it } +
-                  (if (reduceMotion) 32 else if (firstRun) 280 else 140) * 1_000_000L
+                  (if (reduceMotion) 32 else if (firstRun) 360 else 200) * 1_000_000L
               do {
                 val now = withFrameNanos { it }
               } while (now < until)
@@ -158,7 +158,10 @@ internal fun InterfaceWarmup(
         frames.trySend(drawRevision)
       }
   ) {
-    CompositionLocalProvider(LocalInterfacePreparation provides true) {
+    CompositionLocalProvider(
+      LocalInterfacePreparation provides true,
+      LocalWarmupScene provides true,
+    ) {
       WarmupScene(scene, phase, reduceMotion, thumbnails)
     }
   }
@@ -285,12 +288,14 @@ private fun WarmupScene(
           }
         }
       2 ->
-        key(phase) {
+        key(Unit) {
           live.mehiz.mpvkt.presentation.components.PlayerSheet(
             onDismissRequest = {},
             reduceMotion = reduceMotion,
             interactive = false,
-          ) { _, _ ->
+            edgeToEdge = phase == 1,
+          ) { close, _ ->
+            LaunchedEffect(phase) { if (phase == 2) close() }
             Column(
               Modifier.fillMaxSize()
                 .background(
@@ -366,7 +371,8 @@ private fun WarmupScene(
           }
         }
       else ->
-        Column(Modifier.padding(20.dp)) {
+        Column(Modifier.fillMaxSize().padding(20.dp)) {
+          live.mehiz.mpvkt.presentation.components.AppBrandMark(Modifier.size(48.dp))
           // Exercise the original vectors in both styles as painters, rather than only parsing
           // their XML.
           androidx.compose.runtime.CompositionLocalProvider(
@@ -379,8 +385,9 @@ private fun WarmupScene(
                 .flatMap { listOf(it.drawable(style), it.drawable(style, true)) }
                 .distinct()
                 .map { IconVectors.get(resources, it) }
-            BoxWithConstraints {
-              val cell = (maxWidth / 8).coerceAtMost(with(LocalDensity.current) { 48.toDp() })
+            BoxWithConstraints(Modifier.weight(1f)) {
+              val rows = ((icons.size + 7) / 8).coerceAtLeast(1)
+              val cell = minOf(maxWidth / 8, maxHeight / rows, 48.dp).coerceAtLeast(1.dp)
               Column {
                 icons.chunked(8).forEach { row ->
                   Row { row.forEach { Icon(it, null, Modifier.size(cell).padding(cell / 8)) } }
@@ -388,7 +395,20 @@ private fun WarmupScene(
               }
             }
           }
-          SlimPlayerSlider(if (phase == 1) .9f else .1f, {}, Modifier.fillMaxWidth())
+          SeekbarStyle.entries.forEach { style ->
+            StyledSeeker(
+              if (phase == 1) 80f else 20f,
+              120f,
+              100f,
+              emptyList(),
+              {},
+              {},
+              Modifier.fillMaxWidth().height(40.dp),
+              style = style,
+              interactive = false,
+              reduceMotion = reduceMotion,
+            )
+          }
           AnimatedPlayPauseButton(phase != 1, false, false, reduceMotion, {})
         }
     }

@@ -12,14 +12,18 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -30,7 +34,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.presentation.components.AppBrandMark
 import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.startup.LocalBrandHandoff
 
 /** Only bounded slots resize: a long title never supplies an intrinsic animation width. */
 @Composable
@@ -52,6 +58,7 @@ internal fun LibraryHeader(
   display: LibraryDisplayOptions = LibraryDisplayOptions(),
   onDisplay: (LibraryDisplayOptions) -> Unit = {},
 ) {
+  val warming = live.mehiz.mpvkt.ui.startup.LocalWarmupScene.current
   val preparing = live.mehiz.mpvkt.ui.startup.LocalInterfacePreparation.current
   val duration = if (reduceMotion) 0 else 260
   val headerHeight =
@@ -84,6 +91,7 @@ internal fun LibraryHeader(
         // Measure both outgoing and incoming titles at the final reserved width.
         // Only their viewport moves; ellipsis does not change on every animation frame.
         val titleWidth = (maxWidth - 212.dp).coerceAtLeast(1.dp)
+        val searchWidth = (maxWidth - 68.dp).coerceAtLeast(1.dp)
         Row(
           Modifier.fillMaxWidth()
             .statusBarsPadding()
@@ -102,6 +110,7 @@ internal fun LibraryHeader(
                 modifier =
                   Modifier.wrapContentSize(Alignment.CenterStart, unbounded = true)
                     .requiredSize(48.dp)
+                    .clip(CircleShape)
                     .graphicsLayer { alpha = back },
               ) {
                 Icon(Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
@@ -132,7 +141,9 @@ internal fun LibraryHeader(
               live.mehiz.mpvkt.presentation.components.AppTextField(
                 query,
                 onQuery,
-                Modifier.fillMaxWidth().focusRequester(focus),
+                Modifier.wrapContentSize(Alignment.CenterStart, unbounded = true)
+                  .requiredWidth(searchWidth)
+                  .focusRequester(focus),
                 enabled = searching && !preparing,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge,
@@ -144,8 +155,11 @@ internal fun LibraryHeader(
                   ) {
                     Icon(
                       Icons.Close,
-                      stringResource(if (query.isNotEmpty()) R.string.mpv_clear_search else R.string.mpv_close_search),
-                      Modifier.size(22.dp),
+                      stringResource(
+                        if (query.isNotEmpty()) R.string.mpv_clear_search
+                        else R.string.mpv_close_search
+                      ),
+                      Modifier.size(24.dp),
                     )
                   }
                 },
@@ -159,20 +173,44 @@ internal fun LibraryHeader(
                 label = "bounded_header_title",
               ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-                  Text(
-                    it,
-                    Modifier.widthIn(max = titleWidth)
-                      .fillMaxWidth()
-                      .combinedClickable(
-                        onClick = {},
-                        onLongClick = { if (!preparing) onSecureFolder() },
-                        onDoubleClick = { if (!preparing) onSecureFolder() },
-                      ),
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
-                  )
+                  if (!inFolder && it == "MPV") {
+                    val handoff = LocalBrandHandoff.current
+                    Box(
+                      Modifier.size(48.dp)
+                        .clip(CircleShape)
+                        .combinedClickable(
+                          enabled = !preparing,
+                          onClick = {},
+                          onLongClick = onSecureFolder,
+                          onDoubleClick = onSecureFolder,
+                        ),
+                      contentAlignment = Alignment.Center,
+                    ) {
+                      AppBrandMark(
+                        Modifier.size(32.dp)
+                          .onGloballyPositioned { bounds ->
+                            if (handoff != null && !warming)
+                              handoff.target = bounds.boundsInWindow()
+                          }
+                          .graphicsLayer { alpha = if (handoff?.moving == true) 0f else 1f },
+                        description = "MPV",
+                      )
+                    }
+                  } else
+                    Text(
+                      it,
+                      Modifier.widthIn(max = titleWidth)
+                        .fillMaxWidth()
+                        .combinedClickable(
+                          onClick = {},
+                          onLongClick = { if (!preparing) onSecureFolder() },
+                          onDoubleClick = { if (!preparing) onSecureFolder() },
+                        ),
+                      style = MaterialTheme.typography.titleLarge,
+                      maxLines = 1,
+                      softWrap = false,
+                      overflow = TextOverflow.Ellipsis,
+                    )
                 }
               }
             }
@@ -184,7 +222,11 @@ internal fun LibraryHeader(
                   .requiredWidth(144.dp)
                   .graphicsLayer { alpha = 1f - search }
               ) {
-                IconButton(onClick = onSearch, enabled = !searching && !preparing) {
+                IconButton(
+                  onClick = onSearch,
+                  enabled = !searching && !preparing,
+                  modifier = Modifier.size(48.dp).clip(CircleShape),
+                ) {
                   Icon(Icons.Search, stringResource(R.string.mpv_search))
                 }
                 LibrarySortButton(
@@ -200,7 +242,11 @@ internal fun LibraryHeader(
                   display = display,
                   onDisplay = onDisplay,
                 )
-                IconButton(onClick = onSettings, enabled = !searching && !preparing) {
+                IconButton(
+                  onClick = onSettings,
+                  enabled = !searching && !preparing,
+                  modifier = Modifier.size(48.dp).clip(CircleShape),
+                ) {
                   Icon(Icons.Settings, stringResource(R.string.luma_settings))
                 }
               }

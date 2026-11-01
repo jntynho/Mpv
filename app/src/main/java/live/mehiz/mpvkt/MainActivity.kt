@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,11 +46,16 @@ class MainActivity : ComponentActivity() {
     setContent {
       val dark by appearancePreferences.darkMode.collectAsState()
       val isSystemInDarkTheme = isSystemInDarkTheme()
-      enableEdgeToEdge(
-        SystemBarStyle.auto(lightScrim = Color.White.toArgb(), darkScrim = Color.White.toArgb()) {
-          dark == DarkMode.Dark || (dark == DarkMode.System && isSystemInDarkTheme)
-        }
-      )
+      SideEffect {
+        enableEdgeToEdge(
+          SystemBarStyle.auto(
+            lightScrim = Color.Transparent.toArgb(),
+            darkScrim = Color.Black.copy(alpha = .4f).toArgb(),
+          ) {
+            dark == DarkMode.Dark || (dark == DarkMode.System && isSystemInDarkTheme)
+          }
+        )
+      }
       MpvKtTheme { Surface { StartupGate { Navigator() } } }
     }
   }

@@ -7,6 +7,8 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,7 +23,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +46,7 @@ import live.mehiz.mpvkt.BuildConfig
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
+import live.mehiz.mpvkt.presentation.components.AppBrandMark
 import live.mehiz.mpvkt.ui.home.LocalMediaLibrary
 import live.mehiz.mpvkt.ui.home.MediaLibrary
 import live.mehiz.mpvkt.ui.home.Thumbnails
@@ -64,6 +70,9 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   val app = context.applicationContext
   val library: MediaLibrary = viewModel()
   val state by library.state.collectAsState()
+  val handoff = remember { BrandHandoff() }
+  val flight = remember { Animatable(0f) }
+  var landed by remember { mutableStateOf(library.enteredHome) }
   val preferences = remember { app.getSharedPreferences("startup", Context.MODE_PRIVATE) }
   var introduced by rememberSaveable { mutableStateOf(preferences.getBoolean("introduced", false)) }
   var subtitleAccessReviewed by rememberSaveable {
@@ -202,7 +211,23 @@ internal fun StartupGate(content: @Composable () -> Unit) {
       }
     }
   }
-  val showHome = (ready || library.enteredHome) && subtitleAccessReviewed
+  val canReveal = (ready || library.enteredHome) && subtitleAccessReviewed
+  val showHome = canReveal && landed
+  LaunchedEffect(canReveal, foreground) {
+    if (!canReveal || !foreground || landed) return@LaunchedEffect
+    // Real Home has already laid out and rendered behind the cover.
+    withFrameNanos {}
+    if (!reduceMotion && handoff.source != null && handoff.target != null) {
+      flight.snapTo(0f)
+      handoff.moving = true
+      try {
+        flight.animateTo(1f, tween(660, easing = CubicBezierEasing(.55f, 0f, .1f, 1f)))
+      } finally {
+        handoff.moving = false
+      }
+    }
+    landed = true
+  }
   val requestAccess = {
     if (!requesting) {
       requesting = true
@@ -210,10 +235,11 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     }
   }
   CompositionLocalProvider(
+    LocalBrandHandoff provides handoff,
     LocalMediaLibrary provides library,
     LocalLibraryAccess provides LibraryAccess(access, limited, requestAccess),
   ) {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().onGloballyPositioned { handoff.root = it.boundsInWindow() }) {
       // Keep this composition alive when the cover leaves: no second cold construction of Home.
       if (introduced)
         CompositionLocalProvider(LocalInterfacePreparation provides !showHome) {
@@ -238,9 +264,9 @@ internal fun StartupGate(content: @Composable () -> Unit) {
           thumbnails = thumbnails,
         )
       androidx.compose.animation.AnimatedVisibility(
-        !showHome,
+        !canReveal || (!foreground && !landed),
         enter = fadeIn(tween(0)),
-        exit = fadeOut(tween(if (reduceMotion) 0 else 280)),
+        exit = fadeOut(tween(if (reduceMotion) 0 else 600)),
         modifier = Modifier.fillMaxSize(),
       ) {
         Box(
@@ -287,6 +313,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
           )
         }
       }
+      if (handoff.moving) BrandFlight(handoff) { flight.value }
     }
   }
 }
@@ -327,47 +354,15 @@ private fun StartupPage(
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
       val reduced = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
-      val smoothProgress by
-        androidx.compose.animation.core.animateFloatAsState(
-          progress,
-          tween(if (reduced) 0 else 300),
-          label = "preparation_ring",
-        )
+      val handoff = LocalBrandHandoff.current
       Box(Modifier.size(116.dp), contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-          val stroke = 3.dp.toPx()
-          drawArc(
-            colors.outlineVariant.copy(alpha = .35f),
-            -90f,
-            360f,
-            false,
-            style =
-              androidx.compose.ui.graphics.drawscope.Stroke(
-                stroke,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-              ),
-          )
-          drawArc(
-            colors.primary,
-            -90f,
-            360f * smoothProgress.coerceIn(.02f, 1f),
-            false,
-            style =
-              androidx.compose.ui.graphics.drawscope.Stroke(
-                stroke,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-              ),
-          )
-        }
-        Surface(shape = RoundedCornerShape(28.dp), color = colors.surfaceContainerHigh) {
-          androidx.compose.foundation.Image(
-            androidx.compose.ui.res.painterResource(R.drawable.mpv_launcher_foreground),
-            null,
-            Modifier.size(88.dp),
-          )
-        }
+        AppBrandMark(
+          Modifier.size(96.dp)
+            .onGloballyPositioned { handoff?.source = it.boundsInWindow() }
+            .graphicsLayer { alpha = if (handoff?.moving == true) 0f else 1f }
+        )
       }
-      Text("MPV", style = MaterialTheme.typography.displaySmall, color = colors.onBackground)
+      Text("MPV", style = MaterialTheme.typography.headlineMedium, color = colors.onBackground)
       Text(
         stringResource(
           if (showIntroduction) R.string.mpv_welcome
@@ -442,7 +437,7 @@ private fun StartupPage(
         val animatedProgress by
           androidx.compose.animation.core.animateFloatAsState(
             progress,
-            tween(240),
+            tween(if (reduced) 0 else 240),
             label = "startup_progress",
           )
         LinearProgressIndicator(

@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -188,7 +189,10 @@ fun PlayerSheet(
         .padding(if (edgeToEdge) 0.dp else 12.dp)
     ) {
       val width =
-        if (maxWidth > maxHeight) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
+        if (maxWidth > maxHeight)
+          (maxWidth * (if (edgeToEdge) .52f else .48f))
+            .coerceIn(336.dp, if (edgeToEdge) 560.dp else 504.dp)
+            .coerceAtMost(maxWidth)
         else maxWidth.coerceAtMost(504.dp)
       Surface(
         modifier =
@@ -215,7 +219,9 @@ fun PlayerSheet(
             }
             .then(modifier)
             .pointerInput(Unit) { detectTapGestures(onTap = {}) },
-        shape = if (edgeToEdge) RoundedCornerShape(0.dp) else RoundedCornerShape(24.dp),
+        shape =
+          if (edgeToEdge) AbsoluteRoundedCornerShape(topLeft = 24.dp, bottomLeft = 24.dp)
+          else RoundedCornerShape(24.dp),
         tonalElevation = tonalElevation,
         color =
           MaterialTheme.colorScheme.surfaceContainer.copy(
@@ -226,10 +232,20 @@ fun PlayerSheet(
           Modifier.fillMaxSize()
             .then(
               if (edgeToEdge)
-                Modifier.windowInsetsPadding(WindowInsets.safeDrawing).graphicsLayer {
-                  // The surface stays flush; only its contents follow negative spring overshoot.
-                  translationX = motion.position.coerceAtMost(0f) * (widthPx + extraPx)
-                }
+                Modifier.windowInsetsPadding(
+                    WindowInsets.safeDrawing
+                      .union(WindowInsets.statusBarsIgnoringVisibility)
+                      .only(
+                        WindowInsetsSides.Top +
+                          WindowInsetsSides.Bottom +
+                          (if (width == maxWidth) WindowInsetsSides.Horizontal
+                          else WindowInsetsSides.Right)
+                      )
+                  )
+                  .graphicsLayer {
+                    // The surface stays flush; only its contents follow negative spring overshoot.
+                    translationX = motion.position.coerceAtMost(0f) * (widthPx + extraPx)
+                  }
               else Modifier
             )
         ) {

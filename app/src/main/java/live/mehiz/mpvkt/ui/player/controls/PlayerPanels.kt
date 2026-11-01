@@ -31,7 +31,7 @@ fun PlayerPanels(
   }
 }
 
-val CARDS_MAX_WIDTH = 480.dp
+val CARDS_MAX_WIDTH = 560.dp
 val panelCardsColors: @Composable () -> CardColors = {
   CardDefaults.cardColors(
     containerColor = androidx.compose.ui.graphics.Color.Transparent,
