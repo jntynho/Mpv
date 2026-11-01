@@ -113,6 +113,7 @@ internal class PaneMotion {
 }
 
 /** One surface for the lifetime of the player pane; only its inner page changes. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlayerSheet(
   onDismissRequest: () -> Unit,
