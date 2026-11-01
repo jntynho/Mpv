@@ -127,3 +127,11 @@ jobs:
             tail -100 "$RUNNER_TEMP/mpv-publication.log" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
+          python3 - <<'PYCODE'
+          import os, pathlib
+          log = pathlib.Path(os.environ['RUNNER_TEMP'], 'mpv-publication.log')
+          if log.exists():
+              text = log.read_text(errors='replace')[-2500:]
+              safe = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print('::notice::Publication diagnostic: ' + safe)
+          PYCODE
