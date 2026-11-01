@@ -78,6 +78,18 @@ jobs:
           cp artifacts/MPV-APK-arm64/app-arm64-v8a-preview.apk release-assets/arm64-v8a.apk
           cp artifacts/MPV-APK-arm32/app-armeabi-v7a-preview.apk release-assets/armeabi-v7a.apk
           cp artifacts/MPV-APK-universal/app-universal-preview.apk release-assets/universal.apk
+          # Older 0.1.12 builds without the private JNI keep rule must never be published.
+          if [ -f third_party/mpv-android-lib/build.gradle.kts ]; then
+            test -s third_party/mpv-android-lib/consumer-rules.pro
+            python3 - <<'PYCONTRACT'
+          import pathlib, re, sys, zipfile
+          sys.path.insert(0, 'scripts')
+          from mpv_dex_contract import verify_mpv_jni
+          for apk in pathlib.Path('release-assets').glob('*.apk'):
+              with zipfile.ZipFile(apk) as archive:
+                  verify_mpv_jni([archive.read(name) for name in archive.namelist() if re.fullmatch(r'classes\d*\.dex', name)])
+          PYCONTRACT
+          fi
           python3 - <<'PY'
           import os, pathlib, re, zipfile
           version = re.search(r'versionName = "([^"]+)"', pathlib.Path('app/build.gradle.kts').read_text()).group(1)
