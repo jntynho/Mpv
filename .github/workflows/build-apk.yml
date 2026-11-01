@@ -1,6 +1,8 @@
 name: Build MPV APKs
 on:
   push:
+    tags-ignore:
+      - v*-build.*
     paths-ignore:
       - .github/workflows/publish-release.yml
   pull_request:
