@@ -161,6 +161,7 @@ internal fun DialogButton(
     )
 }
 
+/** Compatibility name for existing dialogs; all geometry lives in AppTextField. */
 @Composable
 internal fun RoundedTextField(
   value: String,
@@ -168,7 +169,7 @@ internal fun RoundedTextField(
   modifier: Modifier = Modifier,
   enabled: Boolean = true,
   readOnly: Boolean = false,
-  textStyle: TextStyle = LocalTextStyle.current,
+  textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
   label: (@Composable () -> Unit)? = null,
   placeholder: (@Composable () -> Unit)? = null,
   leadingIcon: (@Composable () -> Unit)? = null,
@@ -178,22 +179,21 @@ internal fun RoundedTextField(
   visualTransformation: VisualTransformation = VisualTransformation.None,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
   keyboardActions: KeyboardActions = KeyboardActions.Default,
-  singleLine: Boolean = false,
+  singleLine: Boolean = true,
   maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-  minLines: Int = 1,
-  shape: Shape = RoundedCornerShape(16.dp),
+  shape: Shape = AppFieldShape,
 ) {
-  OutlinedTextField(
-    value,
-    onValueChange,
-    modifier.fillMaxWidth(),
-    enabled,
-    readOnly,
-    textStyle,
-    label,
-    placeholder,
-    leadingIcon,
-    trailingIcon,
+  AppTextField(
+    value = value,
+    onValueChange = onValueChange,
+    modifier = modifier,
+    enabled = enabled,
+    readOnly = readOnly,
+    textStyle = textStyle,
+    label = label,
+    placeholder = placeholder,
+    leadingIcon = leadingIcon,
+    trailingIcon = trailingIcon,
     supportingText = supportingText,
     isError = isError,
     visualTransformation = visualTransformation,
@@ -201,24 +201,6 @@ internal fun RoundedTextField(
     keyboardActions = keyboardActions,
     singleLine = singleLine,
     maxLines = maxLines,
-    minLines = minLines,
     shape = shape,
-    colors =
-      OutlinedTextFieldDefaults.colors(
-        unfocusedContainerColor =
-          lerp(
-            MaterialTheme.colorScheme.surfaceContainer,
-            MaterialTheme.colorScheme.onSurface,
-            .025f,
-          ),
-        focusedContainerColor =
-          lerp(
-            MaterialTheme.colorScheme.surfaceContainer,
-            MaterialTheme.colorScheme.onSurface,
-            .025f,
-          ),
-        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f),
-        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = .7f),
-      ),
   )
 }

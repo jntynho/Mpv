@@ -1,5 +1,6 @@
 package live.mehiz.mpvkt.ui.player.controls.components.panels
 
+import live.mehiz.mpvkt.presentation.components.AppTextField
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,7 +36,6 @@ import live.mehiz.mpvkt.subtitles.*
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.player.Panels
 import live.mehiz.mpvkt.ui.player.controls.components.*
-import live.mehiz.mpvkt.ui.player.controls.components.PanelTextField as OutlinedTextField
 import live.mehiz.mpvkt.ui.player.controls.components.sheets.AudioTrackRow
 import live.mehiz.mpvkt.ui.preferences.ProviderKeyRow
 import live.mehiz.mpvkt.ui.preferences.SubtitleSettingRow
@@ -101,7 +101,7 @@ internal fun SubtitleSearchPanel(
       SubtitleSearchPage.Query ->
         PlayerScrollArea(Modifier.fillMaxSize()) {
           Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedTextField(
+            AppTextField(
               state.query,
               edit,
               Modifier.fillMaxWidth(),
@@ -438,7 +438,7 @@ private fun NumberSelector(
       Icon(Icons.ArrowDropDown, null, Modifier.size(18.dp))
     }
   else
-    OutlinedTextField(
+    AppTextField(
       value?.toString().orEmpty(),
       { raw ->
         if (raw.isEmpty() || raw.all(Char::isDigit) && raw.length <= 3)
@@ -467,7 +467,7 @@ internal fun SubtitleSearchChoicePanel(
   PlayerLazyScrollArea(Modifier.fillMaxSize()) {
     if (panel == Panels.SubtitleSearchLanguages)
       item("filter") {
-        OutlinedTextField(
+        AppTextField(
           query,
           { query = it },
           Modifier.fillMaxWidth().padding(16.dp),

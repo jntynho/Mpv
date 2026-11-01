@@ -36,28 +36,31 @@ fun SlimPlayerSlider(
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
   val dragged by interactionSource.collectIsDraggedAsState()
-  var editing by remember { mutableStateOf(false) }
-  var pending by remember { mutableStateOf<Float?>(null) }
+  val min = valueRange.start.takeIf { it.isFinite() } ?: 0f
+  val max = valueRange.endInclusive.takeIf { it.isFinite() }?.coerceAtLeast(min) ?: min
+  val interactive = enabled && max > min
+  val safeValue = value.takeIf { it.isFinite() }?.coerceIn(min, max) ?: min
+  var editing by remember(min, max) { mutableStateOf(false) }
+  var pending by remember(min, max) { mutableStateOf<Float?>(null) }
   LaunchedEffect(dragged) { if (!dragged) editing = false }
-  val min = valueRange.start
-  val max = valueRange.endInclusive.coerceAtLeast(min)
+  LaunchedEffect(interactive) { if (!interactive) { editing = false; pending = null } }
   val range = min..max
-  LaunchedEffect(value, pending, editing, dragged) {
+  LaunchedEffect(safeValue, pending, editing, dragged) {
     if (!editing && !dragged && pending != null) {
-      if (abs(value - pending!!) > .001f) delay(800)
+      if (abs(safeValue - pending!!) > .001f) delay(800)
       pending = null
     }
   }
   val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
   Slider(
-    value = (pending ?: value).coerceIn(range),
+    value = (pending ?: safeValue).coerceIn(range),
     onValueChange = {
       editing = true
       pending = it
       onValueChange(it)
     },
     modifier = modifier.heightIn(min = 48.dp),
-    enabled = enabled && max > min,
+    enabled = interactive,
     valueRange = range,
     steps = steps.coerceAtLeast(0),
     colors = colors,
@@ -68,8 +71,9 @@ fun SlimPlayerSlider(
     },
     thumb = {
       Box(
-        Modifier.size(14.dp)
-          .background(if (enabled) colors.thumbColor else colors.disabledThumbColor, CircleShape)
+        // Relax the slider's 48dp minimum here: it is a touch target, not thumb height.
+        Modifier.wrapContentSize().requiredSize(14.dp)
+          .background(if (interactive) colors.thumbColor else colors.disabledThumbColor, CircleShape)
       )
     },
     track = { state ->
@@ -77,12 +81,12 @@ fun SlimPlayerSlider(
         val fraction = if (max > min) ((state.value - min) / (max - min)).coerceIn(0f, 1f) else 0f
         val width = size.width * fraction
         drawRoundRect(
-          if (enabled) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
+          if (interactive) colors.inactiveTrackColor else colors.disabledInactiveTrackColor,
           size = size,
           cornerRadius = CornerRadius(size.height),
         )
         drawRoundRect(
-          if (enabled) colors.activeTrackColor else colors.disabledActiveTrackColor,
+          if (interactive) colors.activeTrackColor else colors.disabledActiveTrackColor,
           topLeft = Offset(if (rtl) size.width - width else 0f, 0f),
           size = Size(width, size.height),
           cornerRadius = CornerRadius(size.height),

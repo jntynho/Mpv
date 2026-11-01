@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_input_invalid">Enter a valid value.</string>
+</resources>

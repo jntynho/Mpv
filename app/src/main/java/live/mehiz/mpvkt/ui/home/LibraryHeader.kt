@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -139,7 +138,7 @@ internal fun LibraryHeader(
                 if (!reduceMotion) delay(260)
                 focus.requestFocus()
               }
-              TextField(
+              live.mehiz.mpvkt.presentation.components.AppTextField(
                 query,
                 onQuery,
                 Modifier.fillMaxWidth().focusRequester(focus),
@@ -147,15 +146,7 @@ internal fun LibraryHeader(
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge,
                 placeholder = { Text(stringResource(R.string.mpv_search)) },
-                colors =
-                  TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                  ),
+                outlined = false,
               )
             } else {
               androidx.compose.animation.Crossfade(

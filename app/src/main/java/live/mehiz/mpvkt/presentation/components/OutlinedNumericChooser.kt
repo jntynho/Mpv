@@ -3,24 +3,17 @@ package live.mehiz.mpvkt.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardOptions
-import live.mehiz.mpvkt.ui.icons.Icons
-import live.mehiz.mpvkt.ui.icons.AddCircle
-import live.mehiz.mpvkt.ui.icons.RemoveCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.theme.spacing
 
 @Composable
@@ -34,46 +27,36 @@ fun OutlinedNumericChooser(
   suffix: (@Composable () -> Unit)? = null,
   label: (@Composable () -> Unit)? = null,
 ) {
-  assert(max > min) { "min can't be larger than max ($min > $max)" }
-  Row(
-    modifier = modifier,
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-  ) {
-    RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.RemoveCircle, null)
-    }
-    var valueString by remember { mutableStateOf("$value") }
-    LaunchedEffect(value) {
-      if (valueString.isBlank() && value == 0) return@LaunchedEffect
-      valueString = value.toString()
-    }
-    OutlinedTextField(
+  require(max > min)
+  var draft by remember { mutableStateOf(value.toString()) }
+  var focused by remember { mutableStateOf(false) }
+  // Engine acknowledgements may arrive late; they must not overwrite an active edit.
+  LaunchedEffect(value, focused) { if (!focused) draft = value.toString() }
+  val parsed = draft.toIntOrNull()
+  val tooLarge = parsed?.let { it > max } ?: false
+  val tooSmall = parsed?.let { it < min } ?: false
+  val changeBy: (Int) -> Unit = { direction ->
+    val next = ((parsed ?: value).toLong() + step.toLong() * direction)
+      .coerceIn(min.toLong(), max.toLong()).toInt()
+    draft = next.toString()
+    onChange(next)
+  }
+  NumericChooserRow(modifier, { changeBy(-1) }, { changeBy(1) }) {
+    AppTextField(
+      value = draft,
+      onValueChange = { raw ->
+        if (raw.isEmpty() || raw == "-" || raw.toIntOrNull() != null) {
+          draft = raw
+          raw.toIntOrNull()?.takeIf { it in min..max }?.let(onChange)
+        }
+      },
+      modifier = Modifier.weight(1f).onFocusChanged { focused = it.isFocused },
       label = label,
-      value = valueString,
-      onValueChange = { newValue ->
-        if (newValue.isBlank()) {
-          valueString = newValue
-          onChange(0)
-        }
-        runCatching {
-          val intValue = if (newValue.trimStart() == "-") -0 else newValue.toInt()
-          onChange(intValue)
-          valueString = newValue
-        }
-      },
-      isError = value > max || value < min,
-      supportingText = {
-        if (value > max) Text(stringResource(R.string.numeric_chooser_value_too_big))
-        if (value < min) Text(stringResource(R.string.numeric_chooser_value_too_small))
-      },
       suffix = suffix,
-      modifier = Modifier.weight(1f),
+      isError = tooLarge || tooSmall,
+      supportingText = numericError(tooLarge, tooSmall),
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
-    RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.AddCircle, null)
-    }
   }
 }
 
@@ -88,47 +71,60 @@ fun OutlinedNumericChooser(
   suffix: (@Composable () -> Unit)? = null,
   label: (@Composable () -> Unit)? = null,
 ) {
-  assert(max > min) { "min can't be larger than max ($min > $max)" }
+  require(min.isFinite() && max.isFinite() && max > min)
+  fun format(number: Float) = java.math.BigDecimal(number.toString()).stripTrailingZeros().toPlainString()
+  val safeValue = value.takeIf { it.isFinite() }?.coerceIn(min, max) ?: min
+  var draft by remember { mutableStateOf(format(safeValue)) }
+  var focused by remember { mutableStateOf(false) }
+  LaunchedEffect(safeValue, focused) { if (!focused) draft = format(safeValue) }
+  val parsed = draft.toFloatOrNull()?.takeIf { it.isFinite() }
+  val tooLarge = parsed?.let { it > max } ?: false
+  val tooSmall = parsed?.let { it < min } ?: false
+  val changeBy: (Int) -> Unit = { direction ->
+    val next = ((parsed ?: safeValue) + step * direction).coerceIn(min, max)
+    draft = format(next)
+    onChange(next)
+  }
+  NumericChooserRow(modifier, { changeBy(-1) }, { changeBy(1) }) {
+    AppTextField(
+      value = draft,
+      onValueChange = { raw ->
+        val number = raw.toFloatOrNull()?.takeIf { it.isFinite() }
+        if (raw in listOf("", "-", ".", "-.") || number != null) {
+          draft = raw
+          number?.takeIf { it in min..max }?.let(onChange)
+        }
+      },
+      modifier = Modifier.weight(1f).onFocusChanged { focused = it.isFocused },
+      label = label,
+      suffix = suffix,
+      isError = tooLarge || tooSmall,
+      supportingText = numericError(tooLarge, tooSmall),
+      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+    )
+  }
+}
+
+private fun numericError(tooLarge: Boolean, tooSmall: Boolean): (@Composable () -> Unit)? =
+  if (!tooLarge && !tooSmall) null
+  else {
+    { Text(stringResource(if (tooLarge) R.string.numeric_chooser_value_too_big else R.string.numeric_chooser_value_too_small)) }
+  }
+
+@Composable
+private fun NumericChooserRow(
+  modifier: Modifier,
+  decrease: () -> Unit,
+  increase: () -> Unit,
+  content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+) {
   Row(
     modifier,
-    verticalAlignment = Alignment.CenterVertically,
+    verticalAlignment = Alignment.Top,
     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
   ) {
-    RepeatingIconButton(onClick = { onChange(value - step) }) {
-      Icon(Icons.RemoveCircle, null)
-    }
-    var valueString by remember { mutableStateOf("$value") }
-    LaunchedEffect(value) {
-      if (valueString.isBlank() && value == 0f) return@LaunchedEffect
-      valueString = value.toString().dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
-    }
-    OutlinedTextField(
-      value = valueString,
-      label = label,
-      onValueChange = { newValue ->
-        if (newValue.isBlank()) {
-          valueString = newValue
-          onChange(0f)
-        }
-        runCatching {
-          if (newValue.startsWith('.')) return@runCatching
-          val floatValue = if (newValue.trimStart() == "-") -0f else newValue.toFloat()
-          onChange(floatValue)
-          valueString = newValue
-        }
-      },
-      isError = value > max || value < min,
-      supportingText = {
-        if (value > max) Text(stringResource(R.string.numeric_chooser_value_too_big))
-        if (value < min) Text(stringResource(R.string.numeric_chooser_value_too_small))
-      },
-      modifier = Modifier.weight(1f),
-      maxLines = 1,
-      suffix = suffix,
-      keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    )
-    RepeatingIconButton(onClick = { onChange(value + step) }) {
-      Icon(Icons.AddCircle, null)
-    }
+    RepeatingIconButton(onClick = decrease) { Icon(Icons.RemoveCircle, null) }
+    content()
+    RepeatingIconButton(onClick = increase) { Icon(Icons.AddCircle, null) }
   }
 }

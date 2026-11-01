@@ -148,6 +148,7 @@ object AdvancedPreferencesScreen : Screen {
                   OutlinedTextField(
                     value = value,
                     onValueChange = onValueChange,
+                    singleLine = false,
                     maxLines = 12,
                     keyboardActions = KeyboardActions(onDone = { onOk() }),
                   )
@@ -202,6 +203,7 @@ object AdvancedPreferencesScreen : Screen {
                   OutlinedTextField(
                     value = value,
                     onValueChange = onValueChange,
+                    singleLine = false,
                     maxLines = 12,
                     keyboardActions = KeyboardActions(onDone = { onOk() }),
                   )

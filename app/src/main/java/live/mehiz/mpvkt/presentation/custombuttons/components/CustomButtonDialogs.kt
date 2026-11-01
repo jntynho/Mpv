@@ -94,7 +94,7 @@ fun CustomButtonAddDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_required))
           },
-          minLines = 3,
+          singleLine = false,
           maxLines = 6,
         )
 
@@ -107,7 +107,7 @@ fun CustomButtonAddDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_optional))
           },
-          minLines = 3,
+          singleLine = false,
           maxLines = 6,
         )
       }
@@ -226,7 +226,7 @@ fun CustomButtonEditDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_required))
           },
-          minLines = 3,
+          singleLine = false,
           maxLines = 6,
         )
 
@@ -239,7 +239,7 @@ fun CustomButtonEditDialog(
           supportingText = {
             Text(text = stringResource(id = R.string.pref_custom_button_action_add_optional))
           },
-          minLines = 3,
+          singleLine = false,
           maxLines = 6,
         )
       }
