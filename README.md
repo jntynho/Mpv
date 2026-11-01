@@ -1,164 +1,142 @@
-# MPV
+<div align="center">
+  <img src="docs/assets/app-icon.svg" alt="MPV app icon" width="112" height="112" />
 
-### Runtime integration 0.1.12
+  <h1>MPV</h1>
+  <p>A clean, customisable Android video player powered by libmpv.</p>
 
-- User-owned local coordinate `io.github.jntynho:mpv-android-lib:0.1.12`; no public Maven publication.
-- Matching upstream 0.1.12 JNI/FFmpeg and mpv 0.41 sources, with the native queue-preserving pause correction retained for both ARM architectures.
-- Per-view native instance ownership with a compatibility boundary for existing controls; retiring sessions wait for in-flight property/command accesses.
-- The reviewed OpenSL ES backend remains the default. New audio backends are not forced without device validation.
-- [Integration details](third_party/mpv-android-lib/README.md).
+  <a href="https://github.com/jntynho/Mpv/releases/latest"><img src="https://img.shields.io/github/v/release/jntynho/Mpv?style=flat-square" alt="Latest release" /></a>
+  <a href="https://github.com/jntynho/Mpv/actions/workflows/build-apk.yml"><img src="https://github.com/jntynho/Mpv/actions/workflows/build-apk.yml/badge.svg" alt="APK build" /></a>
+  <img src="https://img.shields.io/badge/Android-5.0%2B-3DDC84?style=flat-square" alt="Android 5.0 or newer" />
 
-### MPV 0.21.0
+  <p>
+    <a href="#download">Download</a> ·
+    <a href="#features">Features</a> ·
+    <a href="#build-from-source">Build from source</a> ·
+    <a href="#credits--licensing">Credits</a>
+  </p>
+</div>
 
-- Sort returns to a compact, content-driven sheet with a single size-animation owner. Its size freezes during dismissal. View, order and field options use semantic Iconsax symbols.
-- Card removes the backing surfaces, aligns title space and gives video thumbnails the full column width. The original folder artwork stays unchanged.
-- Home Play has exactly three intrinsic-width round actions: Open File, Recently Played and Open Link. Instagram and its vectors are removed.
-- Scrubbing previews position/time locally and issues one seek on release. Cancelled touches and media replacement never commit an old target; playback pause state is untouched. Pending seek preview waits for acknowledgement with a bounded timeout.
-- Player controls enter with a short, bounded displacement and consistent fades. Subtitle settings use uniform read-only pickers, cached color observations, queued JNI writes and persistent expansion state.
-- Secure Folder keeps v0.20 files/PINs compatible and adds a 4/6-digit PIN gate, encrypted security-question recovery, optional Android-authenticated device/biometric unlock, a hidden-entry shortcut, bulk selection, move-in and verified restore-out. Originals are removed only after encrypted storage succeeds; Android deletion denial is reported and leaves the original. Restore deletes the encrypted copy only after verifying the destination. Existing v0.20 accounts must first unlock with their PIN to add a recovery question.
+## Overview
 
+MPV combines the playback capabilities of **libmpv** with an interface built in **Kotlin and Jetpack Compose**. Browse your video library, adjust playback through side panels, and customise the app's appearance and controls.
 
-Signing note: CI uses automatic test signing; v0.19 and v0.20 have different certificates. Before uninstalling an installed version, export its Secure Folder files and verify those public copies. Settings XML does not contain private media. Source-format compatibility cannot bypass Android signature checks.
+The project is derived from [mpvKt](https://github.com/abdallahmehiz/mpvKt). Its Android integration is maintained here under the local coordinate `io.github.jntynho:mpv-android-lib:0.1.12`, retaining attribution to the upstream library and native components.
 
-### MPV 0.20.0
+## Download
 
-- Sort keeps one stable sheet size while Card columns and Fields expand; List and Card retain independent field selections. Card defaults favour thumbnails, duration and counts, with paths off.
-- Player pane transitions prevent outgoing pages from accepting late taps; scrollbars handle variable-height content and invalid input safely.
-- Colour Accent gains directional edge masks. Shared dialogs use their actual option icon without a backing tile and a restrained reflective rim.
-- Advanced → Backup & Restore exports typed XML and validates the entire import before one atomic commit. Credentials and vault contents are excluded.
-- Secure Folder (Android 6+) uses a six-digit PIN, a device-bound Android Keystore wrapping key, encrypted names and authenticated 64 KB media chunks. It creates encrypted copies and preserves originals. Remember the PIN; vault data has no recovery or cloud backup. Private playback uses a temporary app-private file that is removed when the player finishes or the process next starts; it is excluded from recents/history, PiP, background playback and screenshots.
-- Landscape Controls is a standalone settings page with per-region drag ordering, accessible move buttons and a live preview. Seekbar Style offers six direct radio choices and native previews.
-- Home playback actions appear as individual animated pills and account for system gesture insets. Instagram opens the installed app or its website.
-- About and startup preparation have refreshed layouts; the existing measured warmup and readiness checks remain in use.
+Get installable APKs from the [latest GitHub Release](https://github.com/jntynho/Mpv/releases/latest). Choose the variant that matches your device:
 
+| APK | Recommended for | Download |
+| --- | --- | --- |
+| `arm64-v8a.apk` | Most modern Android phones and tablets with a 64-bit ARM system | [ARM64 APK](https://github.com/jntynho/Mpv/releases/latest/download/arm64-v8a.apk) |
+| `armeabi-v7a.apk` | Devices running a 32-bit ARM system | [ARM32 APK](https://github.com/jntynho/Mpv/releases/latest/download/armeabi-v7a.apk) |
+| `universal.apk` | Both supported ARM architectures, when you are unsure which to choose | [Universal APK](https://github.com/jntynho/Mpv/releases/latest/download/universal.apk) |
 
-مشغل Android مشتق من [mpvKt](https://github.com/abdallahmehiz/mpvKt)، بمحرك
-`io.github.jntynho:mpv-android-lib:0.1.12` كوحدة محلية مبنية على إصدار Abdallah Mehiz 0.1.12، مع تصحيح أصلي لـPause وواجهة Compose بألوان ليلية ونعناعية.
-المصدر الأصلي وترخيص Apache-2.0 محفوظان في `NOTICE` و`LICENSE`.
+**Requirements:** Android 5.0 / API 21 or newer. The universal APK contains ARM64 and ARM32; x86 and x86_64 are not included in these app builds. APK downloads require no ZIP extraction.
 
-## ما تغير في 0.19.0
+> **Signing and updates:** Current CI builds use automatic test signing, not a permanent production key. Certificates may differ between builds, which can prevent installing an update over an existing copy. Before uninstalling, export private media from Secure Folder and verify your copies. Uninstalling deletes private files and device-bound encryption keys; a settings backup does not contain that media.
 
-- توحيد تمدد كروت المشغل مع الإعدادات، ومفتاح ترجمة أكثر استدارة يليه شريط أدوات من أربعة أزرار.
-- حقول موحدة بارتفاع 48dp، ونتائج عناوين عمودية، وأدوات موسم وحلقة تتحرك مع قائمة نتائج الترجمة.
-- ستة أنماط لشريط التقدم في Landscape Controls، مع الاحتفاظ بمسار السحب وإمكانية الوصول.
-- فرز حسب المدة وخيارات قائمة/شبكة وأعمدة تلقائية أو مخصصة، وحقول معلومات متعددة في صف قابل للتمرير بحواف متلاشية.
-- أيقونات دلالية لخيارات الإعدادات من نفس Iconsax Outline/Broken، مع الحفاظ على رسمة مجلدات الصفحة الرئيسية.
-- زر تشغيل عائم لفتح ملف أو رابط أو السجل الحديث، وربط السجل بخيار مسح سجل التشغيل.
+## Features
 
-## ما تغير في 0.18.0
+- **Video library:** Folder, Tree and Videos views, search, sorting, list/card layouts, configurable metadata fields and pull-to-refresh.
+- **Playback controls:** Hardware/software decoding choices, playback speed, chapters, seekbar styles, gesture controls and configurable landscape controls.
+- **Player panels:** Audio tracks, subtitle tracks, delays, video filters and a sleep timer inside a persistent side panel.
+- **Subtitles:** Primary and secondary tracks, styling controls, online search with movie/series results, and an in-panel external subtitle browser.
+- **Appearance:** Dark, Light and System modes, colour accents, OLED black, and Iconsax Outline/Broken styles.
+- **Thumbnails:** Configurable source, quality and capture position, with cover placeholders when images are disabled or unavailable.
+- **Quick actions:** Open a file, resume the most recently played video, or open a supported stream URL.
+- **Background and multitasking:** Background playback, media controls and Picture-in-Picture.
+- **Settings and private media:** XML settings backup/restore and Secure Folder functionality.
 
-- نقل أدوات ضبط الترجمة إلى أعلى اللوحة، مع زر مدمج لإضافة ملفات الترجمة الخارجية.
-- مفتاح Primary / Secondary بمؤشر متحرك وانتقال خفيف لقائمة المسارات.
-- بحث الترجمة على مراحل: حقول البحث واللغة والفلاتر، ثم شبكة الملصقات، ثم نتائج الترجمة.
-- تعرض المسلسلات اختيار الموسم والحلقة أعلى النتائج مع بحث صريح، وتُحمّل ترجمات الفيلم عند اختياره.
-- رجوع موحد بين مراحل البحث مع حفظ نتائج العناوين وإلغاء الطلبات القديمة.
+Local playback does not require an API key. Online subtitle providers may require configuration and depend on their service availability. Android file permissions determine which folders and documents the app can access; protected system and app-private locations remain restricted.
 
-## ما تغير في 0.17.4
+## Playback engine
 
-- تصغير دوائر Colour Accent من 76 إلى 56dp مع حلقة تحديد أنحف ومسافات متوازنة، مع الحفاظ على مساحة لمس مريحة.
+| Component | Current integration |
+| --- | --- |
+| App-facing module | `io.github.jntynho:mpv-android-lib:0.1.12` — resolved to a local Gradle project |
+| Upstream Android wrapper | `io.github.abdallahmehiz:mpv-android-lib:0.1.12` |
+| Native core | mpv `0.41.0-174-g76a5eba99`, rebuilt for ARM64 and ARM32 with the queue-preserving pause correction |
+| Native support libraries | FFmpeg and supporting shared libraries retained from the upstream 0.1.12 AAR |
+| Default audio output | OpenSL ES with the native pause correction |
 
-## ما تغير في 0.17.3
+The local coordinate is not published to Maven Central. It identifies this repository's integration module, not a transfer of authorship of mpv or its dependencies.
 
-- عرض Colour Accent كدوائر مقسمة في صف أفقي قابل للتمرير داخل إعدادات المظهر.
-- حلقة تحديد متحركة وتطبيق فوري للون، مع معاينات تتوافق مع الوضع الفاتح والداكن.
+The integration binds controls to the view-owned MPV instance, protects in-flight native calls during teardown, and retains the private JNI callbacks required after code shrinking. The modified native runtime has pinned source inputs, checksums and rebuild instructions.
 
-## ما تغير في 0.17.1
+- [Integration and migration details](docs/MPVLIB-0.1.12.md)
+- [Local Android module](third_party/mpv-android-lib/README.md)
+- [Native patch, sources and rebuild instructions](third_party/mpv-pause/README.md)
 
-- استعادة مكتبة mpvKt السابقة وإزالة اعتماد gyrolet.
-- تصحيح OpenSLES ليحفظ الصوت المخزن عند Pause ويستأنفه دون مسح العينات، مع معالجة Seek أثناء Pause والاستئناف بعد انقطاع تغذية الصوت.
-- إعادة بناء ملفَي libmpv لمعمارَي ARM فقط، مع إبقاء FFmpeg وطبقة JNI وباقي AAR الأصلية دون تغيير.
-- تحقق أصلي بلغة C من فقدان المخزن القديم وحفظه بعد التصحيح، إضافة إلى اختبارات التطبيق والفحوص المعتادة.
-- استعادة الحد الأدنى Android 5.0 (API 21).
-- [تفاصيل التنفيذ والاختبارات وحدودها](docs/PAUSE-RESTORE-0.17.md)، و[مصادر التصحيح وتعليمات إعادة البناء](third_party/mpv-pause/README.md).
+## Build from source
 
-## ما تغير في 0.16
+### Prerequisites
 
-- استبدال مكتبة المحرك القديمة بالمكتبة الرسمية المستخدمة في mpvRx، مع تثبيت الإصدار والتحقق من بصمة AAR.
-- اشتراكات خصائص مستقرة عند إعادة فتح المحرك، وتنظيف Surface والمراقبين عند إغلاقه.
-- الحفاظ على الواجهة وإعدادات المشغل والأيقونات ومنطق تأكيد Pause.
-- يتطلب هذا المحرك Android 7.0 (API 24) فأحدث.
-- [تفاصيل التوافق والتحقق وحدود الاختبارات](docs/MPVLIB-MIGRATION-0.16.md).
+- JDK **17**
+- Android SDK Platform **36**
+- Android Build Tools **35.0.0**
+- Android NDK **27.0.12077973**
+- Python **3** and a host C compiler for the native regression check
+- Access to Google Maven, Maven Central, Gradle distribution servers and GitHub
 
-## ما تغير في 0.10
+Set `ANDROID_HOME` to your Android SDK installation, then run:
 
-- صفحة تقديم مع صلاحيات الفيديوهات، وتجهيز الأيقونات وتجميع المجلدات في الخلفية قبل الدخول.
-- ذاكرة Vector مشتركة لتجنب إعادة تحليل الأيقونات عند فتح الواجهات واللوحات؛ مع تجهيز محدود للصور المصغرة.
-- Quick Menu بألوان وحواف الصورة المرجعية، وبداية الحركة بعد القياس، وحدود آمنة للنوافذ الصغيرة.
-- Header ثابت مع الأسماء الطويلة، وبحث يتوسع ويتلاشى بخفة، وحفظ موضع التمرير عند الرجوع.
-- تحريك ترتيب النتائج، وتمدد عند نهاية القائمة، ولوحة مشغل أعرض قليلًا مع ارتداد مخمد وفصل القياس عن بدء الدخول.
-- [سبب التقطع المحتمل والتفاصيل والفحوص وحدود القياس](docs/STARTUP-AND-MOTION-0.10.md).
+```bash
+git clone https://github.com/jntynho/Mpv.git
+cd Mpv
 
-## ما تغير في 0.9
+python3 scripts/check-icon-assets.py
+python3 scripts/check-native-pause.py
 
-- Quick Menu للفرز كما في المعاينة المعتمدة: دون إطار أو علامة صح، بمؤشر مستدير وكروت تحديد متناسقة.
-- Title وDate وSize وCount مع اتجاه A–Z / Z–A وحفظ الاختيار. Count للمجلدات، وSize يجمع أحجام فيديوهاتها.
-- انزلاق وتلاشي قصيران لقائمة الفرز، وارتداد مخمد وخفيف لدخول Slide Panel مع إبقاء عرضه وأشرطته الحالية.
-- [تفاصيل المعاني والحركات والتحقق](docs/SORT-AND-MOTION-0.9.md).
+bash ./gradlew --no-daemon --max-workers=1 \
+  verifyMpvRuntime testDebugUnitTest lintDebug assemblePreview
 
-## ما تغير في 0.8.1
-
-- لوحة جانبية أعرض قليلًا ودخول متدرج دون اهتزاز الارتداد.
-- حاوية ثابتة: Filters وتأخير الصوت وإعدادات الترجمة ومؤقت النوم تغيّر المحتوى داخل اللوحة نفسها، مع انتقال أفقي قصير.
-- الرجوع من الخيار الفرعي يعيد القائمة السابقة وموضعها وتبويبها؛ الإغلاق يمسح سجل اللوحة بالكامل.
-- [التفاصيل والفحص](docs/PLAYER-PANE-0.8.1.md).
-
-## ما تغير في 0.8
-
-- تمدد مرن لعناوين الإعدادات، وتحديث للمجلدات والفيديوهات مع السحب والإفلات.
-- مسار موحّد للتحكم بالتشغيل خارج خيط الواجهة، مع حركة Play/Pause قصيرة، ومعالجة تعارض التقديم والتركيز الصوتي والضغطات السريعة.
-- لوحات More وSubtitle وAudio جانبية من اليمين، بعناوين ثابتة وتمرير رفيع وترتيب يحفظ الخيارات الحالية والترجمة المزدوجة.
-- تصحيح مراقبة موضع الفيديو بعد الخلفية وإعادة إنشاء المحرك، وإغلاق اللوحات الفرعية عند دخول PiP.
-- [تقرير التنفيذ والمشاكل المعالجة والتحقق](docs/UI-PLAYBACK-0.8.md).
-
-## الأيقونات المحفوظة
-
-- **Iconsax Outline** افتراضيًا، مع اختيار **Broken** من Settings → Appearance → Icon style. يُحفظ الاختيار ويطبَّق على الواجهة والمشغل واللوحات والإشعارات وPiP.
-- كتالوج Vector واحد مشترك بين Compose وموارد Android، دون خط أو مكتبة أيقونات كاملة.
-- المجلد في الرئيسية ثابت: نفس الرسم واللون والحجم 88×76dp، خارج التبديل بين النمطين.
-- أُزيل نظام Font Awesome وكل رسوماته الأخرى، مع إبقاء نسبة مصدر رسم المجلد المحفوظ وترخيصه وحده.
-- [تفاصيل التنفيذ والتحقق والحجم](docs/ICONS-0.7.md) و[تقرير سلوك المشغل السابق](docs/PLAYER-AUDIT-0.6.md).
-
-## بناء APK دون Secrets
-
-من تبويب **Actions → Build MPV APKs → Run workflow**، أو عند push/pull request،
-يعمل [.github/workflows/build-apk.yml](.github/workflows/build-apk.yml) على:
-
-1. تجهيز JDK 17 وAndroid SDK 36 وBuild Tools 35.
-2. التحقق من كتالوج الأيقونات وثبات رسم المجلد، ثم تشغيل `verifyMpvRuntime testDebugUnitTest lintDebug assemblePreview`.
-3. تشغيل اختبار انحدار Pause الأصلي والتحقق من توقيع APK ومكتبات `.so` لكل معمارية.
-4. رفع artifacts للمعماريات الثلاث، ونشر APKs مباشرة في Release عند دفع وسم إصدار، دون ملف SHA256SUMS.txt.
-
-لا توجد أي مراجع إلى `secrets` في YAML. نسخ Preview قابلة للتثبيت بتوقيع debug تلقائي،
-ومعرفها `io.github.jntynho.luma.preview`. لا تحتاج المتاجر أو GitHub Releases إلى تفعيل لاستخدام artifacts.
-**هذه ليست نسخ نشر إنتاجية:** المفتاح التجريبي قد يتغير بين تشغيلات CI، لذلك قد تحتاج إزالة النسخة السابقة
-قبل تثبيت نسخة جديدة. النشر الرسمي بتحديثات ثابتة يحتاج مفتاح توقيع دائمًا وخطة توزيع مستقلة.
-
-## التطوير المحلي
-
-يتطلب JDK 17، Android SDK platform 36 وbuild-tools 35.0.0، واتصالًا بـGoogle Maven وMaven Central
-وGradle وGitHub لتنزيل المحرك الرسمي. تم تضمين مصدر Seeker وFSAF بإصدارات محددة وتراخيصهما داخل third_party، لذلك لا حاجة إلى JitPack. استخدم checkout الموجود مباشرة، دون إنشاء worktree إضافي.
-
-```sh
-chmod +x gradlew
-./gradlew --no-daemon --max-workers=1 verifyMpvRuntime testDebugUnitTest lintDebug assemblePreview
+python3 scripts/check-mpv-apks.py
 ```
 
-توجد ملفات APK تحت `app/build/outputs/apk/preview/` بعد نجاح البناء.
-لا حاجة إلى API keys أو خدمات خارجية لتشغيل الوسائط المحلية. الحد الأدنى Android 5.0 (API 21).
+The APKs are generated in:
 
-## حالة التحقق
+```text
+app/build/outputs/apk/preview/
+├── app-arm64-v8a-preview.apk
+├── app-armeabi-v7a-preview.apk
+└── app-universal-preview.apk
+```
 
-الإصدار 0.17.1 يستخدم المكتبة السابقة مع تصحيح أصلي لمسار Pause/Play. يتحقق البناء من بصمة المكتبة الأصلية، ومن اقتصار الاستبدال على ملفَي libmpv لمعمارَي ARM، ومن غياب اعتماد gyrolet. يتحقق اختبار C من حفظ مخزن الصوت وساعته ومن استئناف الصوت بعد Seek أثناء Pause.
+Preview builds use the application ID `io.github.jntynho.luma.preview`. The reviewed ARM native binaries are included in the repository, so an ordinary app build does not need to rebuild mpv from source. Follow the separate native rebuild guide when changing the engine or its patch.
 
-اجتازت النسخة **138 اختبارًا** وLint دون أخطاء، إضافة إلى اختبار الانحدار الأصلي. نجح بناء APKs الثلاث وفحص التوقيع ومحاذاة ZIP وربط JNI والمعماريات. بقي رسم المجلد والأيقونات Outline/Broken كما هي.
+### GitHub Actions
 
-لا يوجد هاتف أو محاكي متصل؛ اختبارات C تستخدم جهازًا وساعة مصطنعين، واختبارات الرسم تستخدم Robolectric. يلزم تأكيد النتيجة بتجربة تشغيل فعلية على الهاتف. [الفحوص والحدود بالتفصيل](docs/PAUSE-RESTORE-0.17.md).
+[Build MPV APKs](.github/workflows/build-apk.yml) runs validation and builds the three APK variants. It can also be started from **Actions → Build MPV APKs → Run workflow**.
 
-## GitHub Releases
+[Publish verified APK release](.github/workflows/publish-release.yml) publishes successful eligible `main` builds as actual GitHub Releases, with exactly these attached APK assets:
 
-عند دفع وسم يبدأ بـ `v`، ينشئ workflow إصدار GitHub Release بعد نجاح البناء والفحوص،
-ويرفق فقط `arm64-v8a.apk` و`armeabi-v7a.apk` و`universal.apk` مباشرةً دون ZIP أو SHA256SUMS.txt. لا تحتاج إضافة Secrets؛
-يستخدم النشر رمز GitHub التلقائي بصلاحية كتابة محتويات المستودع.
-توقيع APK يظل توقيع اختبار تلقائيًا؛ إنشاء GitHub Release لا يحوله إلى مفتاح إنتاج دائم.
+```text
+arm64-v8a.apk
+armeabi-v7a.apk
+universal.apk
+```
 
-[تفاصيل أيقونات Iconsax والتبديل بين النمطين](docs/ICONS-0.7.md).
+No custom ZIP or `SHA256SUMS.txt` asset is attached. Publication uses GitHub's automatic workflow token; user-configured Secrets are not required. Pull-request validation does not publish a release.
+
+## Validation
+
+The build checks the upstream runtime checksum, native provenance, icon catalogue, unit/UI tests, Android Lint, APK architecture contents, signatures and alignment. Final DEX inspection verifies that code shrinking has preserved the native context field and JNI callback signatures.
+
+Native regression tests use a simulated audio device and clock. UI tests use Robolectric. These checks do not replace physical-device testing of audio/video synchronisation, Bluetooth routing, decoding, rotation, background playback and PiP.
+
+## Contributing
+
+Bug reports and focused improvements are welcome through [Issues](https://github.com/jntynho/Mpv/issues) and pull requests.
+
+For playback problems, include your device, Android version, app build, decoder mode, media format and clear reproduction steps. Share a short sample only if you have permission to distribute it, and remove personal data from logs.
+
+## Credits & licensing
+
+- [mpvKt](https://github.com/abdallahmehiz/mpvKt) — the original application foundation.
+- [mpv-android](https://github.com/abdallahmehiz/mpv-android) and its contributors — upstream Android integration.
+- [mpv](https://github.com/mpv-player/mpv), [FFmpeg](https://github.com/FFmpeg/FFmpeg), [libass](https://github.com/libass/libass) and [libplacebo](https://github.com/haasn/libplacebo) — playback, decoding, subtitles and rendering.
+- [Iconsax](https://github.com/lusaxweb/iconsax) — Outline and Broken icon artwork; see the notices in [assets/licenses](app/src/main/assets/licenses).
+- Seeker and FSAF — supporting components maintained in [third_party](third_party) with their license notices.
+
+See the repository's [Apache License 2.0](LICENSE) for the application source. Dependencies and separately licensed components retain their own terms. The modified libmpv runtime is distributed under **GPL-2.0-or-later**; its source inputs, patch, notices and build instructions are available in [third_party/mpv-pause](third_party/mpv-pause). The local jntynho integration module has its own [MIT license](third_party/mpv-android-lib/LICENSE).
