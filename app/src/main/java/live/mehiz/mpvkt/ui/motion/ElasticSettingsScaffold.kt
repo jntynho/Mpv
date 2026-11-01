@@ -38,7 +38,22 @@ fun ElasticSettingsScaffold(
       modifier = modifier.nestedScroll(behavior.nestedScrollConnection),
       topBar = topBar,
       floatingActionButton = floatingActionButton,
-      content = content,
+      content = { padding ->
+        content(
+          PaddingValues(
+            start =
+              padding.calculateStartPadding(
+                androidx.compose.ui.platform.LocalLayoutDirection.current
+              ),
+            top = padding.calculateTopPadding(),
+            end =
+              padding.calculateEndPadding(
+                androidx.compose.ui.platform.LocalLayoutDirection.current
+              ),
+            bottom = padding.calculateBottomPadding() + 32.dp,
+          )
+        )
+      },
     )
   }
 }
@@ -53,7 +68,12 @@ fun ElasticSettingsTopAppBar(
 ) {
   LargeTopAppBar(
     title = title,
-    modifier = modifier,
+    modifier = modifier.headerGradient(),
+    colors =
+      TopAppBarDefaults.largeTopAppBarColors(
+        containerColor = MaterialTheme.colorScheme.surface,
+        scrolledContainerColor = MaterialTheme.colorScheme.surface,
+      ),
     navigationIcon = navigationIcon,
     actions = actions,
     expandedHeight = 128.dp,

@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -38,8 +40,8 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
   val context = LocalContext.current
   val density = androidx.compose.ui.platform.LocalDensity.current
   val gestureNavigation = WindowInsets.mandatorySystemGestures.getBottom(density) > 0
-  val clearance = if (gestureNavigation) 12.dp else 4.dp
-  val popupOffset = with(density) { (-72.dp - clearance).roundToPx() }
+  val clearance = if (gestureNavigation) 20.dp else 12.dp
+  val popupOffset = with(density) { (-80.dp - clearance).roundToPx() }
   var expanded by rememberSaveable { mutableStateOf(false) }
   val visibility = remember { MutableTransitionState(false) }
   visibility.targetState = expanded
@@ -64,12 +66,19 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
       when (pending) {
         QuickAction.File -> picker.launch(arrayOf("*/*"))
         QuickAction.Recent -> {
-          val entry = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            RecentMedia.latest(context)
-          }
+          val entry =
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+              RecentMedia.latest(context)
+            }
           kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
             if (entry != null) HomeScreen.playFile(entry.uri, context)
-            else android.widget.Toast.makeText(context, R.string.mpv_recent_empty, android.widget.Toast.LENGTH_SHORT).show()
+            else
+              android.widget.Toast.makeText(
+                  context,
+                  R.string.mpv_recent_empty,
+                  android.widget.Toast.LENGTH_SHORT,
+                )
+                .show()
           }
         }
         QuickAction.Link -> {
@@ -82,18 +91,30 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
     }
   }
   BackHandler(expanded) { expanded = false }
+  val actionLabel = stringResource(R.string.mpv_quick_actions)
   Box(Modifier.padding(bottom = clearance)) {
     FloatingActionButton(
-      onClick = { expanded = !expanded },
+      onClick = {
+        // Outside-dismiss and the same tap must not reopen the menu; do not race its exit.
+        if (pending == null && visibility.isIdle && visibility.currentState == expanded)
+          expanded = !expanded
+      },
+      modifier = Modifier.size(64.dp).semantics { contentDescription = actionLabel },
       shape = CircleShape,
-      containerColor = MaterialTheme.colorScheme.primaryContainer,
+      containerColor = MaterialTheme.colorScheme.primary,
+      contentColor = MaterialTheme.colorScheme.onPrimary,
     ) {
-      Crossfade(
+      AnimatedContent(
         expanded,
-        animationSpec = tween(if (reduceMotion) 0 else 180),
+        transitionSpec = {
+          val duration = if (reduceMotion) 0 else 200
+          ((fadeIn(tween(duration)) + scaleIn(tween(duration), initialScale = .8f)) togetherWith
+              (fadeOut(tween(duration)) + scaleOut(tween(duration), targetScale = .8f)))
+            .using(SizeTransform(clip = false, sizeAnimationSpec = { _, _ -> tween(0) }))
+        },
         label = "quick_action_icon",
       ) {
-        Icon(if (it) Icons.Close else Icons.Play, stringResource(R.string.mpv_quick_actions))
+        Icon(if (it) Icons.Close else Icons.Play, null, Modifier.size(28.dp))
       }
     }
     if (visibility.currentState || visibility.targetState)
@@ -169,6 +190,7 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
                     },
                     null,
                     Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                   )
                 }
               }

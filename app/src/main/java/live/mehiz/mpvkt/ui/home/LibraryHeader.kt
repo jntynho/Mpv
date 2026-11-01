@@ -36,6 +36,7 @@ import kotlinx.coroutines.delay
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.AppBrandMark
 import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.motion.headerGradient
 import live.mehiz.mpvkt.ui.startup.LocalBrandHandoff
 
 /** Only bounded slots resize: a long title never supplies an intrinsic animation width. */
@@ -86,7 +87,7 @@ internal fun LibraryHeader(
     }
   }
   CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-    Surface {
+    Surface(Modifier.headerGradient()) {
       BoxWithConstraints {
         // Measure both outgoing and incoming titles at the final reserved width.
         // Only their viewport moves; ellipsis does not change on every animation frame.

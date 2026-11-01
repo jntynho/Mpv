@@ -71,4 +71,6 @@
     <string name="mpv_reduce_motion_scope">تقليل الحركات الانتقالية لأدوات المشغّل واللوحات الجانبية.</string>
     <string name="mpv_controls_timeout_scope">إخفاء أدوات المشغّل بعد %1$d ملي ثانية أثناء التشغيل. تبقى اللوحات الجانبية مفتوحة.</string>
     <string name="mpv_internal_storage">التخزين الداخلي</string>
+    <string name="mpv_header_gradient">تدرّج الرأس</string>
+    <string name="mpv_header_gradient_summary">تدرّج ناعم عند الحافة السفلية للرؤوس في التطبيق.</string>
 </resources>

@@ -1,5 +1,7 @@
 package live.mehiz.mpvkt.ui.player.controls.components
 
+import live.mehiz.mpvkt.ui.motion.headerGradient
+
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -45,7 +47,7 @@ fun PlayerPanelHeader(
   onBack: (() -> Unit)? = null,
   animateTitle: Boolean = true,
 ) {
-  Column(modifier) {
+  Column(modifier.headerGradient()) {
     Row(
       Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
       verticalAlignment = Alignment.CenterVertically,

@@ -30,7 +30,6 @@ import live.mehiz.mpvkt.ui.icons.Image
 import live.mehiz.mpvkt.ui.icons.Palette
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsScaffold as Scaffold
 import live.mehiz.mpvkt.ui.motion.ElasticSettingsTopAppBar as TopAppBar
-import live.mehiz.mpvkt.ui.theme.DarkMode
 import live.mehiz.mpvkt.ui.utils.LocalNavigateBack
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import org.koin.compose.koinInject
@@ -79,6 +78,14 @@ object AppearancePreferencesScreen : Screen {
                 icon = { Icon(optionIcon(R.string.mpv_icons_style_title), null) },
               )
               ColourAccentPreference(preferences)
+              val headerGradient by preferences.headerGradient.collectAsState()
+              SwitchPreference(
+                value = headerGradient,
+                onValueChange = preferences.headerGradient::set,
+                title = { Text(stringResource(R.string.mpv_header_gradient)) },
+                summary = { Text(stringResource(R.string.mpv_header_gradient_summary)) },
+                icon = { Icon(Icons.Palette, null) },
+              )
               val videoCoverBorder by preferences.videoCoverBorder.collectAsState()
               SwitchPreference(
                 value = videoCoverBorder,

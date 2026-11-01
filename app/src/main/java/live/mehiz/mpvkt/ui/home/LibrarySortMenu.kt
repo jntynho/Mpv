@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -145,7 +146,8 @@ internal fun LibrarySortMenuContent(
           stringResource(labels.first),
           sort.ascending,
           duration,
-          Icons.ArrowDropUp,
+          Icons.ArrowBack,
+          iconRotation = 90f,
           modifier = Modifier.weight(1f),
         ) {
           onSelect(sort.copy(ascending = true))
@@ -154,7 +156,8 @@ internal fun LibrarySortMenuContent(
           stringResource(labels.second),
           !sort.ascending,
           duration,
-          Icons.ArrowDropDown,
+          Icons.ArrowBack,
+          iconRotation = -90f,
           modifier = Modifier.weight(1f),
         ) {
           onSelect(sort.copy(ascending = false))
@@ -221,11 +224,7 @@ internal fun LibrarySortMenuContent(
       if (display.grid && limit >= 3) {
         FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
           (3..limit).forEach { count ->
-            SortChip(
-              count.toString(),
-              display.columns == count,
-              duration,
-            ) {
+            SortChip(count.toString(), display.columns == count, duration) {
               onDisplay(display.copy(columns = count))
             }
           }
@@ -284,6 +283,7 @@ private fun SortChip(
   duration: Int,
   icon: ImageVector? = null,
   modifier: Modifier = Modifier,
+  iconRotation: Float = 0f,
   onClick: () -> Unit,
 ) {
   val bg by
@@ -311,7 +311,7 @@ private fun SortChip(
     horizontalArrangement = Arrangement.Center,
   ) {
     if (icon != null) {
-      Icon(icon, null, Modifier.size(20.dp), tint = fg)
+      Icon(icon, null, Modifier.size(20.dp).rotate(iconRotation), tint = fg)
       Spacer(Modifier.width(8.dp))
     }
     Text(

@@ -121,6 +121,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
 
   val accent by preferences.colourAccent.collectAsState()
   val isDark = darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme)
+  val headerGradient by preferences.headerGradient.collectAsState()
   val coverBorder by preferences.videoCoverBorder.collectAsState()
   val thumbnails by preferences.showThumbnails.collectAsState()
   val generator by preferences.thumbnailGenerator.collectAsState()
@@ -157,6 +158,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val animatedScheme = animatedAppColours(targetScheme, reduceMotion)
 
   CompositionLocalProvider(
+    live.mehiz.mpvkt.ui.motion.LocalHeaderGradient provides headerGradient,
     androidx.compose.foundation.LocalOverscrollFactory provides
       if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
     live.mehiz.mpvkt.ui.home.LocalVideoCoverBorder provides coverBorder,

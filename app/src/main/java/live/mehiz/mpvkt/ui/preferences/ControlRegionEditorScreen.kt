@@ -1,22 +1,24 @@
 package live.mehiz.mpvkt.ui.preferences
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.PlayerPreferences
@@ -36,13 +38,39 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
     val preferences = koinInject<PlayerPreferences>()
     val layout by preferences.landscapeLayout.collectAsState()
     var dragged by remember { mutableStateOf<LandscapeControl?>(null) }
-    var offset by remember { mutableFloatStateOf(0f) }
     val reduced by preferences.reduceMotion.collectAsState()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    var dragTop by remember { mutableFloatStateOf(0f) }
+    var dragDistance by remember { mutableFloatStateOf(0f) }
+    var settling by remember { mutableStateOf<LandscapeControl?>(null) }
+    val settle = remember { Animatable(0f) }
+    var settleTop by remember { mutableFloatStateOf(0f) }
+    fun translation(button: LandscapeControl): Float {
+      val position =
+        listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == button.name }?.offset
+          ?: return 0f
+      return dragTop + dragDistance - position
+    }
     var preview by remember { mutableStateOf<LandscapeLayout?>(null) }
     val shown = preview ?: layout
     val latestShown by rememberUpdatedState(shown)
+    fun finishDrag(cancelled: Boolean) {
+      val button = dragged ?: return
+      settleTop = dragTop + dragDistance
+      if (!cancelled) preview?.let(preferences.landscapeLayout::set) else preview = null
+      settling = button
+      dragged = null
+      scope.launch(start = CoroutineStart.UNDISPATCHED) {
+        try {
+          settle.snapTo(0f)
+          settle.animateTo(1f, tween(if (reduced) 0 else 200, easing = FastOutSlowInEasing))
+        } finally {
+          settling = null
+        }
+      }
+    }
     LaunchedEffect(layout, dragged) { if (dragged == null && preview == layout) preview = null }
-    val defaultStep = with(LocalDensity.current) { 76.dp.toPx() }
     ElasticSettingsScaffold(
       topBar = {
         ElasticSettingsTopAppBar(
@@ -55,6 +83,8 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
     ) { padding ->
       LazyColumn(
         Modifier.fillMaxSize().padding(padding),
+        state = listState,
+        userScrollEnabled = dragged == null && settling == null,
         contentPadding = PaddingValues(bottom = 32.dp),
       ) {
         item { LandscapePreview(shown) }
@@ -66,29 +96,33 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
           )
         }
         items(shown.buttons(region), key = { it.name }) { button ->
-          var measuredHeight by remember(button) { mutableFloatStateOf(defaultStep) }
-          val step by rememberUpdatedState(measuredHeight)
           val lift by
             animateFloatAsState(
               if (dragged == button) 1.015f else 1f,
               tween(if (reduced) 0 else 140),
               label = "drag_lift",
             )
-          val translation by
-            animateFloatAsState(
-              if (dragged == button) offset else 0f,
-              if (dragged == button || reduced) snap() else tween(180),
-              label = "drag_settle",
-            )
           SettingsCard(
             Modifier.animateItem(
-                placementSpec = if (dragged == button) null else tween(if (reduced) 0 else 220)
+                placementSpec =
+                  if (dragged == button || settling == button) null
+                  else tween(if (reduced) 0 else 220)
               )
-              .zIndex(if (dragged == button) 1f else 0f)
-              .onSizeChanged { measuredHeight = it.height.toFloat().coerceAtLeast(1f) }
+              .zIndex(if (dragged == button || settling == button) 1f else 0f)
               .padding(horizontal = 20.dp, vertical = 4.dp)
               .graphicsLayer {
-                translationY = translation
+                translationY =
+                  when (button) {
+                    dragged -> translation(button)
+                    settling -> {
+                      val position =
+                        listState.layoutInfo.visibleItemsInfo
+                          .firstOrNull { it.key == button.name }
+                          ?.offset
+                      if (position == null) 0f else (settleTop - position) * (1f - settle.value)
+                    }
+                    else -> 0f
+                  }
                 scaleX = lift
                 scaleY = lift
               }
@@ -101,20 +135,23 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
                   val index = shown.buttons(region).indexOf(button)
                   IconButton(
                     { preferences.landscapeLayout.set(latestShown.move(region, index, index - 1)) },
-                    enabled = dragged == null && preview == null && index > 0,
+                    enabled = dragged == null && settling == null && preview == null && index > 0,
                   ) {
                     Icon(Icons.ArrowDropUp, stringResource(R.string.mpv_move_earlier))
                   }
                   IconButton(
                     { preferences.landscapeLayout.set(latestShown.move(region, index, index + 1)) },
                     enabled =
-                      dragged == null && preview == null && index < shown.buttons(region).lastIndex,
+                      dragged == null &&
+                        settling == null &&
+                        preview == null &&
+                        index < shown.buttons(region).lastIndex,
                   ) {
                     Icon(Icons.ArrowDropDown, stringResource(R.string.mpv_move_later))
                   }
                   IconButton(
                     { preferences.landscapeLayout.set(latestShown.assign(button, null)) },
-                    enabled = dragged == null && preview == null,
+                    enabled = dragged == null && settling == null && preview == null,
                   ) {
                     Icon(Icons.Close, stringResource(R.string.update_remove_control))
                   }
@@ -122,36 +159,46 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
                     Modifier.size(40.dp).pointerInput(button, region) {
                       detectDragGesturesAfterLongPress(
                         onDragStart = {
-                          preview = latestShown
-                          dragged = button
-                          offset = 0f
-                        },
-                        onDragEnd = {
-                          preview?.let(preferences.landscapeLayout::set)
-                          dragged = null
-                          offset = 0f
-                        },
-                        onDragCancel = {
-                          preview = null
-                          dragged = null
-                          offset = 0f
-                        },
-                        onDrag = { change, delta ->
-                          change.consume()
-                          offset += delta.y
-                          val working = preview ?: latestShown
-                          val index = working.buttons(region).indexOf(button)
-                          val direction =
-                            when {
-                              offset > step / 2 -> 1
-                              offset < -step / 2 -> -1
-                              else -> 0
+                          if (settling == null && dragged == null && preview == null) {
+                            val item =
+                              listState.layoutInfo.visibleItemsInfo.firstOrNull {
+                                it.key == button.name
+                              }
+                            if (item != null) {
+                              preview = latestShown
+                              dragTop = item.offset.toFloat()
+                              dragDistance = 0f
+                              dragged = button
                             }
-                          val target = index + direction
-                          if (direction != 0 && target in working.buttons(region).indices) {
-                            preview = working.move(region, index, target)
-                            offset -= direction * step
-                          } else if (direction != 0) offset = offset.coerceIn(-step / 2, step / 2)
+                          }
+                        },
+                        onDragEnd = { if (dragged == button) finishDrag(false) },
+                        onDragCancel = { if (dragged == button) finishDrag(true) },
+                        onDrag = { change, delta ->
+                          if (dragged == button) {
+                            change.consume()
+                            dragDistance += delta.y
+                            val working = preview ?: latestShown
+                            val buttons = working.buttons(region)
+                            val index = buttons.indexOf(button)
+                            val visible = listState.layoutInfo.visibleItemsInfo
+                            val active = visible.firstOrNull { it.key == button.name }
+                            val direction = if (delta.y > 0f) 1 else if (delta.y < 0f) -1 else 0
+                            val target = index + direction
+                            val neighbor =
+                              buttons.getOrNull(target)?.let { other ->
+                                visible.firstOrNull { it.key == other.name }
+                              }
+                            if (active != null && neighbor != null && direction != 0) {
+                              val center = dragTop + dragDistance + active.size / 2f
+                              val threshold = neighbor.offset + neighbor.size / 2f
+                              if (
+                                direction > 0 && center > threshold ||
+                                  direction < 0 && center < threshold
+                              )
+                                preview = working.move(region, index, target)
+                            }
+                          }
                         },
                       )
                     },
@@ -173,7 +220,11 @@ data class ControlRegionEditorScreen(val region: ControlRegion) : Screen {
             SettingsRow(
               { Text(stringResource(button.titleRes)) },
               icon = { Icon(button.icon(), null) },
-              enabled = dragged == null && preview == null && shown.buttons(region).size < 6,
+              enabled =
+                dragged == null &&
+                  settling == null &&
+                  preview == null &&
+                  shown.buttons(region).size < 6,
               trailing = { Icon(Icons.Add, null) },
             ) {
               preferences.landscapeLayout.set(latestShown.assign(button, region))
