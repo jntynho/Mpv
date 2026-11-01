@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import live.mehiz.mpvkt.BuildConfig
 import live.mehiz.mpvkt.R
@@ -98,16 +97,11 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   var interfaceReady by remember { mutableStateOf(library.interfacePrepared) }
   var storageReady by remember { mutableStateOf(false) }
   var homeReady by remember { mutableStateOf(library.enteredHome) }
-  var minimumReady by remember { mutableStateOf(library.enteredHome) }
   var thumbnails by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
   var warmupProgress by remember { mutableFloatStateOf(if (interfaceReady) 1f else 0f) }
   var renderHealthy by remember { mutableStateOf(false) }
   val firstPreparation = remember {
     preferences.getInt("prepared_version", 0) != BuildConfig.VERSION_CODE
-  }
-  LaunchedEffect(library) {
-    if (!library.enteredHome) delay(if (firstPreparation) 3_800 else 1_600)
-    minimumReady = true
   }
   val database = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>()
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
@@ -193,14 +187,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     }
   }
   val dataReady = (!access && !hasSelectedAccess) || state.loaded
-  val ready =
-    introduced &&
-      prepared &&
-      interfaceReady &&
-      storageReady &&
-      dataReady &&
-      homeReady &&
-      minimumReady
+  val ready = introduced && prepared && interfaceReady && storageReady && dataReady && homeReady
   LaunchedEffect(ready) {
     if (ready) {
       library.enteredHome = true
@@ -294,9 +281,11 @@ internal fun StartupGate(content: @Composable () -> Unit) {
             access = access,
             preparing = !ready,
             progress =
-              (warmupProgress * .75f +
-                  (if (prepared && storageReady) .15f else 0f) +
-                  (if (homeReady) .1f else 0f))
+              (((if (interfaceReady) 1f else warmupProgress) * 18f +
+                  (if (prepared) 1f else 0f) +
+                  (if (storageReady) 1f else 0f) +
+                  (if (homeReady) 1f else 0f) +
+                  (if (dataReady) 1f else 0f)) / 22f)
                 .coerceIn(0f, 1f),
             requesting = requesting,
             denied = denied,
@@ -339,7 +328,7 @@ private fun StartupPage(
     Modifier.fillMaxSize()
       .background(
         androidx.compose.ui.graphics.Brush.verticalGradient(
-          listOf(colors.surfaceContainerLow, colors.background)
+          listOf(colors.background, colors.surfaceContainerLow, colors.background)
         )
       )
       .safeDrawingPadding(),
@@ -351,7 +340,7 @@ private fun StartupPage(
         .verticalScroll(rememberScrollState())
         .padding(28.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(20.dp),
+      verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       val reduced = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
       val handoff = LocalBrandHandoff.current
@@ -440,13 +429,32 @@ private fun StartupPage(
             tween(if (reduced) 0 else 240),
             label = "startup_progress",
           )
-        LinearProgressIndicator(
-          progress = { animatedProgress },
-          modifier = Modifier.width(180.dp).height(4.dp).clip(RoundedCornerShape(50)),
-          trackColor = colors.onSurface.copy(alpha = .12f),
-          gapSize = 0.dp,
-          drawStopIndicator = {},
-        )
+        Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+          Row(Modifier.width(216.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(6) { segment ->
+              Box(
+                Modifier.weight(1f)
+                  .height(3.dp)
+                  .clip(RoundedCornerShape(50))
+                  .background(colors.onSurface.copy(alpha = .08f))
+              ) {
+                Box(
+                  Modifier.fillMaxWidth((animatedProgress * 6f - segment).coerceIn(0f, 1f))
+                    .fillMaxHeight()
+                    .background(colors.primary)
+                )
+              }
+            }
+          }
+          Text(
+            "${(progress * 100).toInt()}%",
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
+          )
+        }
         if (showIntroduction)
           Text(
             stringResource(R.string.mpv_preparing),

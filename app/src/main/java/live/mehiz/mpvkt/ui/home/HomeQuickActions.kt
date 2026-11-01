@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,14 +17,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.presentation.components.*
 import live.mehiz.mpvkt.ui.icons.*
@@ -41,7 +40,6 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
   val density = androidx.compose.ui.platform.LocalDensity.current
   val gestureNavigation = WindowInsets.mandatorySystemGestures.getBottom(density) > 0
   val clearance = if (gestureNavigation) 20.dp else 12.dp
-  val popupOffset = with(density) { (-80.dp - clearance).roundToPx() }
   var expanded by rememberSaveable { mutableStateOf(false) }
   val visibility = remember { MutableTransitionState(false) }
   visibility.targetState = expanded
@@ -92,7 +90,91 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
   }
   BackHandler(expanded) { expanded = false }
   val actionLabel = stringResource(R.string.mpv_quick_actions)
-  Box(Modifier.padding(bottom = clearance)) {
+  Column(Modifier.padding(bottom = clearance), horizontalAlignment = Alignment.End) {
+    AnimatedVisibility(
+      visibleState = visibility,
+      enter = fadeIn(tween(0)),
+      exit = fadeOut(tween(0)),
+      modifier = Modifier.padding(bottom = 12.dp),
+    ) {
+      Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+      ) {
+        listOf(QuickAction.File, QuickAction.Recent, QuickAction.Link).forEachIndexed {
+          index,
+          action ->
+          Surface(
+            Modifier.animateEnterExit(
+              enter =
+                fadeIn(
+                  tween(
+                    if (reduceMotion) 0 else 160,
+                    delayMillis = if (reduceMotion) 0 else (2 - index) * 35,
+                  )
+                ) +
+                  scaleIn(
+                    if (reduceMotion) tween(0) else spring(dampingRatio = .85f, stiffness = 500f),
+                    initialScale = .7f,
+                    transformOrigin = TransformOrigin(1f, 1f),
+                  ) +
+                  slideInVertically(
+                    if (reduceMotion) tween(0) else spring(dampingRatio = .85f, stiffness = 500f)
+                  ) {
+                    it / 2
+                  },
+              exit =
+                fadeOut(tween(if (reduceMotion) 0 else 140)) +
+                  scaleOut(
+                    tween(if (reduceMotion) 0 else 180),
+                    targetScale = .7f,
+                    transformOrigin = TransformOrigin(1f, 1f),
+                  ) +
+                  slideOutVertically(tween(if (reduceMotion) 0 else 180)) { it / 2 },
+            ),
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shadowElevation = 3.dp,
+          ) {
+            Row(
+              Modifier.widthIn(max = 280.dp)
+                .heightIn(min = 56.dp)
+                .clickable {
+                  if (expanded) {
+                    pending = action
+                    expanded = false
+                  }
+                }
+                .padding(16.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+              Text(
+                stringResource(
+                  when (action) {
+                    QuickAction.File -> R.string.mpv_open_file
+                    QuickAction.Recent -> R.string.mpv_recently_played
+                    QuickAction.Link -> R.string.mpv_open_link
+                  }
+                ),
+                Modifier,
+              )
+              Icon(
+                when (action) {
+                  QuickAction.File -> Icons.FolderOpen
+                  QuickAction.Recent -> Icons.History
+                  QuickAction.Link -> Icons.Link
+                },
+                null,
+                Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+              )
+            }
+          }
+        }
+      }
+    }
     FloatingActionButton(
       onClick = {
         // Outside-dismiss and the same tap must not reopen the menu; do not race its exit.
@@ -117,88 +199,8 @@ internal fun HomeQuickActions(reduceMotion: Boolean) {
         Icon(if (it) Icons.Close else Icons.Play, null, Modifier.size(28.dp))
       }
     }
-    if (visibility.currentState || visibility.targetState)
-      Popup(
-        alignment = Alignment.BottomEnd,
-        offset = IntOffset(0, popupOffset),
-        onDismissRequest = { expanded = false },
-        properties = PopupProperties(focusable = true),
-      ) {
-        AnimatedVisibility(
-          visibleState = visibility,
-          enter = fadeIn(tween(if (reduceMotion) 0 else 220)),
-          exit = fadeOut(tween(if (reduceMotion) 0 else 180)),
-        ) {
-          Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-          ) {
-            listOf(QuickAction.File, QuickAction.Recent, QuickAction.Link).forEachIndexed {
-              index,
-              action ->
-              Surface(
-                Modifier.animateEnterExit(
-                  enter =
-                    fadeIn(
-                      tween(
-                        if (reduceMotion) 0 else 180,
-                        delayMillis = if (reduceMotion) 0 else (2 - index) * 30,
-                      )
-                    ) +
-                      slideInVertically(
-                        tween(
-                          if (reduceMotion) 0 else 220,
-                          delayMillis = if (reduceMotion) 0 else (2 - index) * 30,
-                        )
-                      ) {
-                        it / 3
-                      },
-                  exit = fadeOut(tween(if (reduceMotion) 0 else 140)),
-                ),
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shadowElevation = 3.dp,
-              ) {
-                Row(
-                  Modifier.widthIn(max = 280.dp)
-                    .heightIn(min = 56.dp)
-                    .clickable {
-                      if (expanded) {
-                        pending = action
-                        expanded = false
-                      }
-                    }
-                    .padding(16.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                  Text(
-                    stringResource(
-                      when (action) {
-                        QuickAction.File -> R.string.mpv_open_file
-                        QuickAction.Recent -> R.string.mpv_recently_played
-                        QuickAction.Link -> R.string.mpv_open_link
-                      }
-                    ),
-                    Modifier,
-                  )
-                  Icon(
-                    when (action) {
-                      QuickAction.File -> Icons.FolderOpen
-                      QuickAction.Recent -> Icons.History
-                      QuickAction.Link -> Icons.Link
-                    },
-                    null,
-                    Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                  )
-                }
-              }
-            }
-          }
-        }
-      }
   }
+
   if (link)
     AppDialog(
       onDismissRequest = { link = false },

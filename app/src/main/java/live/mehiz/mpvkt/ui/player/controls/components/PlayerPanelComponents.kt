@@ -1,7 +1,5 @@
 package live.mehiz.mpvkt.ui.player.controls.components
 
-import live.mehiz.mpvkt.ui.motion.headerGradient
-
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -37,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.motion.headerGradient
 
 @Composable
 fun PlayerPanelHeader(
@@ -47,11 +46,18 @@ fun PlayerPanelHeader(
   onBack: (() -> Unit)? = null,
   animateTitle: Boolean = true,
 ) {
+  val compact = live.mehiz.mpvkt.ui.motion.LocalCompactPanelHeader.current
   Column(modifier.headerGradient()) {
     Row(
-      Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+      Modifier.fillMaxWidth()
+        .padding(
+          start = if (compact) 4.dp else 12.dp,
+          end = 4.dp,
+          top = if (compact) 0.dp else 8.dp,
+          bottom = if (compact) 0.dp else 8.dp,
+        ),
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      horizontalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 8.dp),
     ) {
       Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
         if (onBack != null)
@@ -69,7 +75,9 @@ fun PlayerPanelHeader(
       ) { text ->
         Text(
           text,
-          style = MaterialTheme.typography.titleLarge,
+          style =
+            if (compact) MaterialTheme.typography.titleMedium
+            else MaterialTheme.typography.titleLarge,
           maxLines = 1,
           overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         )

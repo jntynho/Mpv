@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
+internal val LocalCompactPanelHeader = staticCompositionLocalOf { false }
 internal val LocalHeaderMaskColor = staticCompositionLocalOf { Color.Unspecified }
 internal val LocalHeaderGradient = staticCompositionLocalOf { false }
 
@@ -30,12 +31,12 @@ internal fun Modifier.headerGradient(): Modifier {
   val maskColor = LocalHeaderMaskColor.current
   val surface = if (maskColor == Color.Unspecified) MaterialTheme.colorScheme.surface else maskColor
   return zIndex(1f).drawWithCache {
-    val depth = 24.dp.toPx()
+    val depth = 48.dp.toPx()
     val brush =
       Brush.verticalGradient(
         listOf(
-          surface.copy(alpha = surface.alpha * .9f * strength),
-          surface.copy(alpha = surface.alpha * .35f * strength),
+          surface.copy(alpha = surface.alpha * strength),
+          surface.copy(alpha = surface.alpha * .6f * strength),
           surface.copy(alpha = 0f),
         ),
         startY = size.height,

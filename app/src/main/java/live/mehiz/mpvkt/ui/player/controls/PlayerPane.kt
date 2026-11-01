@@ -57,10 +57,13 @@ internal fun PlayerPane(
     onCloseStart = onCloseStart,
   ) { close, headerDrag ->
     CompositionLocalProvider(
+      live.mehiz.mpvkt.ui.motion.LocalCompactPanelHeader provides edgeToEdge,
       live.mehiz.mpvkt.ui.motion.LocalHeaderMaskColor provides
-        androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(alpha = opacity.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 1f),
+        androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(
+          alpha = opacity.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 1f
+        ),
       LocalOverscrollFactory provides
-        if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
+        if (reduceMotion) null else live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory,
     ) {
       Column(Modifier.fillMaxSize()) {
         PlayerPanelHeader(

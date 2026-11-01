@@ -188,7 +188,7 @@ internal fun LibraryHeader(
                       contentAlignment = Alignment.Center,
                     ) {
                       AppBrandMark(
-                        Modifier.size(32.dp)
+                        Modifier.size(38.dp)
                           .onGloballyPositioned { bounds ->
                             if (handoff != null && !warming)
                               handoff.target = bounds.boundsInWindow()

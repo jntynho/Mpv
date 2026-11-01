@@ -234,14 +234,12 @@ fun PlayerSheet(
             .then(
               if (edgeToEdge)
                 Modifier.windowInsetsPadding(
-                    WindowInsets.safeDrawing
-                      .union(WindowInsets.statusBarsIgnoringVisibility)
-                      .only(
-                        WindowInsetsSides.Top +
-                          WindowInsetsSides.Bottom +
-                          (if (width == maxWidth) WindowInsetsSides.Horizontal
-                          else WindowInsetsSides.Right)
-                      )
+                    WindowInsets.safeDrawing.only(
+                      WindowInsetsSides.Top +
+                        WindowInsetsSides.Bottom +
+                        (if (width == maxWidth) WindowInsetsSides.Horizontal
+                        else WindowInsetsSides.Right)
+                    )
                   )
                   .graphicsLayer {
                     // The surface stays flush; only its contents follow negative spring overshoot.
