@@ -35,6 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/mpv-publication.log") 2>&1
           # Bootstrap publishes the already reviewed build without compiling it again.
           source_run_id="${EVENT_RUN_ID:-${INPUT_RUN_ID:-41264711015}}"
           [[ "$source_run_id" =~ ^[0-9]+$ ]]
@@ -69,6 +70,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/mpv-publication.log") 2>&1
           mkdir release-assets
           cp artifacts/MPV-APK-arm64/app-arm64-v8a-preview.apk release-assets/arm64-v8a.apk
           cp artifacts/MPV-APK-arm32/app-armeabi-v7a-preview.apk release-assets/armeabi-v7a.apk
@@ -102,6 +104,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/mpv-publication.log") 2>&1
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" release-assets/*.apk --clobber
             gh release edit "$RELEASE_TAG" --latest
@@ -115,3 +118,12 @@ jobs:
           assert json.load(open('published-assets.json')) == ['arm64-v8a.apk', 'armeabi-v7a.apk', 'universal.apk']
           PY
           gh release view "$RELEASE_TAG" --json url --jq .url >> "$GITHUB_STEP_SUMMARY"
+      - name: Publication diagnostic summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/mpv-publication.log" ]; then
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            tail -100 "$RUNNER_TEMP/mpv-publication.log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
