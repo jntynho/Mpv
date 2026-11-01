@@ -131,8 +131,8 @@ class PlayerViewModel(
     addingExternalSubtitle.value = false
     externalSubtitleSlot = slot.coerceIn(0, 1)
     externalSubtitleGeneration = subtitleVideoGeneration.get()
-    val primary = android.os.Environment.getExternalStorageDirectory().absolutePath
-    subtitleBrowserPath.value = listOf(primary)
+    val initialFolder = listOfNotNull(SubtitleStorage.primaryDirectory()?.absolutePath)
+    subtitleBrowserPath.value = initialFolder
     val request = externalSubtitleRequest.get()
     val generation = externalSubtitleGeneration
     PlaybackControl.enqueue("external-subtitle-context") {
@@ -142,7 +142,7 @@ class PlayerViewModel(
           panelNavigator.state.value.lastOrNull()?.sheet != Sheets.SubtitleTracks) return@launch
         externalSubtitleOwnerPath = path
         val restored = kotlinx.coroutines.withContext(Dispatchers.IO) {
-          runCatching { SubtitleStorage.restore(activity.applicationContext) }.getOrDefault(listOf(primary))
+          runCatching { SubtitleStorage.restore(activity.applicationContext) }.getOrDefault(initialFolder)
         }
         if (request == externalSubtitleRequest.get() && generation == subtitleVideoGeneration.get() &&
           panelNavigator.state.value.lastOrNull()?.sheet == Sheets.SubtitleTracks) {

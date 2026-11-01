@@ -176,9 +176,21 @@ class SettingsStandardTest {
     )
     compose.runOnUiThread { live.mehiz.mpvkt.testutils.captureWindow(compose.activity, "startup") }
     var shown = false
+    var offeredSubtitleAccess = false
     repeat(650) {
       if (!shown) {
         pumpWarmupFrame()
+        if (
+          !offeredSubtitleAccess &&
+            compose.onAllNodesWithText("Not now").fetchSemanticsNodes().isNotEmpty()
+        ) {
+          compose
+            .onNodeWithText(context.getString(live.mehiz.mpvkt.R.string.mpv_subtitle_storage_grant))
+            .assertIsDisplayed()
+          compose.onNodeWithText("Actual home").assertDoesNotExist()
+          compose.onNodeWithText("Not now").performClick()
+          offeredSubtitleAccess = true
+        }
         shown = runCatching { compose.onNodeWithText("Actual home").assertIsDisplayed() }.isSuccess
       }
     }
@@ -186,6 +198,12 @@ class SettingsStandardTest {
     compose.waitForIdle()
     compose.onNodeWithText("Actual home").assertIsDisplayed()
     compose.onNodeWithText("Preparing your viewing space").assertDoesNotExist()
+    assertTrue("Startup offers optional subtitle access before showing Home", offeredSubtitleAccess)
+    assertTrue(
+      context
+        .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+        .getBoolean("subtitle_access_reviewed", false)
+    )
     assertEquals(1, homes)
     assertEquals(
       live.mehiz.mpvkt.BuildConfig.VERSION_CODE,

@@ -13,11 +13,23 @@ import androidx.core.net.toUri
 import java.io.File
 
 internal object SubtitleStorage {
-  fun granted(context: Context) =
-    if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager()
-    else
-      ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-        PackageManager.PERMISSION_GRANTED
+  /** Android may have no mounted volumes during boot or in a restricted profile. */
+  fun granted(context: Context): Boolean =
+    try {
+      if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager()
+      else
+        ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+          PackageManager.PERMISSION_GRANTED
+    } catch (_: RuntimeException) {
+      false
+    }
+
+  fun primaryDirectory(): File? =
+    try {
+      Environment.getExternalStorageDirectory()
+    } catch (_: RuntimeException) {
+      null
+    }
 
   fun request(context: Context) {
     if (Build.VERSION.SDK_INT >= 30) {
@@ -36,7 +48,7 @@ internal object SubtitleStorage {
   }
 
   fun roots(context: Context): List<File> {
-    val primary = Environment.getExternalStorageDirectory()
+    val primary = primaryDirectory()
     val extra =
       if (Build.VERSION.SDK_INT >= 30)
         context.getSystemService(StorageManager::class.java).storageVolumes.mapNotNull {
@@ -46,15 +58,15 @@ internal object SubtitleStorage {
         context.getExternalFilesDirs(null).filterNotNull().mapNotNull {
           it.parentFile?.parentFile?.parentFile?.parentFile
         }
-    return (listOf(primary) + extra)
+    return (listOfNotNull(primary) + extra)
       .filter { it.isDirectory && it.canRead() }
       .distinctBy { it.canonicalPath }
   }
 
   /** A path stack always starts at a storage root, so Back cannot escape shared storage. */
   fun restore(context: Context): List<String> {
-    val primary = Environment.getExternalStorageDirectory()
     val roots = roots(context)
+    val primary = primaryDirectory() ?: roots.firstOrNull() ?: return emptyList()
     val saved =
       context
         .getSharedPreferences("subtitle_browser", Context.MODE_PRIVATE)

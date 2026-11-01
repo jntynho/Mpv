@@ -2,7 +2,6 @@ package live.mehiz.mpvkt.ui.player.controls.components.panels
 
 import android.Manifest
 import android.os.Build
-import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -59,7 +58,7 @@ internal suspend fun listSubtitleDirectory(directory: File): List<File> =
   }
 
 private data class SubtitleDirectoryPage(
-  val folder: String,
+  val folder: String?,
   val entries: List<File> = emptyList(),
   val failed: Boolean = false,
 )
@@ -87,7 +86,7 @@ internal fun ExternalSubtitlesPanel(
     onDispose { owner.lifecycle.removeObserver(observer) }
   }
   val accessible = remember(refresh) { SubtitleStorage.granted(context) }
-  val folder = path.lastOrNull() ?: Environment.getExternalStorageDirectory().absolutePath
+  val folder = path.lastOrNull() ?: SubtitleStorage.primaryDirectory()?.absolutePath
   val reduced = LocalReduceMotion.current
   var roots by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
   var storageMenu by remember { mutableStateOf(false) }
@@ -99,7 +98,7 @@ internal fun ExternalSubtitlesPanel(
           runCatching {
               SubtitleStorage.roots(context).map { root ->
                 val label =
-                  if (root.canonicalFile == Environment.getExternalStorageDirectory().canonicalFile)
+                  if (root.canonicalFile == SubtitleStorage.primaryDirectory()?.canonicalFile)
                     internalStorage
                   else if (Build.VERSION.SDK_INT >= 24)
                     context
@@ -116,9 +115,10 @@ internal fun ExternalSubtitlesPanel(
   }
   var page by remember { mutableStateOf(SubtitleDirectoryPage(folder)) }
   // Keep the previous page drawn during IO, but disable it as soon as navigation starts.
-  var loading by remember(folder, refresh, accessible) { mutableStateOf(accessible) }
+  var loading by
+    remember(folder, refresh, accessible) { mutableStateOf(accessible && folder != null) }
   LaunchedEffect(folder, refresh, accessible) {
-    if (!accessible) return@LaunchedEffect
+    if (!accessible || folder == null) return@LaunchedEffect
     loading = true
     try {
       val entries = listSubtitleDirectory(File(folder))
@@ -157,9 +157,14 @@ internal fun ExternalSubtitlesPanel(
       TextButton(onClick = onUp, enabled = !adding) {
         Icon(Icons.ArrowBack, null)
         Spacer(Modifier.width(8.dp))
-        Text(File(folder).name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(File(path.last()).name, maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
     when {
+      folder == null ->
+        Column(Modifier.padding(20.dp)) {
+          Text(stringResource(R.string.mpv_subtitle_storage_failed))
+          TextButton({ refresh++ }) { Text(stringResource(R.string.mpv_subtitle_storage_retry)) }
+        }
       !accessible ->
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
           Text(stringResource(R.string.mpv_subtitle_storage_explanation))
@@ -183,7 +188,8 @@ internal fun ExternalSubtitlesPanel(
           contentKey = { it.folder },
           modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),
           transitionSpec = {
-            val backwards = initialState.folder.startsWith(targetState.folder + File.separator)
+            val backwards =
+              initialState.folder?.startsWith(targetState.folder.orEmpty() + File.separator) == true
             val direction = if (backwards) -1 else 1
             val duration = if (reduced) 0 else 220
             ((fadeIn(tween(duration)) +
