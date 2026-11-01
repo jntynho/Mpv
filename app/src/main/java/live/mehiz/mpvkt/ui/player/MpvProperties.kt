@@ -5,9 +5,7 @@ import `is`.xyz.mpv.MPVNode
 
 /** Activity-owned binding; cached Flow references remain usable after a native core recreation. */
 internal object MpvProperties {
-  private val session = StablePropertySession { action ->
-    PlaybackControl.enqueueSession(action = action)
-  }
+  private val session = StablePropertySession()
   val propBoolean =
     session.channel(MPVLib.mpvFormat.MPV_FORMAT_FLAG) { MPVLib.getPropertyBoolean(it) }
   val propString =

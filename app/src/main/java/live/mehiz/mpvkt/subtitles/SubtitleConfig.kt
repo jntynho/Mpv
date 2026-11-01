@@ -4,28 +4,11 @@ import android.content.Context
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import live.mehiz.mpvkt.preferences.AdvancedPreferences
 
 internal object SubtitleConfig {
-  private val owned = kotlinx.coroutines.flow.MutableStateFlow<Set<String>>(emptySet())
-  val ownedProperties = owned.asStateFlow()
-  var active: Set<String>
-    get() = owned.value
-    set(value) {
-      owned.value = value.toSet()
-    }
-
-  internal fun canonical(name: String): String =
-    when (name) {
-      "sub-border-color" -> "sub-outline-color"
-      "sub-border-size" -> "sub-outline-size"
-      else -> name
-    }
-
-  internal fun canEdit(name: String, owned: Set<String> = active): Boolean =
-    owned.none { canonical(it) == canonical(name) }
+  @Volatile var active: Set<String> = emptySet()
 
   fun read(input: java.io.InputStream): String {
     val out = java.io.ByteArrayOutputStream()

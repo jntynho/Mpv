@@ -3,8 +3,8 @@ package live.mehiz.mpvkt.ui.player
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** JNI runs on the supplied worker, never while holding the UI-facing state lock. */
-internal class StablePropertySession(private val dispatch: (() -> Unit) -> Unit) {
+/** Stable application-owned flows are rebound whenever the native player is recreated. */
+internal class StablePropertySession {
   private val lock = Any()
   private val channels = mutableListOf<Channel<*>>()
   private val observed = hashSetOf<Pair<String, Int>>()
@@ -14,73 +14,40 @@ internal class StablePropertySession(private val dispatch: (() -> Unit) -> Unit)
   inner class Channel<T>
   internal constructor(private val format: Int, private val read: (String) -> T?) {
     private val values = linkedMapOf<String, MutableStateFlow<T?>>()
-    private val revisions = mutableMapOf<String, Long>()
-    private val scheduled = mutableMapOf<String, Long>()
 
-    operator fun get(name: String): StateFlow<T?> {
-      var created = false
-      val flow =
-        synchronized(lock) {
-          values.getOrPut(name) {
-            created = true
-            MutableStateFlow(null)
+    operator fun get(name: String): StateFlow<T?> =
+      synchronized(lock) {
+        values[name]
+          ?: MutableStateFlow<T?>(null).also {
+            values[name] = it
+            if (observe != null) bind(name)
           }
-        }
-      if (created) bind(name)
-      return flow
-    }
+      }
 
     internal fun cached(name: String): T? = synchronized(lock) { values[name]?.value }
 
-    internal fun emit(name: String, value: T?) =
-      synchronized(lock) {
-        revisions[name] = (revisions[name] ?: 0L) + 1
-        values[name]?.value = value
-      }
+    internal fun emit(name: String, value: T?) {
+      values[name]?.value = value
+    }
 
     internal fun invalidate(name: String) {
-      emit(name, null)
+      values[name]?.value = null
     }
 
     internal fun reset() {
-      scheduled.clear()
-      values.keys.toList().forEach { emit(it, null) }
+      values.values.forEach { it.value = null }
     }
 
     internal fun bindAll() {
-      val names = synchronized(lock) { values.keys.toList() }
-      names.forEach(::bind)
+      values.keys.toList().forEach(::bind)
     }
 
     private fun bind(name: String) {
-      val binding =
-        synchronized(lock) {
-          val callback = observe ?: return
-          if (scheduled[name] == generation) return
-          scheduled[name] = generation
-          Triple(generation, callback, revisions[name] ?: 0L)
-        }
-      dispatch {
-        val shouldObserve =
-          synchronized(lock) {
-            if (observe == null || generation != binding.first) return@dispatch
-            observed.add(name to format)
-          }
-        val value =
-          runCatching {
-              if (shouldObserve) binding.second(name, format)
-              read(name)
-            }
-            .getOrNull()
-        synchronized(lock) {
-          // An event newer than the initial snapshot must win, including an unavailable event.
-          if (
-            observe != null &&
-              generation == binding.first &&
-              (revisions[name] ?: 0L) == binding.third
-          )
-            values[name]?.value = value
-        }
+      try {
+        if (observed.add(name to format)) observe?.invoke(name, format)
+        values[name]?.value = read(name)
+      } catch (_: Exception) {
+        values[name]?.value = null
       }
     }
   }
@@ -98,10 +65,7 @@ internal class StablePropertySession(private val dispatch: (() -> Unit) -> Unit)
       generation
     }
 
-  fun bindAll() {
-    val snapshot = synchronized(lock) { if (observe == null) emptyList() else channels.toList() }
-    snapshot.forEach { it.bindAll() }
-  }
+  fun bindAll() = synchronized(lock) { if (observe != null) channels.forEach { it.bindAll() } }
 
   fun accept(token: Long, update: () -> Unit) =
     synchronized(lock) { if (observe != null && generation == token) update() }

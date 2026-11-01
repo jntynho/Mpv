@@ -28,9 +28,6 @@ internal fun PanelTextField(
   modifier: Modifier = Modifier,
   enabled: Boolean = true,
   readOnly: Boolean = false,
-  isError: Boolean = false,
-  visualTransformation: androidx.compose.ui.text.input.VisualTransformation =
-    androidx.compose.ui.text.input.VisualTransformation.None,
   label: (@Composable () -> Unit)? = null,
   singleLine: Boolean = true,
   leadingIcon: (@Composable () -> Unit)? = null,
@@ -49,7 +46,6 @@ internal fun PanelTextField(
     enabled = enabled,
     readOnly = readOnly,
     singleLine = singleLine,
-    visualTransformation = visualTransformation,
     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.onSurface),
     cursorBrush = SolidColor(colors.primary),
     interactionSource = interaction,
@@ -62,8 +58,7 @@ internal fun PanelTextField(
           .background(colors.surfaceContainerHigh.copy(alpha = .4f), shape)
           .border(
             1.dp,
-            if (isError) colors.error
-            else if (focused) colors.primary else colors.outlineVariant.copy(alpha = .65f),
+            if (focused) colors.primary else colors.outlineVariant.copy(alpha = .65f),
             shape,
           )
           .padding(horizontal = 12.dp),

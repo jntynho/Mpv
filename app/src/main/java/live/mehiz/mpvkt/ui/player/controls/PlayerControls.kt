@@ -128,7 +128,6 @@ fun PlayerControls(
   val position by
     remember { MpvProperties.propDouble["time-pos"].map { it?.toInt() } }.collectAsState(initial = null)
   val playbackSpeed by MpvProperties.propFloat["speed"].collectAsState()
-  val currentSpeed = (playbackSpeed ?: playerPreferences.defaultSpeed.get()).takeIf { it.isFinite() && it in .01f..100f } ?: 1f
   val gestureSeekAmount by viewModel.gestureSeekAmount.collectAsState()
   val doubleTapSeekAmount by viewModel.doubleTapSeekAmount.collectAsState()
   val showDoubleTapOvals by playerPreferences.showDoubleTapOvals.collectAsState()
@@ -215,7 +214,7 @@ fun PlayerControls(
       LandscapeControl.Lock -> viewModel.lockControls()
       LandscapeControl.Rotation -> viewModel.cycleScreenRotations()
       LandscapeControl.Speed -> {
-        val speed = currentSpeed
+        val speed = playbackSpeed ?: playerPreferences.defaultSpeed.get()
         val next = if (speed >= 2) .25f else speed + .25f
         live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("speed") {
           MPVLib.setPropertyFloat("speed", next)
@@ -228,7 +227,7 @@ fun PlayerControls(
     LandscapeControlStrip(
       landscapeLayout.buttons(region),
       decoder,
-      currentSpeed,
+      playbackSpeed ?: playerPreferences.defaultSpeed.get(),
       chapters.getOrNull(currentChapter ?: 0),
       if (customButton != null) customButtonTitle else null,
       playerActivity?.isPipSupported == true,
@@ -652,13 +651,13 @@ fun PlayerControls(
           if (isLandscape) landscapeStrip(ControlRegion.BottomLeft)
           else
             BottomLeftPlayerControls(
-              playbackSpeed = currentSpeed,
+              playbackSpeed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
               showChapterIndicator = showChapterIndicator,
               currentChapter = chapters.getOrNull(currentChapter ?: 0),
               onLockControls = viewModel::lockControls,
               onCycleRotation = viewModel::cycleScreenRotations,
               onPlaybackSpeedChange = {
-                live.mehiz.mpvkt.ui.player.PanelProperties.setFloat("speed", it)
+                MPVLib.setPropertyFloat("speed", it)
                 playerPreferences.defaultSpeed.set(it)
               },
               onOpenSheet = onOpenSheet,
@@ -684,7 +683,6 @@ fun PlayerControls(
     }
     PlayerPane(
       pages = panelPages,
-      mediaKey = seekMediaGeneration,
       onCloseStart = viewModel::closeSubtitleSearch,
       onDismiss = {
         viewModel.panelNavigator.dismiss()
@@ -696,15 +694,13 @@ fun PlayerControls(
         PlayerSheets(
           sheetShown = page.sheet,
           subtitles = subtitles,
-          onAddSubtitle = { uri, slot, owner -> viewModel.addSubtitle(uri, slot, owner) },
-          mediaGeneration = seekMediaGeneration,
-          onOpenSubtitlePanel = viewModel.panelNavigator::openSubtitlePanel,
+          onAddSubtitle = viewModel::addSubtitle,
           onSelectSubtitle = viewModel::selectSub,
           onSearchSubtitle = { slot ->
             viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(), slot)
           },
           audioTracks = audioTracks,
-          onAddAudio = { uri, owner -> viewModel.addAudio(uri, owner) },
+          onAddAudio = viewModel::addAudio,
           onSelectAudio = { track ->
             live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("audio-track") {
               if (track == null) MPVLib.setPropertyBoolean("aid", false)
@@ -714,32 +710,20 @@ fun PlayerControls(
           chapter = chapters.getOrNull(currentChapter ?: 0),
           chapters = chapters,
           onSeekToChapter = {
-            live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("chapter") {
-              MPVLib.setPropertyInt("chapter", it)
-            }
+            MPVLib.setPropertyInt("chapter", it)
+            viewModel.unpause()
           },
           decoder = decoder,
           onUpdateDecoder = viewModel::setDecoder,
-          speed = currentSpeed,
-          onSpeedChange = {
-            live.mehiz.mpvkt.ui.player.PanelProperties.setFloat("speed", it.toFixed(2))
-          },
-          onMakeDefaultSpeed = {
-            live.mehiz.mpvkt.ui.player.PlaybackControl.enqueue("speed-default") {
-              MPVLib.getPropertyFloat("speed")?.takeIf { value -> value.isFinite() && value in .01f..100f }
-                ?.let { value -> playerPreferences.defaultSpeed.set(value.toFixed(2)) }
-            }
-          },
+          speed = playbackSpeed ?: playerPreferences.defaultSpeed.get(),
+          onSpeedChange = { MPVLib.setPropertyFloat("speed", it.toFixed(2)) },
+          onMakeDefaultSpeed = { playerPreferences.defaultSpeed.set(it.toFixed(2)) },
           onAddSpeedPreset = { playerPreferences.speedPresets += it.toFixed(2).toString() },
           onRemoveSpeedPreset = { playerPreferences.speedPresets -= it.toFixed(2).toString() },
           onResetSpeedPresets = playerPreferences.speedPresets::delete,
-          speedPresets =
-            live.mehiz.mpvkt.preferences.SpeedPresets.safe(
-              speedPresets,
-              playerPreferences.speedPresets.defaultValue(),
-            ),
+          speedPresets = speedPresets.map { it.toFloat() }.sorted(),
           onResetDefaultSpeed = {
-            live.mehiz.mpvkt.ui.player.PanelProperties.setFloat(
+            MPVLib.setPropertyFloat(
               "speed",
               playerPreferences.defaultSpeed.deleteAndGet().toFixed(2),
             )
@@ -769,7 +753,6 @@ fun PlayerControls(
       else
         PlayerPanels(
           panelShown = page.panel,
-          subtitleSlot = page.subtitleSlot ?: 0,
           sleepTimerTimeRemaining = sleepTimerTimeRemaining,
           onStartSleepTimer = viewModel::startTimer,
           onNavigateBack = viewModel.panelNavigator::back,

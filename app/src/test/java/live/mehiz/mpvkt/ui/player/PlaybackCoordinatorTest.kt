@@ -281,27 +281,4 @@ class PlaybackCoordinatorTest {
       closer.shutdownNow()
     }
   }
-
-  @Test
-  fun coreSubscriptionsSurviveMediaChangeWhileOldMediaCommandsDoNot() {
-    val engine = Engine()
-    PlaybackCoordinator(engine).use { c ->
-      val entered = CountDownLatch(1)
-      val release = CountDownLatch(1)
-      c.enqueue {
-        entered.countDown()
-        release.await(3, TimeUnit.SECONDS)
-      }
-      entered.awaitChecked()
-      val observed = CountDownLatch(1)
-      var stale = false
-      c.enqueueSession { observed.countDown() }
-      c.enqueue { stale = true }
-      c.mediaStarted()
-      release.countDown()
-      assertTrue(observed.await(3, TimeUnit.SECONDS))
-      c.drain()
-      assertFalse(stale)
-    }
-  }
 }

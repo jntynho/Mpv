@@ -488,8 +488,7 @@ internal fun SubtitleSearchChoicePanel(
           AudioTrackRow(
             entry.value,
             entry.key in languages,
-            multiple = true,
-            onClick = {
+            {
               preferences.searchLanguages.set(
                 toggleSubtitleChoice(languages, entry.key, emptySet())
               )
@@ -558,30 +557,13 @@ internal fun SubtitleSearchOptionsPanel(
   val encodings by preferences.searchEncodings.collectAsState()
   val ai by preferences.aiResults.collectAsState()
   val hearing by preferences.hearingImpaired.collectAsState()
-  var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+  var expanded by remember { mutableStateOf("") }
   val scope = rememberCoroutineScope()
   val wyzieSources by preferences.wyzieSources.collectAsState()
   var wyzieOptions by remember {
     mutableStateOf<Map<String, String>>(mapOf("all" to "All sources"))
   }
   var loading by remember { mutableStateOf(false) }
-  var wyzieError by remember { mutableStateOf(false) }
-  fun loadSources() {
-    if (loading) return
-    loading = true
-    wyzieError = false
-    scope.launch {
-      try {
-        wyzieOptions = withContext(Dispatchers.IO) { service.sources() }
-      } catch (c: CancellationException) {
-        throw c
-      } catch (_: Exception) {
-        wyzieError = true
-      } finally {
-        loading = false
-      }
-    }
-  }
   val aiValues =
     mapOf(
       "all" to stringResource(R.string.subtitle_ai_all),
@@ -598,10 +580,11 @@ internal fun SubtitleSearchOptionsPanel(
         ) {
           expanded = if (expanded == "mode") "" else "mode"
         }
-        ExpandedOptions(expanded == "mode", SubtitleCatalog.modes, setOf(mode), multiple = false) {
-          preferences.searchMode.set(it)
-          expanded = ""
-        }
+        if (expanded == "mode")
+          InlineOptions(SubtitleCatalog.modes, setOf(mode)) {
+            preferences.searchMode.set(it)
+            expanded = ""
+          }
         SubtitleSettingsDivider()
         if (mode != "wyzie") {
           SubtitleSettingRow(
@@ -611,11 +594,12 @@ internal fun SubtitleSearchOptionsPanel(
           ) {
             expanded = if (expanded == "sources") "" else "sources"
           }
-          ExpandedOptions(expanded == "sources", SubtitleCatalog.hub, sources) {
-            preferences.hubSources.set(
-              toggleSubtitleChoice(sources, it, SubtitleCatalog.keys.keys - "wyzie")
-            )
-          }
+          if (expanded == "sources")
+            InlineOptions(SubtitleCatalog.hub, sources) {
+              preferences.hubSources.set(
+                toggleSubtitleChoice(sources, it, SubtitleCatalog.keys.keys - "wyzie")
+              )
+            }
           SubtitleSettingsDivider()
         }
         if (mode != "subhub") {
@@ -624,30 +608,29 @@ internal fun SubtitleSearchOptionsPanel(
             if (loading) stringResource(R.string.subtitle_loading)
             else wyzieSources.joinToString(", ") { wyzieOptions[it] ?: it },
             Icons.Link,
-            expanded = expanded == "wyzie",
+            enabled = !loading,
           ) {
             if (expanded == "wyzie") expanded = ""
-            else {
-              expanded = "wyzie"
-              loadSources()
+            else
+              scope.launch {
+                loading = true
+                try {
+                  wyzieOptions = withContext(Dispatchers.IO) { service.sources() }
+                } catch (c: CancellationException) {
+                  throw c
+                } catch (_: Exception) {} finally {
+                  loading = false
+                }
+                expanded = "wyzie"
+              }
+          }
+          if (expanded == "wyzie")
+            InlineOptions(
+              wyzieOptions + wyzieSources.associateWith { wyzieOptions[it] ?: it },
+              wyzieSources,
+            ) {
+              preferences.wyzieSources.set(toggleSubtitleChoice(wyzieSources, it, emptySet()))
             }
-          }
-          if (expanded == "wyzie" && loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-          if (expanded == "wyzie" && wyzieError) {
-            Text(
-              stringResource(R.string.panel_sources_failed),
-              Modifier.padding(16.dp),
-              style = MaterialTheme.typography.bodySmall,
-            )
-            TextButton(onClick = { loadSources() }) { Text(stringResource(R.string.panel_retry)) }
-          }
-          ExpandedOptions(
-            expanded == "wyzie",
-            wyzieOptions + wyzieSources.associateWith { wyzieOptions[it] ?: it },
-            wyzieSources,
-          ) {
-            preferences.wyzieSources.set(toggleSubtitleChoice(wyzieSources, it, emptySet()))
-          }
           SubtitleSettingsDivider()
         }
         SubtitleSettingRow(
@@ -666,10 +649,11 @@ internal fun SubtitleSearchOptionsPanel(
         ) {
           expanded = if (expanded == "ai") "" else "ai"
         }
-        ExpandedOptions(expanded == "ai", aiValues, setOf(ai), multiple = false) {
-          preferences.aiResults.set(it)
-          expanded = ""
-        }
+        if (expanded == "ai")
+          InlineOptions(aiValues, setOf(ai)) {
+            preferences.aiResults.set(it)
+            expanded = ""
+          }
         SubtitleSettingsDivider()
         SubtitleSettingRow(
           stringResource(R.string.subtitle_formats),
@@ -678,9 +662,10 @@ internal fun SubtitleSearchOptionsPanel(
         ) {
           expanded = if (expanded == "formats") "" else "formats"
         }
-        ExpandedOptions(expanded == "formats", SubtitleCatalog.formats, formats) {
-          preferences.searchFormats.set(toggleSubtitleChoice(formats, it, emptySet()))
-        }
+        if (expanded == "formats")
+          InlineOptions(SubtitleCatalog.formats, formats) {
+            preferences.searchFormats.set(toggleSubtitleChoice(formats, it, emptySet()))
+          }
         SubtitleSettingsDivider()
         SubtitleSettingRow(
           stringResource(R.string.subtitle_encodings),
@@ -689,9 +674,10 @@ internal fun SubtitleSearchOptionsPanel(
         ) {
           expanded = if (expanded == "encoding") "" else "encoding"
         }
-        ExpandedOptions(expanded == "encoding", SubtitleCatalog.encodings, encodings) {
-          preferences.searchEncodings.set(toggleSubtitleChoice(encodings, it, emptySet()))
-        }
+        if (expanded == "encoding")
+          InlineOptions(SubtitleCatalog.encodings, encodings) {
+            preferences.searchEncodings.set(toggleSubtitleChoice(encodings, it, emptySet()))
+          }
         PlayerPanelSection(stringResource(R.string.subtitle_keys))
         SubtitleCatalog.keys
           .filterKeys { it == "wyzie" && mode != "subhub" || it in sources && mode != "wyzie" }
@@ -702,18 +688,12 @@ internal fun SubtitleSearchOptionsPanel(
 }
 
 @Composable
-private fun ExpandedOptions(
-  expanded: Boolean,
+private fun InlineOptions(
   values: Map<String, String>,
   selected: Set<String>,
-  multiple: Boolean = true,
   onSelect: (String) -> Unit,
 ) {
-  live.mehiz.mpvkt.ui.preferences.ExpandableSettingsContent(expanded) {
-    values.forEach { (key, title) ->
-      AudioTrackRow(title, key in selected, { onSelect(key) }, multiple = multiple)
-    }
-  }
+  values.forEach { (key, title) -> AudioTrackRow(title, key in selected, { onSelect(key) }) }
 }
 
 internal fun subtitleNoticeResource(notice: SubtitleNotice): Int =

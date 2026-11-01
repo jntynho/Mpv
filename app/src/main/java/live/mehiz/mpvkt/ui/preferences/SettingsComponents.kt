@@ -21,11 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.*
@@ -50,19 +47,7 @@ internal fun ExpandableSettingsContent(
     exit =
       shrinkVertically(tween(duration), shrinkTowards = Alignment.Top) + fadeOut(tween(duration)),
   ) {
-    Column(
-      Modifier.then(if (!expanded) Modifier.clearAndSetSemantics {} else Modifier).pointerInput(
-        expanded
-      ) {
-        if (!expanded)
-          awaitPointerEventScope {
-            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach {
-              it.consume()
-            }
-          }
-      },
-      content = content,
-    )
+    Column(content = content)
   }
 }
 
@@ -75,11 +60,7 @@ internal fun SettingsCard(
     modifier
       .fillMaxWidth()
       .clip(RoundedCornerShape(24.dp))
-      .background(
-        MaterialTheme.colorScheme.surfaceContainer.copy(
-          alpha = live.mehiz.mpvkt.ui.player.controls.components.LocalPanelOpacity.current
-        )
-      ),
+      .background(MaterialTheme.colorScheme.surfaceContainer),
     content = content,
   )
 }

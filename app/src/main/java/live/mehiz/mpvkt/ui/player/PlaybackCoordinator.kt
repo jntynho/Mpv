@@ -388,12 +388,7 @@ internal class PlaybackCoordinator(
     }
 
   /** Replace queued keyed work physically, not just when it eventually reaches the worker. */
-  fun enqueue(key: String? = null, action: () -> Unit) = enqueueWork(key, true, action)
-
-  /** Property subscriptions belong to the core, so a new media file must not discard them. */
-  fun enqueueSession(action: () -> Unit) = enqueueWork(null, false, action)
-
-  private fun enqueueWork(key: String?, mediaBound: Boolean, action: () -> Unit) =
+  fun enqueue(key: String? = null, action: () -> Unit) =
     synchronized(stateLock) {
       if (closed) return@synchronized
       key?.let { keyed.remove(it)?.let(executor::remove) }
@@ -403,11 +398,7 @@ internal class PlaybackCoordinator(
         submit(10) {
           synchronized(engineLock) {
             synchronized(stateLock) {
-              if (
-                closed ||
-                  (mediaBound && generation != media) ||
-                  (key != null && keyed[key] !== work)
-              )
+              if (closed || generation != media || (key != null && keyed[key] !== work))
                 return@submit
               if (key != null) keyed.remove(key)
             }

@@ -59,14 +59,12 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
       Column {
         val overrideAssSubs by preferences.overrideAssSubs.collectAsState()
         SwitchPreference(
-          value = overrideAssSubs,
-          enabled =
-            live.mehiz.mpvkt.ui.player.controls.components.propertyEditable("sub-ass-override"),
+          overrideAssSubs,
           onValueChange = {
             preferences.overrideAssSubs.set(it)
             PanelProperties.setString("sub-ass-override", if (it) "force" else "scale")
           },
-          title = { Text(stringResource(R.string.player_sheets_sub_override_ass)) },
+          { Text(stringResource(R.string.player_sheets_sub_override_ass)) },
         )
         val subScale by MpvProperties.propFloat["sub-scale"].collectAsState()
         val subPos by MpvProperties.propInt["sub-pos"].collectAsState()
@@ -79,8 +77,6 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
             PanelProperties.setFloat("sub-scale", it)
           },
           max = 5f,
-          min = .1f,
-          property = "sub-scale",
           icon = { Icon(Icons.FormatSize, null) },
         )
         SliderItem(
@@ -92,7 +88,6 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
             PanelProperties.setInt("sub-pos", it)
           },
           max = 150,
-          property = "sub-pos",
           icon = { Icon(Icons.AlignVerticalCenter, null) },
         )
         Row(
@@ -103,16 +98,10 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
         ) {
           TextButton(
             onClick = {
-              if (PanelProperties.editable("sub-pos"))
-                preferences.subPos.deleteAndGet().let { PanelProperties.setInt("sub-pos", it) }
-              if (PanelProperties.editable("sub-scale"))
-                preferences.subScale.deleteAndGet().let {
-                  PanelProperties.setFloat("sub-scale", it)
-                }
-              if (PanelProperties.editable("sub-ass-override")) {
-                preferences.overrideAssSubs.deleteAndGet()
-                PanelProperties.setString("sub-ass-override", "scale")
-              } // mpv's default is 'scale'
+              preferences.subPos.deleteAndGet().let { PanelProperties.setInt("sub-pos", it) }
+              preferences.subScale.deleteAndGet().let { PanelProperties.setFloat("sub-scale", it) }
+              preferences.overrideAssSubs.deleteAndGet()
+              PanelProperties.setString("sub-ass-override", "scale") // mpv's default is 'scale'
             }
           ) {
             Row {

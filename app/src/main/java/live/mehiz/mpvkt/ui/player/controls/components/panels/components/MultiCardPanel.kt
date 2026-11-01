@@ -9,16 +9,8 @@ import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.ui.player.controls.components.PlayerScrollArea
 
 @Composable
-fun MultiCardPanel(
-  cardCount: Int,
-  modifier: Modifier = Modifier,
-  header: @Composable () -> Unit = {},
-  cards: @Composable (Int, Modifier) -> Unit,
-) {
+fun MultiCardPanel(cardCount: Int, modifier: Modifier = Modifier, cards: @Composable (Int, Modifier) -> Unit) {
   PlayerScrollArea(modifier.fillMaxSize()) {
-    header()
-    repeat(cardCount) {
-      cards(it, Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp))
-    }
+    repeat(cardCount) { cards(it, Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) }
   }
 }
