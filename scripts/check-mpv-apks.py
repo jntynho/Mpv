@@ -8,6 +8,7 @@ import re
 import struct
 import subprocess
 import zipfile
+from mpv_dex_contract import verify_mpv_jni
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT/'app/build/outputs/apk/preview'
@@ -76,7 +77,7 @@ with zipfile.ZipFile(ROOT/'app/build/generated/mpv-runtime/mpv-android-lib-0.1.1
                     else:
                         assert data == upstream, name
             dex = [apk.read(name) for name in apk.namelist() if re.fullmatch(r'classes\d*\.dex', name)]
-            assert dex and any(b'Lis/xyz/mpv/MPV;' in data for data in dex)
+            verify_mpv_jni(dex)
         print(json.dumps({'apk': path.name, 'bytes': path.stat().st_size, 'abis': sorted(abis),
                           'versionCode': element['versionCode'], 'nativePauseFix': 'verified',
                           'otherRuntimeContent': 'unchanged (libc++ debug stripping allowed)',
