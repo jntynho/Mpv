@@ -1,6 +1,7 @@
 name: Build MPV APKs
 on:
   push:
+    branches: [main]
     tags-ignore:
       - v*-build.*
     paths-ignore:
