@@ -17,14 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 import live.mehiz.mpvkt.R
 import live.mehiz.mpvkt.preferences.AppearancePreferences
 import live.mehiz.mpvkt.preferences.preference.collectAsState
 import live.mehiz.mpvkt.presentation.Screen
-import live.mehiz.mpvkt.presentation.preferences.MultiChoiceSegmentedButton
 import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.icons.ArrowBack
 import live.mehiz.mpvkt.ui.icons.IconStyle
@@ -92,11 +89,7 @@ object AppearancePreferencesScreen : Screen {
               )
               val darkMode by preferences.darkMode.collectAsState()
 
-              MultiChoiceSegmentedButton(
-                choices = DarkMode.entries.map { context.getString(it.titleRes) }.toImmutableList(),
-                selectedIndices = persistentListOf(DarkMode.entries.indexOf(darkMode)),
-                onClick = { preferences.darkMode.set(DarkMode.entries[it]) },
-              )
+              AppearanceModeSelector(darkMode, preferences.darkMode::set)
 
               val materialYou by preferences.materialYou.collectAsState()
               val isMaterialYouAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

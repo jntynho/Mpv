@@ -15,6 +15,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -125,7 +126,8 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
   val quality by preferences.thumbnailQuality.collectAsState()
   val position by preferences.thumbnailPosition.collectAsState()
   val thumbnailEpoch by live.mehiz.mpvkt.ui.home.Thumbnails.epoch.collectAsState()
-  val baseScheme =
+  val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+  val baseScheme = remember(dynamicColor, darkMode, darkTheme, context, configuration) {
     when {
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
         when (darkMode) {
@@ -140,10 +142,18 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
       darkMode == DarkMode.Light -> lightScheme
       else -> if (darkTheme) darkScheme else lightScheme
     }
+  }
 
-  val colorScheme =
+  val colorScheme = remember(dynamicColor, baseScheme, accent, isDark) {
     if (dynamicColor && Build.VERSION.SDK_INT >= 31) baseScheme
     else accent.applyTo(baseScheme, isDark)
+  }
+
+  val targetScheme = remember(colorScheme, oledBlack, isDark) {
+    if (oledBlack && isDark) colorScheme.copy(background = Color.Black, surface = Color.Black)
+    else colorScheme
+  }
+  val animatedScheme = animatedAppColours(targetScheme, reduceMotion)
 
   CompositionLocalProvider(
     androidx.compose.foundation.LocalOverscrollFactory provides
@@ -161,12 +171,7 @@ fun MpvKtTheme(content: @Composable () -> Unit) {
     live.mehiz.mpvkt.ui.motion.LocalReduceMotion provides reduceMotion,
   ) {
     MaterialTheme(
-      colorScheme =
-        if (
-          oledBlack && (darkMode == DarkMode.Dark || (darkMode == DarkMode.System && darkTheme))
-        ) {
-          colorScheme.copy(background = Color.Black, surface = Color.Black)
-        } else colorScheme,
+      colorScheme = animatedScheme,
       content = content,
     )
   }

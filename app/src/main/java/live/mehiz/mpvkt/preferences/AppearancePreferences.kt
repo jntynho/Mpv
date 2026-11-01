@@ -20,7 +20,7 @@ class AppearancePreferences(preferenceStore: PreferenceStore) {
   val libraryGrid = preferenceStore.getBoolean("library_grid", false)
   val libraryGridColumns = preferenceStore.getInt("library_grid_columns", 2)
   val colourAccent =
-    preferenceStore.getEnum("colour_accent", live.mehiz.mpvkt.ui.theme.ColourAccent.Original)
+    preferenceStore.getEnum("colour_accent", live.mehiz.mpvkt.ui.theme.ColourAccent.Default)
   val showThumbnails = preferenceStore.getBoolean("show_video_thumbnails", true)
   val thumbnailGenerator =
     preferenceStore.getEnum("thumbnail_generator", live.mehiz.mpvkt.ui.home.ThumbnailGenerator.Auto)

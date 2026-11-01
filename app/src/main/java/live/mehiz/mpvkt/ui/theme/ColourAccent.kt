@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.luminance
 // Palette names and colour values reference mpvRx AppTheme (Riteshp2001/mpvRx).
 // Theme application and UI are implemented for MPV's existing Material components.
 enum class ColourAccent(val label: String, private vararg val tones: Long) {
-  Original("MPV"),
   Default(
     "Default",
     0xFF794F81,
@@ -352,7 +351,6 @@ enum class ColourAccent(val label: String, private vararg val tones: Long) {
   );
 
   fun applyTo(base: ColorScheme, dark: Boolean): ColorScheme {
-    if (tones.isEmpty()) return base
     val p = Color(tones[if (dark) 1 else 0])
     val s = Color(tones[if (dark) 3 else 2])
     val t = Color(tones[if (dark) 5 else 4])

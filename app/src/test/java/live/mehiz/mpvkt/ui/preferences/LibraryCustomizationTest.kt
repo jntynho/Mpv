@@ -54,6 +54,16 @@ class LibraryCustomizationTest {
   }
 
   @Test
+  fun removedAccentAndUnknownSavedNamesFallBackToDefault() {
+    val store = AndroidPreferenceStore(compose.activity.applicationContext)
+    listOf("Original", "removed-palette").forEach { old ->
+      store.getString("colour_accent").set(old)
+      assertEquals(ColourAccent.Default, AppearancePreferences(store).colourAccent.get())
+    }
+    appearance.colourAccent.set(ColourAccent.Default)
+  }
+
+  @Test
   fun buttonLocationEditorMovesOneButtonAndPreviewsThePersistedResult() {
     compose.setContent {
       MpvKtTheme {
