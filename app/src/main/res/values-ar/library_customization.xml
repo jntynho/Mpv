@@ -39,7 +39,7 @@
     <string name="mpv_rescan_library_summary">تحديث الفيديوهات المفهرسة والمجلدات المختارة.</string>
     <string name="mpv_clear_library_cache">مسح ذاكرة المكتبة المؤقتة</string>
     <string name="mpv_clear_library_cache_summary">مسح القوائم المجهزة والأغلفة مع الاحتفاظ بالملفات والإعدادات.</string>
-    <string name="mpv_landscape_controls">أزرار الوضع الأفقي</string>
+    <string name="mpv_landscape_controls">Player Layout</string>
     <string name="mpv_landscape_controls_summary">ترتيب الأزرار ونقلها أو إخفاؤها، حتى ستة أزرار لكل منطقة. يُطبق في الوضع الأفقي فقط.</string>
     <string name="mpv_controls_top_right">أعلى اليمين</string>
     <string name="mpv_controls_bottom_right">أسفل اليمين</string>
@@ -64,4 +64,11 @@
     <string name="mpv_quality_high">عالية</string>
     <string name="mpv_portrait_chapters">زر الفصول في الوضع العمودي</string>
     <string name="mpv_portrait_chapter_title">عنوان الفصل في الوضع العمودي</string>
+    <string name="mpv_remove_external_subtitle">إزالة الترجمة الخارجية من المشغّل</string>
+    <string name="mpv_panel_edge_to_edge">لوحات ممتدة إلى الحواف</string>
+    <string name="mpv_panel_edge_to_edge_summary">استخدام المساحة العلوية والسفلية واليمنى، مع إبقاء الأزرار بعيدة عن أشرطة النظام.</string>
+    <string name="mpv_status_bar_scope">عرض شريط الحالة أثناء ظهور أدوات المشغّل أو لوحة جانبية.</string>
+    <string name="mpv_reduce_motion_scope">تقليل الحركات الانتقالية لأدوات المشغّل واللوحات الجانبية.</string>
+    <string name="mpv_controls_timeout_scope">إخفاء أدوات المشغّل بعد %1$d ملي ثانية أثناء التشغيل. تبقى اللوحات الجانبية مفتوحة.</string>
+    <string name="mpv_internal_storage">التخزين الداخلي</string>
 </resources>

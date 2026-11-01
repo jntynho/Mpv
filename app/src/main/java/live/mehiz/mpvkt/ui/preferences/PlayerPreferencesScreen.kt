@@ -292,12 +292,14 @@ object PlayerPreferencesScreen : Screen {
                 value = showSystemStatusBar,
                 onValueChange = preferences.showSystemStatusBar::set,
                 title = { Text(stringResource(R.string.pref_player_display_show_status_bar)) },
+                summary = { Text(stringResource(R.string.mpv_status_bar_scope)) },
                 icon = { Icon(optionIcon(R.string.pref_player_display_show_status_bar), null) },
               )
               val reduceMotion by preferences.reduceMotion.collectAsState()
               SwitchPreference(
                 value = reduceMotion,
                 onValueChange = preferences.reduceMotion::set,
+                summary = { Text(stringResource(R.string.mpv_reduce_motion_scope)) },
                 title = {
                   Text(stringResource(R.string.pref_player_display_reduce_player_animation))
                 },
@@ -314,10 +316,18 @@ object PlayerPreferencesScreen : Screen {
                 title = {
                   Text(text = stringResource(R.string.pref_player_display_hide_player_control_time))
                 },
-                summary = { Text(text = "$playerTimeToDisappear ms") },
+                summary = { Text(stringResource(R.string.mpv_controls_timeout_scope, playerTimeToDisappear)) },
                 icon = {
                   Icon(optionIcon(R.string.pref_player_display_hide_player_control_time), null)
                 },
+              )
+              val edgeToEdge by preferences.panelEdgeToEdge.collectAsState()
+              SwitchPreference(
+                value = edgeToEdge,
+                onValueChange = preferences.panelEdgeToEdge::set,
+                title = { Text(stringResource(R.string.mpv_panel_edge_to_edge)) },
+                summary = { Text(stringResource(R.string.mpv_panel_edge_to_edge_summary)) },
+                icon = { Icon(Icons.Grid, null) },
               )
               val panelTransparency by preferences.panelTransparency.collectAsState()
               SliderPreference(

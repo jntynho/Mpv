@@ -41,7 +41,10 @@ internal fun PlayerPane(
   content: @Composable (PlayerPanelRoute) -> Unit,
 ) {
   val page = pages.lastOrNull() ?: return
-  val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
+  val preferences = koinInject<PlayerPreferences>()
+  val reduceMotion by preferences.reduceMotion.collectAsState()
+  val opacity by preferences.panelTransparency.collectAsState()
+  val edgeToEdge by preferences.panelEdgeToEdge.collectAsState()
   val focus = androidx.compose.ui.platform.LocalFocusManager.current
   LaunchedEffect(page.key) { focus.clearFocus() }
   val savedPages = rememberSaveableStateHolder()
@@ -49,6 +52,8 @@ internal fun PlayerPane(
     onDismissRequest = onDismiss,
     onNavigateBack = onBack.takeIf { pages.size > 1 },
     reduceMotion = reduceMotion,
+    opacity = opacity,
+    edgeToEdge = edgeToEdge,
     onCloseStart = onCloseStart,
   ) { close, headerDrag ->
     CompositionLocalProvider(

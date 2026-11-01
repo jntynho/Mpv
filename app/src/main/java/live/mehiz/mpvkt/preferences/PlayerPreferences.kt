@@ -50,7 +50,8 @@ class PlayerPreferences(preferenceStore: PreferenceStore) {
   val reduceMotion = preferenceStore.getBoolean("reduce_motion")
   val playerTimeToDisappear = preferenceStore.getInt("player_time_to_disappear", 4000)
 
-  val panelTransparency = preferenceStore.getFloat("panel_transparency", 0.6f)
+  val panelEdgeToEdge = preferenceStore.getBoolean("panel_edge_to_edge", false)
+  val panelTransparency = preferenceStore.getFloat("panel_transparency", 1f)
 
   val landscapeLayout =
     preferenceStore.getObject(

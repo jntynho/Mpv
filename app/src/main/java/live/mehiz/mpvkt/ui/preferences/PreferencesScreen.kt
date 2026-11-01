@@ -103,7 +103,7 @@ object PreferencesScreen : Screen {
             key = "landscape",
             title = { Text(stringResource(R.string.mpv_landscape_controls)) },
             summary = { Text(stringResource(R.string.mpv_landscape_controls_summary)) },
-            icon = { Icon(Icons.Monitor, null) },
+            icon = { Icon(Icons.Grid, null) },
             onClick = { backstack.add(LandscapeControlsScreen) },
           )
           if (!secureHidden) {

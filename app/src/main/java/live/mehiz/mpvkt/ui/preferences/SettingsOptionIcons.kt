@@ -18,7 +18,7 @@ internal fun optionIconKey(title: Int): IconKey =
     R.string.mpv_icons_style_title -> IconKey.Palette
     R.string.mpv_include_only -> IconKey.Folder
     R.string.mpv_included_folders -> IconKey.FolderOpen
-    R.string.mpv_landscape_controls -> IconKey.Monitor
+    R.string.mpv_landscape_controls -> IconKey.Grid
     R.string.mpv_minimum_duration -> IconKey.Timer
     R.string.mpv_minimum_size -> IconKey.Data
     R.string.mpv_pinch_zoom -> IconKey.AspectRatio

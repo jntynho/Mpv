@@ -39,7 +39,7 @@
     <string name="mpv_rescan_library_summary">Refresh indexed videos and selected folder access.</string>
     <string name="mpv_clear_library_cache">Clear library cache</string>
     <string name="mpv_clear_library_cache_summary">Clear prepared lists and covers. Your files and settings are kept.</string>
-    <string name="mpv_landscape_controls">Landscape Controls</string>
+    <string name="mpv_landscape_controls">Player Layout</string>
     <string name="mpv_landscape_controls_summary">Arrange, move or hide buttons. Up to six per region; applies in landscape only.</string>
     <string name="mpv_controls_top_right">Top right</string>
     <string name="mpv_controls_bottom_right">Bottom right</string>
@@ -64,4 +64,11 @@
     <string name="mpv_quality_high">High</string>
     <string name="mpv_portrait_chapters">Show chapters button in portrait</string>
     <string name="mpv_portrait_chapter_title">Show chapter title in portrait</string>
+    <string name="mpv_remove_external_subtitle">Remove external subtitle from player</string>
+    <string name="mpv_panel_edge_to_edge">Edge-to-edge panels</string>
+    <string name="mpv_panel_edge_to_edge_summary">Fill the top, bottom and right margins. Keep controls clear of system bars.</string>
+    <string name="mpv_status_bar_scope">Show the status bar while player controls or a panel are visible.</string>
+    <string name="mpv_reduce_motion_scope">Reduce transitions for player controls and panels.</string>
+    <string name="mpv_controls_timeout_scope">Hide player controls after %1$d ms during playback. Panels stay open.</string>
+    <string name="mpv_internal_storage">Internal storage</string>
 </resources>

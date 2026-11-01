@@ -157,10 +157,15 @@ fun PlayerControls(
     viewModel.panelNavigator.openPanel(it)
     if (it == Panels.None) viewModel.showControls() else viewModel.hideControls()
   }
+  val statusBarVisible by playerPreferences.showSystemStatusBar.collectAsState()
+  val statusPanelPages by viewModel.panelNavigator.state.collectAsState()
+  LaunchedEffect(statusBarVisible, controlsShown, statusPanelPages.isNotEmpty()) {
+    viewModel.updateSystemStatusBar()
+  }
   val customButtons by viewModel.customButtons.collectAsState()
   val customButton by viewModel.primaryButton.collectAsState()
 
-  LaunchedEffect(controlsShown, paused, isSeeking, resetControls) {
+  LaunchedEffect(controlsShown, paused, isSeeking, resetControls, playerTimeToDisappear) {
     if (controlsShown && paused == false && !isSeeking) {
       delay(playerTimeToDisappear.toLong())
       viewModel.hideControls()
@@ -695,6 +700,7 @@ fun PlayerControls(
           subtitles = subtitles,
           onBrowseSubtitles = viewModel::openExternalSubtitles,
           onSelectSubtitle = viewModel::selectSub,
+          onRemoveSubtitle = viewModel::removeExternalSubtitle,
           onSearchSubtitle = { slot ->
             viewModel.openSubtitleSearch(subtitleMediaTitle.orEmpty(), slot)
           },
@@ -739,6 +745,7 @@ fun PlayerControls(
           onEnter = { viewModel.subtitleBrowserPath.value = folders + it },
           onUp = viewModel::backFromPlayerPanel,
           onSelect = viewModel::applyExternalSubtitle,
+          onStorageRoot = { viewModel.subtitleBrowserPath.value = listOf(it) },
         )
       }
       else if (page.panel == Panels.SubtitleSearch)

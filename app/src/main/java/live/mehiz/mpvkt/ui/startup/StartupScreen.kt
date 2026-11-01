@@ -1,7 +1,9 @@
 package live.mehiz.mpvkt.ui.startup
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +45,7 @@ import live.mehiz.mpvkt.ui.home.LocalMediaLibrary
 import live.mehiz.mpvkt.ui.home.MediaLibrary
 import live.mehiz.mpvkt.ui.home.Thumbnails
 import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.player.SubtitleStorage
 import org.koin.compose.koinInject
 
 internal data class LibraryAccess(
@@ -63,6 +66,20 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   val state by library.state.collectAsState()
   val preferences = remember { app.getSharedPreferences("startup", Context.MODE_PRIVATE) }
   var introduced by rememberSaveable { mutableStateOf(preferences.getBoolean("introduced", false)) }
+  var subtitleAccessReviewed by rememberSaveable {
+    mutableStateOf(
+      preferences.getBoolean("subtitle_access_reviewed", false) || SubtitleStorage.granted(context)
+    )
+  }
+  fun reviewSubtitleAccess() {
+    subtitleAccessReviewed = true
+    preferences.edit { putBoolean("subtitle_access_reviewed", true) }
+  }
+  var subtitlePermissionFailed by remember { mutableStateOf(false) }
+  val subtitlePermission =
+    rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+      if (SubtitleStorage.granted(context)) reviewSubtitleAccess()
+    }
   var access by remember { mutableStateOf(VideoAccess.granted(context)) }
   var limited by remember { mutableStateOf(VideoAccess.limited(context)) }
   var denied by rememberSaveable { mutableStateOf(false) }
@@ -108,6 +125,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     val observer = LifecycleEventObserver { _, event ->
       if (event == Lifecycle.Event.ON_PAUSE) paused = true
       if (event == Lifecycle.Event.ON_RESUME) {
+        if (!subtitleAccessReviewed && SubtitleStorage.granted(context)) reviewSubtitleAccess()
         access = VideoAccess.granted(context)
         limited = VideoAccess.limited(context)
         if (paused && access) library.reload()
@@ -184,7 +202,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
       }
     }
   }
-  val showHome = ready || library.enteredHome
+  val showHome = (ready || library.enteredHome) && subtitleAccessReviewed
   val requestAccess = {
     if (!requesting) {
       requesting = true
@@ -238,6 +256,15 @@ internal fun StartupGate(content: @Composable () -> Unit) {
         ) {
           StartupPage(
             showIntroduction = !introduced,
+            showSubtitleAccess = introduced && ready && !subtitleAccessReviewed,
+            subtitlePermissionFailed = subtitlePermissionFailed,
+            onSubtitleAllow = {
+              if (Build.VERSION.SDK_INT >= 30) {
+                subtitlePermissionFailed =
+                  runCatching { SubtitleStorage.request(context) }.isFailure
+              } else subtitlePermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            },
+            onSubtitleSkip = ::reviewSubtitleAccess,
             access = access,
             preparing = !ready,
             progress =
@@ -267,6 +294,10 @@ internal fun StartupGate(content: @Composable () -> Unit) {
 @Composable
 private fun StartupPage(
   showIntroduction: Boolean,
+  showSubtitleAccess: Boolean,
+  subtitlePermissionFailed: Boolean,
+  onSubtitleAllow: () -> Unit,
+  onSubtitleSkip: () -> Unit,
   access: Boolean,
   preparing: Boolean,
   progress: Float,
@@ -339,7 +370,9 @@ private fun StartupPage(
       Text("MPV", style = MaterialTheme.typography.displaySmall, color = colors.onBackground)
       Text(
         stringResource(
-          if (showIntroduction) R.string.mpv_welcome else R.string.update_loading_status
+          if (showIntroduction) R.string.mpv_welcome
+          else if (showSubtitleAccess) R.string.mpv_panel_subtitles
+          else R.string.update_loading_status
         ),
         style = MaterialTheme.typography.titleLarge,
         color = colors.onBackground,
@@ -376,7 +409,29 @@ private fun StartupPage(
           Text(stringResource(R.string.mpv_not_now))
         }
       }
-      if (!showIntroduction)
+      if (showSubtitleAccess) {
+        Surface(shape = RoundedCornerShape(24.dp), color = colors.surfaceContainer) {
+          Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Subtitles, null, tint = colors.primary)
+            Text(
+              stringResource(R.string.mpv_subtitle_storage_explanation),
+              style = MaterialTheme.typography.bodyMedium,
+            )
+            if (subtitlePermissionFailed)
+              Text(stringResource(R.string.mpv_subtitle_storage_failed), color = colors.error)
+            Button(onClick = onSubtitleAllow, modifier = Modifier.fillMaxWidth()) {
+              Text(stringResource(R.string.mpv_subtitle_storage_grant))
+            }
+            TextButton(
+              onClick = onSubtitleSkip,
+              modifier = Modifier.align(Alignment.CenterHorizontally),
+            ) {
+              Text(stringResource(R.string.mpv_not_now))
+            }
+          }
+        }
+      }
+      if (!showIntroduction && !showSubtitleAccess)
         Text(
           stringResource(R.string.update_loading_hint),
           style = MaterialTheme.typography.bodyMedium,

@@ -53,6 +53,7 @@ fun PlayerSheets(
   buttons: ImmutableList<CustomButtonEntity>,
 
   onOpenPanel: (Panels) -> Unit,
+  onRemoveSubtitle: (TrackNode) -> Unit = {},
 ) {
   when (sheetShown) {
     Sheets.None -> {}
@@ -64,6 +65,7 @@ fun PlayerSheets(
         onAddSubtitle = onBrowseSubtitles,
         onOpenSubtitleSettings = { onOpenPanel(Panels.SubtitleSettings) },
         onOpenSubtitleDelay = { onOpenPanel(Panels.SubtitleDelay) },
+        onRemoveSubtitle = onRemoveSubtitle,
       )
     }
 

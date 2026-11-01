@@ -31,6 +31,7 @@ fun SubtitlesSheet(
   onOpenSubtitleSettings: () -> Unit,
   onOpenSubtitleDelay: () -> Unit,
   modifier: Modifier = Modifier,
+  onRemoveSubtitle: (TrackNode) -> Unit = {},
 ) {
   var slot by rememberSaveable { mutableIntStateOf(0) }
   val reduceMotion = LocalReduceMotion.current
@@ -86,13 +87,26 @@ fun SubtitlesSheet(
         }
         items(tracks, key = { it.id }) { track ->
           val selected = track.mainSelection?.toInt()
-          AudioTrackRow(
-            getTrackTitle(track),
-            selected == selectedSlot,
-            { if (slot == selectedSlot) onSelect(track.id, selectedSlot) },
-            subtitle = trackDescription(track),
-            badge = selected?.let { labels.getOrNull(it) },
-          )
+          Row(
+            Modifier.fillMaxWidth().animateItem(
+              fadeInSpec = tween(if (reduceMotion) 0 else 180),
+              fadeOutSpec = tween(if (reduceMotion) 0 else 180),
+              placementSpec = tween(if (reduceMotion) 0 else 220),
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            AudioTrackRow(
+              getTrackTitle(track), selected == selectedSlot,
+              { if (slot == selectedSlot) onSelect(track.id, selectedSlot) },
+              modifier = Modifier.weight(1f),
+              subtitle = trackDescription(track),
+              badge = selected?.let { labels.getOrNull(it) },
+            )
+            if (track.external == true || !track.externalFilename.isNullOrBlank())
+              IconButton(onClick = { onRemoveSubtitle(track) }, enabled = slot == selectedSlot) {
+                Icon(Icons.Delete, stringResource(R.string.mpv_remove_external_subtitle))
+              }
+          }
         }
         if (selectedSlot == 1)
           item("secondary-note") {

@@ -3,6 +3,8 @@ package live.mehiz.mpvkt.ui.player.controls.components.panels
 import live.mehiz.mpvkt.ui.player.MpvProperties
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -161,7 +163,7 @@ fun DelayCard(
   Card(
     modifier = modifier
       .widthIn(max = CARDS_MAX_WIDTH)
-      .animateContentSize(),
+      .animateContentSize(tween(if (LocalReduceMotion.current) 0 else 240)),
     colors = panelCardsColors(),
   ) {
     Column(
@@ -183,7 +185,7 @@ fun DelayCard(
         suffix = { Text(stringResource(R.string.generic_unit_ms)) },
       )
       Column(
-        modifier = Modifier.animateContentSize(),
+        modifier = Modifier.animateContentSize(tween(if (LocalReduceMotion.current) 0 else 240)),
       ) { extraSettings() }
       // true (heard -> spotted), false (spotted -> heard)
       var isDirectionPositive by remember { mutableStateOf<Boolean?>(null) }

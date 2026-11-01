@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -272,32 +273,20 @@ private fun SubtitlePosterResults(
         Modifier.fillMaxWidth()
           .padding(horizontal = 16.dp, vertical = 6.dp)
           .clip(RoundedCornerShape(14.dp))
-          .background(MaterialTheme.colorScheme.surfaceContainerLow)
           .clickable(role = Role.Button, onClick = { select(media) })
           .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
       ) {
         SubtitlePoster(media.posterUrl, reduceMotion, Modifier.size(104.dp, 156.dp))
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text(
-            media.title,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-          )
-          Text(
-            listOf(
-                if (media.television) stringResource(R.string.subtitle_series)
-                else stringResource(R.string.subtitle_movie),
-                media.year,
-              )
-              .filter(String::isNotBlank)
-              .joinToString(" · "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-          )
-        }
+        Text(
+          media.title,
+          Modifier.weight(1f),
+          style = MaterialTheme.typography.titleSmall,
+          maxLines = 3,
+          overflow = TextOverflow.Ellipsis,
+        )
+        Icon(Icons.AutoMirrored.ArrowBack, null, Modifier.size(20.dp).rotate(180f))
       }
     }
   }

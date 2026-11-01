@@ -131,20 +131,28 @@ class PlayerViewModel(
     addingExternalSubtitle.value = false
     externalSubtitleSlot = slot.coerceIn(0, 1)
     externalSubtitleGeneration = subtitleVideoGeneration.get()
-    subtitleBrowserPath.value = emptyList()
+    val primary = android.os.Environment.getExternalStorageDirectory().absolutePath
+    subtitleBrowserPath.value = listOf(primary)
     val request = externalSubtitleRequest.get()
     val generation = externalSubtitleGeneration
     PlaybackControl.enqueue("external-subtitle-context") {
       val path = MPVLib.getPropertyString("path") ?: return@enqueue
       viewModelScope.launch {
+        if (request != externalSubtitleRequest.get() || generation != subtitleVideoGeneration.get() ||
+          panelNavigator.state.value.lastOrNull()?.sheet != Sheets.SubtitleTracks) return@launch
+        externalSubtitleOwnerPath = path
+        val restored = kotlinx.coroutines.withContext(Dispatchers.IO) {
+          runCatching { SubtitleStorage.restore(activity.applicationContext) }.getOrDefault(listOf(primary))
+        }
         if (request == externalSubtitleRequest.get() && generation == subtitleVideoGeneration.get() &&
           panelNavigator.state.value.lastOrNull()?.sheet == Sheets.SubtitleTracks) {
-          externalSubtitleOwnerPath = path
+          subtitleBrowserPath.value = restored
           panelNavigator.openPanel(Panels.ExternalSubtitles)
         }
       }
     }
   }
+
   internal fun applyExternalSubtitle(file: File) {
     if (addingExternalSubtitle.value) return
     val request = externalSubtitleRequest.get()
@@ -220,7 +228,7 @@ class PlayerViewModel(
   }
   internal fun backFromPlayerPanel() {
     val page=panelNavigator.state.value.lastOrNull()?.panel
-    if (page == Panels.ExternalSubtitles && subtitleBrowserPath.value.isNotEmpty()) {
+    if (page == Panels.ExternalSubtitles && subtitleBrowserPath.value.size > 1) {
       subtitleBrowserPath.value = subtitleBrowserPath.value.dropLast(1)
       return
     }
@@ -314,6 +322,20 @@ class PlayerViewModel(
   }
 
 
+  internal fun removeExternalSubtitle(track: TrackNode) {
+    val generation = subtitleVideoGeneration.get()
+    PlaybackControl.enqueue("remove-external-subtitle-${track.id}") {
+      if (generation != subtitleVideoGeneration.get()) return@enqueue
+      val live = MPVLib.getPropertyNode("track-list")?.toObject<List<TrackNode>>(json).orEmpty()
+        .firstOrNull { it.id == track.id && it.isSubtitle } ?: return@enqueue
+      if (live.external != true && live.externalFilename.isNullOrBlank()) return@enqueue
+      if (live.externalFilename != track.externalFilename) return@enqueue
+      if (MPVLib.getPropertyInt("sid") == live.id) MPVLib.setPropertyBoolean("sid", false)
+      if (MPVLib.getPropertyInt("secondary-sid") == live.id) MPVLib.setPropertyBoolean("secondary-sid", false)
+      MPVLib.command("sub-remove", live.id.toString())
+    }
+  }
+
   fun selectSub(id: Int, slot: Int) {
     PlaybackControl.enqueue("subtitle-$slot") {
       val property = if (slot == 1) "secondary-sid" else "sid"
@@ -329,16 +351,22 @@ class PlayerViewModel(
   fun beginSeek() = PlaybackControl.beginSeek()
   fun endSeek() = PlaybackControl.endSeek()
 
-  private val showStatusBar = playerPreferences.showSystemStatusBar.get()
+  internal fun updateSystemStatusBar() {
+    val inPip = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N && activity.isInPictureInPictureMode
+    if (!inPip && playerPreferences.showSystemStatusBar.get() && (_controlsShown.value || panelNavigator.isOpen))
+      activity.windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
+    else activity.windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+  }
+
   fun showControls() {
     if (panelNavigator.isOpen) return
-    if (showStatusBar) activity.windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
     _controlsShown.update { true }
+    updateSystemStatusBar()
   }
 
   fun hideControls() {
-    activity.windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
     _controlsShown.update { false }
+    updateSystemStatusBar()
   }
 
   fun hideSeekBar() {

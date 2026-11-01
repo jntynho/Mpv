@@ -424,6 +424,7 @@ class PlayerActivity : AppCompatActivity() {
   override fun onResume() {
     super.onResume()
     pipTransitionExpected = false
+    viewModel.updateSystemStatusBar()
 
     viewModel.currentVolume.update {
       audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).also {
@@ -550,7 +551,8 @@ class PlayerActivity : AppCompatActivity() {
     } else binding.player.post {
       if (!isDestroyed && !player.isExiting) {
         viewModel.changeVideoAspect(playerPreferences.videoAspect.get(), notify = false)
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars())
+        viewModel.updateSystemStatusBar()
         updatePipParams()
       }
     }

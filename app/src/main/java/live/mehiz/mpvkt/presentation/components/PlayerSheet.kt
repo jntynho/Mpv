@@ -121,6 +121,8 @@ fun PlayerSheet(
   reduceMotion: Boolean = false,
   onCloseStart: () -> Unit = {},
   interactive: Boolean = true,
+  opacity: Float = 1f,
+  edgeToEdge: Boolean = false,
   content: @Composable (onClose: () -> Unit, headerDrag: Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -181,9 +183,9 @@ fun PlayerSheet(
     )
     BoxWithConstraints(
       Modifier.fillMaxSize()
-        .windowInsetsPadding(WindowInsets.safeDrawing)
+        .then(if (edgeToEdge) Modifier else Modifier.windowInsetsPadding(WindowInsets.safeDrawing))
         .imePadding()
-        .padding(12.dp)
+        .padding(if (edgeToEdge) 0.dp else 12.dp)
     ) {
       val width =
         if (maxWidth > maxHeight) (maxWidth * .48f).coerceIn(336.dp, 504.dp).coerceAtMost(maxWidth)
@@ -197,7 +199,11 @@ fun PlayerSheet(
               widthPx = it.width.toFloat().coerceAtLeast(1f)
               laidOut = true
             }
-            .graphicsLayer { translationX = motion.position * (size.width + 24.dp.toPx()) }
+            .graphicsLayer { // In edge mode, keep the right edge pinned during spring overshoot.
+              translationX =
+                (if (edgeToEdge) motion.position.coerceAtLeast(0f) else motion.position) *
+                  (size.width + 24.dp.toPx())
+            }
             .pointerInput(closing, interactive) {
               // Once exit starts, a late tap cannot change tracks or push another page.
               if (closing || !interactive)
@@ -209,11 +215,26 @@ fun PlayerSheet(
             }
             .then(modifier)
             .pointerInput(Unit) { detectTapGestures(onTap = {}) },
-        shape = RoundedCornerShape(24.dp),
+        shape = if (edgeToEdge) RoundedCornerShape(0.dp) else RoundedCornerShape(24.dp),
         tonalElevation = tonalElevation,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color =
+          MaterialTheme.colorScheme.surfaceContainer.copy(
+            alpha = opacity.takeIf { it.isFinite() }?.coerceIn(0f, 1f) ?: 1f
+          ),
       ) {
-        content(close, headerDrag)
+        Box(
+          Modifier.fillMaxSize()
+            .then(
+              if (edgeToEdge)
+                Modifier.windowInsetsPadding(WindowInsets.safeDrawing).graphicsLayer {
+                  // The surface stays flush; only its contents follow negative spring overshoot.
+                  translationX = motion.position.coerceAtMost(0f) * (widthPx + extraPx)
+                }
+              else Modifier
+            )
+        ) {
+          content(close, headerDrag)
+        }
       }
     }
   }
