@@ -19,6 +19,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -51,16 +53,25 @@ internal fun ExpandableSettingsContent(
   }
 }
 
+/** Shared surface for root settings entries and all nested settings cards. */
+internal fun Modifier.settingsCardSurface(color: Color): Modifier {
+  val shape = RoundedCornerShape(24.dp)
+  return shadow(
+    elevation = 2.dp,
+    shape = shape,
+    clip = false,
+    ambientColor = Color.Black.copy(alpha = .12f),
+    spotColor = Color.Black.copy(alpha = .16f),
+  ).clip(shape).background(color)
+}
+
 @Composable
 internal fun SettingsCard(
   modifier: Modifier = Modifier,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   Column(
-    modifier
-      .fillMaxWidth()
-      .clip(RoundedCornerShape(24.dp))
-      .background(MaterialTheme.colorScheme.surfaceContainer),
+    modifier.fillMaxWidth().settingsCardSurface(MaterialTheme.colorScheme.surfaceContainer),
     content = content,
   )
 }

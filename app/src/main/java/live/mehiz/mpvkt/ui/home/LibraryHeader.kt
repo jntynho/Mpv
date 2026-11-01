@@ -104,16 +104,7 @@ internal fun LibraryHeader(
                     .requiredSize(48.dp)
                     .graphicsLayer { alpha = back },
               ) {
-                androidx.compose.animation.Crossfade(
-                  searching,
-                  animationSpec = tween(if (reduceMotion) 0 else 140),
-                  label = "header_back_icon",
-                ) {
-                  Icon(
-                    if (it) Icons.Close else Icons.AutoMirrored.ArrowBack,
-                    stringResource(R.string.mpv_back),
-                  )
-                }
+                Icon(Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
               }
           }
           AnimatedContent(
@@ -146,6 +137,18 @@ internal fun LibraryHeader(
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge,
                 placeholder = { Text(stringResource(R.string.mpv_search)) },
+                trailingIcon = {
+                  IconButton(
+                    onClick = { if (query.isNotEmpty()) onQuery("") else onBack() },
+                    enabled = editing && searching && !preparing,
+                  ) {
+                    Icon(
+                      Icons.Close,
+                      stringResource(if (query.isNotEmpty()) R.string.mpv_clear_search else R.string.mpv_close_search),
+                      Modifier.size(22.dp),
+                    )
+                  }
+                },
                 outlined = false,
               )
             } else {

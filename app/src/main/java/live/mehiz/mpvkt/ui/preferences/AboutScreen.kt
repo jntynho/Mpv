@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -77,7 +78,7 @@ object AboutScreen : Screen {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
           ) {
-            Image(painterResource(R.drawable.mpv_launcher_foreground), null, Modifier.size(88.dp))
+            Image(painterResource(R.drawable.mpv_launcher_foreground), null, Modifier.size(88.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
             Text(
               stringResource(R.string.update_about_tagline),

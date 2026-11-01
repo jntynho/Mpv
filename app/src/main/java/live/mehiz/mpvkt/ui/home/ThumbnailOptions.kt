@@ -25,3 +25,6 @@ data class ThumbnailOptions(
 
 internal val LocalThumbnailOptions = staticCompositionLocalOf { ThumbnailOptions() }
 internal val LocalThumbnailEpoch = staticCompositionLocalOf { 0L }
+
+/** Presentation only: toggling a border must not invalidate thumbnail decoding/cache keys. */
+internal val LocalVideoCoverBorder = staticCompositionLocalOf { false }

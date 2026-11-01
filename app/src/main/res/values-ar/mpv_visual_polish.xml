@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_cover_border">إطار أغلفة الفيديو</string>
+  <string name="mpv_cover_border_summary">إضافة إطار خفيف حول أغلفة الفيديو.</string>
+  <string name="mpv_clear_search">مسح البحث</string>
+  <string name="mpv_close_search">إغلاق البحث</string>
+</resources>

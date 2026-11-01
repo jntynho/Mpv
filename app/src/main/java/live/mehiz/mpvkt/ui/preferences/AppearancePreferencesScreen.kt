@@ -79,6 +79,14 @@ object AppearancePreferencesScreen : Screen {
                 icon = { Icon(optionIcon(R.string.mpv_icons_style_title), null) },
               )
               ColourAccentPreference(preferences)
+              val videoCoverBorder by preferences.videoCoverBorder.collectAsState()
+              SwitchPreference(
+                value = videoCoverBorder,
+                onValueChange = preferences.videoCoverBorder::set,
+                title = { Text(stringResource(R.string.mpv_cover_border)) },
+                summary = { Text(stringResource(R.string.mpv_cover_border_summary)) },
+                icon = { Icon(Icons.Image, null) },
+              )
               val oledBlack by preferences.oledBlack.collectAsState()
               SwitchPreference(
                 value = oledBlack,

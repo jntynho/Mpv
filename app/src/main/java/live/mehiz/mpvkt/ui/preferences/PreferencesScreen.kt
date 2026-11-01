@@ -75,7 +75,7 @@ object PreferencesScreen : Screen {
           verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "appearance",
             title = { Text(text = stringResource(id = R.string.pref_appearance_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_appearance_summary)) },
@@ -83,7 +83,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(AppearancePreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "folders",
             title = { Text(stringResource(R.string.mpv_folders)) },
             summary = { Text(stringResource(R.string.mpv_folders_summary)) },
@@ -91,7 +91,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(FoldersPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "player",
             title = { Text(text = stringResource(id = R.string.pref_player)) },
             summary = { Text(text = stringResource(id = R.string.pref_player_summary)) },
@@ -99,7 +99,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(PlayerPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "landscape",
             title = { Text(stringResource(R.string.mpv_landscape_controls)) },
             summary = { Text(stringResource(R.string.mpv_landscape_controls_summary)) },
@@ -108,7 +108,7 @@ object PreferencesScreen : Screen {
           )
           if (!secureHidden) {
             preference(
-              modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+              modifier = Modifier.settingsCardSurface(cardColor),
               key = "secure",
               title = { Text(stringResource(R.string.update_secure)) },
               summary = { Text(stringResource(R.string.update_secure_summary)) },
@@ -117,7 +117,7 @@ object PreferencesScreen : Screen {
             )
           }
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "gesture",
             title = { Text(text = stringResource(id = R.string.pref_gesture)) },
             summary = { Text(text = stringResource(id = R.string.pref_gesture_summary)) },
@@ -125,7 +125,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(GesturePreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "decoder",
             title = { Text(text = stringResource(id = R.string.pref_decoder)) },
             summary = { Text(text = stringResource(id = R.string.pref_decoder_summary)) },
@@ -133,7 +133,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(DecoderPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "subtitles",
             title = { Text(text = stringResource(id = R.string.pref_subtitles)) },
             summary = { Text(text = stringResource(id = R.string.pref_subtitles_summary)) },
@@ -141,7 +141,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(SubtitlesPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "audio",
             title = { Text(text = stringResource(id = R.string.pref_audio)) },
             summary = { Text(text = stringResource(id = R.string.pref_audio_summary)) },
@@ -149,7 +149,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(AudioPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "customButtons",
             title = { Text(text = stringResource(id = R.string.pref_custom_buttons_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_custom_buttons_summary)) },
@@ -157,7 +157,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(CustomButtonsScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "advanced",
             title = { Text(text = stringResource(R.string.pref_advanced)) },
             summary = { Text(text = stringResource(id = R.string.pref_advanced_summary)) },
@@ -165,7 +165,7 @@ object PreferencesScreen : Screen {
             onClick = { backstack.add(AdvancedPreferencesScreen) },
           )
           preference(
-            modifier = Modifier.clip(RoundedCornerShape(24.dp)).background(cardColor),
+            modifier = Modifier.settingsCardSurface(cardColor),
             key = "about",
             title = { Text(text = stringResource(id = R.string.pref_about_title)) },
             summary = { Text(text = stringResource(id = R.string.pref_about_summary)) },

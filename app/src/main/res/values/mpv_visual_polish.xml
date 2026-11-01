@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="mpv_cover_border">Video cover border</string>
+  <string name="mpv_cover_border_summary">Add a subtle border around video covers.</string>
+  <string name="mpv_clear_search">Clear search</string>
+  <string name="mpv_close_search">Close search</string>
+</resources>

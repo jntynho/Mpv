@@ -1,6 +1,7 @@
 package live.mehiz.mpvkt.ui.home
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -180,7 +187,30 @@ private fun VideoCover(video: LibraryVideo, fields: Set<String>, modifier: Modif
   val context = LocalContext.current
   val coverRadius = 12.dp
   val badgeInset = 4.dp
-  Box(modifier.clip(RoundedCornerShape(coverRadius))) {
+  val borderAlpha by animateFloatAsState(
+    if (LocalVideoCoverBorder.current) 1f else 0f,
+    tween(if (LocalReduceMotion.current) 0 else 180),
+    label = "video_cover_border",
+  )
+  val rim = MaterialTheme.colorScheme.onSurface
+  val accent = MaterialTheme.colorScheme.primary
+  Box(modifier.clip(RoundedCornerShape(coverRadius)).drawWithContent {
+    drawContent()
+    if (borderAlpha > 0f && size.minDimension > 0f) {
+      val stroke = 1.dp.toPx().coerceAtMost(size.minDimension)
+      drawRoundRect(
+        brush = Brush.linearGradient(listOf(
+          rim.copy(alpha = .28f * borderAlpha),
+          accent.copy(alpha = .12f * borderAlpha),
+          rim.copy(alpha = .18f * borderAlpha),
+        )),
+        topLeft = Offset(stroke / 2, stroke / 2),
+        size = Size(size.width - stroke, size.height - stroke),
+        cornerRadius = CornerRadius((coverRadius.toPx() - stroke / 2).coerceAtLeast(0f)),
+        style = Stroke(stroke),
+      )
+    }
+  }) {
     val thumbnails = fields.has(LibraryField.Thumbnails)
     val motionDuration = if (LocalReduceMotion.current) 0 else 160
     Crossfade(thumbnails, Modifier.fillMaxSize(), tween(motionDuration), label = "library-cover") { enabled ->
