@@ -109,8 +109,14 @@ jobs:
             gh release upload "$RELEASE_TAG" release-assets/*.apk --clobber
             gh release edit "$RELEASE_TAG" --latest
           else
+            # An existing reviewed tag avoids requiring the token to create a historical ref.
+            if gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" > /dev/null 2>&1; then
+              tag_options=(--verify-tag)
+            else
+              tag_options=(--target "$SOURCE_SHA")
+            fi
             gh release create "$RELEASE_TAG" release-assets/*.apk \
-              --target "$SOURCE_SHA" --title "$RELEASE_TITLE" --notes-file release-notes.md --latest
+              "${tag_options[@]}" --title "$RELEASE_TITLE" --notes-file release-notes.md --latest
           fi
           gh release view "$RELEASE_TAG" --json assets --jq '[.assets[].name] | sort' > published-assets.json
           python3 - <<'PY'
