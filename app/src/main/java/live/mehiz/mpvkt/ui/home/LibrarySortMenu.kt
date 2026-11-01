@@ -25,9 +25,9 @@ import live.mehiz.mpvkt.ui.icons.*
 import live.mehiz.mpvkt.ui.motion.LibraryOverscrollFactory
 
 internal data class LibraryDisplayOptions(
-  val fields: Set<String> = setOf("Path", "Thumbnails", "Extension", "Duration"),
+  val fields: Set<String> = setOf("Path", "Thumbnails", "Extension"),
   val grid: Boolean = false,
-  val columns: Int = 0,
+  val columns: Int = 2,
 )
 
 @Composable
@@ -213,16 +213,16 @@ internal fun LibrarySortMenuContent(
           Icons.Grid,
           Modifier.weight(1f),
         ) {
-          onDisplay(display.copy(grid = true))
+          onDisplay(display.copy(grid = true, columns = 2))
         }
       }
-      if (display.grid) {
+      val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+      val limit = ((width - 40) / 144).coerceIn(1, 5)
+      if (display.grid && limit >= 3) {
         FadingHorizontalRow(Modifier.fillMaxWidth().selectableGroup()) {
-          val width = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
-          val limit = ((width - 40) / 144).coerceIn(1, 5)
-          (listOf(0) + (2..limit).toList()).forEach { count ->
+          (3..limit).forEach { count ->
             SortChip(
-              if (count == 0) stringResource(R.string.mpv_grid_auto) else count.toString(),
+              count.toString(),
               display.columns == count,
               duration,
             ) {
@@ -360,8 +360,7 @@ private fun LibraryField.icon() =
     LibraryField.Extension -> Icons.FormatSize
     LibraryField.Path -> Icons.FolderOpen
     LibraryField.Count -> Icons.Movie
-    LibraryField.TotalDuration,
-    LibraryField.Duration -> Icons.Schedule
+    LibraryField.TotalDuration -> Icons.Schedule
     LibraryField.Size -> Icons.Data
     LibraryField.Date -> Icons.Calendar
     LibraryField.Thumbnails -> Icons.Image

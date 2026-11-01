@@ -110,7 +110,7 @@ object HomeScreen : Screen {
     val fields = if (grid) cardFields else listFields
     val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
     val maximumColumns = ((screenWidth - 40) / 144).coerceIn(1, 5)
-    val effectiveColumns = if (columns in 2..5) columns.coerceAtMost(maximumColumns) else 0
+    val effectiveColumns = libraryCardColumns(columns).coerceAtMost(maximumColumns)
     val display = LibraryDisplayOptions(fields, grid, effectiveColumns)
     val positions =
       if (fields.has(LibraryField.Progress)) {
@@ -278,9 +278,7 @@ object HomeScreen : Screen {
                 LazyVerticalGrid(
                   columns =
                     if (!display.grid) GridCells.Fixed(1)
-                    else if (display.columns in 2..5)
-                      GridCells.Fixed(display.columns.coerceAtMost(maxColumns))
-                    else GridCells.Adaptive(160.dp),
+                    else GridCells.Fixed(libraryCardColumns(display.columns).coerceAtMost(maxColumns)),
                   modifier = Modifier.fillMaxSize(),
                   state = listState,
                   contentPadding =

@@ -25,7 +25,6 @@ internal enum class LibraryField(
   Date(R.string.mpv_field_date, true, true),
   Thumbnails(R.string.mpv_field_thumbnails, video = true),
   Extension(R.string.mpv_field_extension, video = true),
-  Duration(R.string.mpv_field_duration, video = true),
   Resolution(R.string.mpv_field_resolution, video = true),
   Framerate(R.string.mpv_field_framerate, video = true),
   Subtitles(R.string.mpv_field_subtitles, video = true),
@@ -125,3 +124,11 @@ internal fun formatBytes(bytes: Long): String {
 internal fun formatDate(seconds: Long) =
   java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT)
     .format(java.util.Date(seconds.coerceAtLeast(0) * 1000))
+
+/** Saved positions are seconds; unknown durations and invalid positions have no progress. */
+internal fun libraryPlaybackProgress(positionSeconds: Int, durationMillis: Long): Float =
+  if (durationMillis <= 0 || positionSeconds <= 0) 0f
+  else (positionSeconds.toDouble() * 1000.0 / durationMillis).coerceIn(0.0, 1.0).toFloat()
+
+/** Legacy Auto (0) becomes the default two columns without rewriting user preferences. */
+internal fun libraryCardColumns(saved: Int): Int = if (saved in 2..5) saved else 2

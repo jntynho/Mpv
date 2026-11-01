@@ -1,5 +1,7 @@
 package live.mehiz.mpvkt.ui.home
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import live.mehiz.mpvkt.R
+import live.mehiz.mpvkt.ui.icons.*
+import live.mehiz.mpvkt.ui.motion.LocalReduceMotion
 
 @Composable
 internal fun LibraryFolderItem(
@@ -89,11 +93,9 @@ internal fun LibraryVideoItem(
       value = null
       if (detailsNeeded) value = VideoDetailsLoader.load(context.applicationContext, video)
     }
-  val progress =
-    if (video.duration > 0) (lastPosition * 1000f / video.duration).coerceIn(0f, 1f) else 0f
+  val progress = libraryPlaybackProgress(lastPosition, video.duration)
   val values = buildList {
     if (fields.has(LibraryField.Path) && video.path.isNotBlank()) add(video.path)
-    if (fields.has(LibraryField.Duration)) add(formatDuration(video.duration))
     if (fields.has(LibraryField.Size)) add(formatBytes(video.sizeBytes))
     if (fields.has(LibraryField.Date) && video.dateAdded > 0) add(formatDate(video.dateAdded))
     if (fields.has(LibraryField.Resolution)) {
@@ -140,7 +142,10 @@ internal fun LibraryVideoItem(
     if (fields.has(LibraryField.Progress))
       LinearProgressIndicator(
         progress = { progress },
-        modifier = Modifier.fillMaxWidth().height(2.dp),
+        modifier = Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(50)),
+        strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
+        gapSize = 0.dp,
+        drawStopIndicator = {},
       )
   }
   val base =
@@ -156,8 +161,7 @@ internal fun LibraryVideoItem(
       horizontalAlignment =
         if (fields.has(LibraryField.CenterTitles)) Alignment.CenterHorizontally else Alignment.Start,
     ) {
-      if (fields.has(LibraryField.Thumbnails))
-        VideoCover(video, fields, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+      VideoCover(video, fields, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
       info()
     }
   else
@@ -166,8 +170,7 @@ internal fun LibraryVideoItem(
       horizontalArrangement = Arrangement.spacedBy(14.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      if (fields.has(LibraryField.Thumbnails))
-        VideoCover(video, fields, Modifier.width(136.dp).height(88.dp))
+      VideoCover(video, fields, Modifier.width(136.dp).height(88.dp))
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp), content = info)
     }
 }
@@ -178,8 +181,23 @@ private fun VideoCover(video: LibraryVideo, fields: Set<String>, modifier: Modif
   val coverRadius = 12.dp
   val badgeInset = 4.dp
   Box(modifier.clip(RoundedCornerShape(coverRadius))) {
-    VideoThumbnail(context, video.uri, Modifier.fillMaxSize(), video.revision)
-    if (fields.has(LibraryField.Duration))
+    val thumbnails = fields.has(LibraryField.Thumbnails)
+    val motionDuration = if (LocalReduceMotion.current) 0 else 160
+    Crossfade(thumbnails, Modifier.fillMaxSize(), tween(motionDuration), label = "library-cover") { enabled ->
+      if (enabled) VideoThumbnail(context, video.uri, Modifier.fillMaxSize(), video.revision)
+      else Box(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        contentAlignment = Alignment.Center,
+      ) {
+        Icon(
+          Icons.Image,
+          null,
+          Modifier.fillMaxHeight(.48f).aspectRatio(1f),
+          tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+    }
+    if (video.duration > 0)
       Text(
         formatDuration(video.duration),
         Modifier.align(Alignment.BottomEnd)

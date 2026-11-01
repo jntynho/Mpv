@@ -10,15 +10,15 @@ class AppearancePreferences(preferenceStore: PreferenceStore) {
   val libraryFields =
     preferenceStore.getStringSet(
       "library_fields",
-      setOf("Path", "Thumbnails", "Extension", "Duration"),
+      setOf("Path", "Thumbnails", "Extension"),
     )
   val libraryCardFields =
     preferenceStore.getStringSet(
       "library_card_fields",
-      setOf("Thumbnails", "Extension", "Duration", "Count", "CenterTitles"),
+      setOf("Thumbnails", "Extension", "Count", "CenterTitles"),
     )
   val libraryGrid = preferenceStore.getBoolean("library_grid", false)
-  val libraryGridColumns = preferenceStore.getInt("library_grid_columns", 0)
+  val libraryGridColumns = preferenceStore.getInt("library_grid_columns", 2)
   val colourAccent =
     preferenceStore.getEnum("colour_accent", live.mehiz.mpvkt.ui.theme.ColourAccent.Original)
   val showThumbnails = preferenceStore.getBoolean("show_video_thumbnails", true)
