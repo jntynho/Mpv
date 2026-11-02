@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
         Box(
           Modifier.align(Alignment.BottomCenter)
             .fillMaxWidth()
-            .height(if (backstack.lastOrNull() == HomeScreen) 64.dp else 32.dp)
+            .height(64.dp)
             .background(
               Brush.verticalGradient(
                 listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = .82f))

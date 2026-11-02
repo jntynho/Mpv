@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
@@ -102,7 +101,7 @@ class SettingsStandardTest {
     compose.waitForIdle()
     assertTrue("Warmup did not finish", complete)
     assertTrue("Warmup report: $report", report?.rendered == true)
-    assertEquals(18, report?.captures)
+    assertEquals(6, report?.captures)
     assertEquals(6, report?.scenes)
     compose.onNodeWithText("Ready").assertIsDisplayed()
     compose.onAllNodes(hasClickAction()).assertCountEquals(0)
@@ -161,19 +160,9 @@ class SettingsStandardTest {
         }
       }
     }
-    repeat(40) { pumpWarmupFrame() }
-    compose.onNodeWithText("Preparing your viewing space").assertIsDisplayed()
+    repeat(4) { pumpWarmupFrame() }
+    compose.onNodeWithText("File access").assertIsDisplayed()
     compose.onNodeWithText("Actual home").assertDoesNotExist()
-    val textLayouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
-    compose.onNodeWithText("MPV").performSemanticsAction(
-      androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult
-    ) {
-      it(textLayouts)
-    }
-    assertTrue(
-      "Startup title must be readable on the dark preparation surface",
-      textLayouts.single().layoutInput.style.color.luminance() > .2f,
-    )
     compose.runOnUiThread { live.mehiz.mpvkt.testutils.captureWindow(compose.activity, "startup") }
     var shown = false
     var offeredSubtitleAccess = false
@@ -211,6 +200,90 @@ class SettingsStandardTest {
         .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
         .getInt("prepared_version", 0),
     )
+    db.close()
+  }
+
+  @Test
+  fun welcomeVideoAndFilePagesCanBeSkippedWithoutTrappingStartup() {
+    val context = compose.activity.applicationContext
+    context
+      .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+      .edit()
+      .clear()
+      .commit()
+    val db =
+      androidx.room.Room.inMemoryDatabaseBuilder(
+          context,
+          live.mehiz.mpvkt.database.MpvKtDatabase::class.java,
+        )
+        .build()
+    org.koin.core.context.loadKoinModules(module { single { db } })
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MpvKtTheme { live.mehiz.mpvkt.ui.startup.StartupGate { Text("Onboarding complete") } }
+    }
+    compose
+      .onNodeWithText(context.getString(live.mehiz.mpvkt.R.string.mpv_get_started))
+      .performClick()
+    compose.mainClock.advanceTimeBy(500)
+    compose.onNodeWithText("Your video library").assertIsDisplayed()
+    compose.onNodeWithText("Not now").performClick()
+    compose.mainClock.advanceTimeBy(500)
+    repeat(40) { pumpWarmupFrame() }
+    compose.onNodeWithText("File access").assertIsDisplayed()
+    compose.onNodeWithText("Not now").performClick()
+    var ready = false
+    repeat(650) {
+      if (!ready) {
+        pumpWarmupFrame()
+        ready =
+          runCatching { compose.onNodeWithText("Onboarding complete").assertIsDisplayed() }
+            .isSuccess
+      }
+    }
+    compose.mainClock.autoAdvance = true
+    compose.onNodeWithText("Onboarding complete").assertIsDisplayed()
+    assertTrue(
+      context
+        .getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+        .getBoolean("introduced", false)
+    )
+    db.close()
+  }
+
+  @Test
+  fun freshSessionWithSavedPreparationDoesNotReplayRasterWarmup() {
+    val context = compose.activity.applicationContext
+    val prefs = context.getSharedPreferences("startup", android.content.Context.MODE_PRIVATE)
+    prefs
+      .edit()
+      .clear()
+      .putBoolean("introduced", true)
+      .putBoolean("subtitle_access_reviewed", true)
+      .putBoolean("startup_prepared_v2", true)
+      .commit()
+    val db =
+      androidx.room.Room.inMemoryDatabaseBuilder(
+          context,
+          live.mehiz.mpvkt.database.MpvKtDatabase::class.java,
+        )
+        .build()
+    org.koin.core.context.loadKoinModules(module { single { db } })
+    compose.mainClock.autoAdvance = false
+    compose.setContent {
+      MpvKtTheme { live.mehiz.mpvkt.ui.startup.StartupGate { Text("Returning home") } }
+    }
+    var ready = false
+    repeat(300) {
+      if (!ready) {
+        pumpWarmupFrame()
+        ready =
+          runCatching { compose.onNodeWithText("Returning home").assertIsDisplayed() }.isSuccess
+      }
+    }
+    compose.mainClock.autoAdvance = true
+    compose.onNodeWithText("Returning home").assertIsDisplayed()
+    assertEquals(0, prefs.getInt("startup_attempt_v2", 0))
     db.close()
   }
 

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
@@ -12,6 +13,7 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -94,15 +96,17 @@ internal fun StartupGate(content: @Composable () -> Unit) {
   var requesting by remember { mutableStateOf(false) }
   val style = LocalIconStyle.current
   var prepared by remember { mutableStateOf(false) }
-  var interfaceReady by remember { mutableStateOf(library.interfacePrepared) }
+  var interfaceReady by remember {
+    mutableStateOf(
+      library.interfacePrepared ||
+        preferences.getBoolean("startup_prepared_v2", false) ||
+        preferences.getInt("startup_attempt_v2", 0) > 0
+    )
+  }
   var storageReady by remember { mutableStateOf(false) }
   var homeReady by remember { mutableStateOf(library.enteredHome) }
   var thumbnails by remember { mutableStateOf<List<android.graphics.Bitmap>>(emptyList()) }
-  var warmupProgress by remember { mutableFloatStateOf(if (interfaceReady) 1f else 0f) }
-  var renderHealthy by remember { mutableStateOf(false) }
-  val firstPreparation = remember {
-    preferences.getInt("prepared_version", 0) != BuildConfig.VERSION_CODE
-  }
+  val firstPreparation = remember { !preferences.getBoolean("startup_prepared_v2", false) }
   val database = koinInject<live.mehiz.mpvkt.database.MpvKtDatabase>()
   val reduceMotion by koinInject<PlayerPreferences>().reduceMotion.collectAsState()
   fun completeIntro() {
@@ -117,7 +121,6 @@ internal fun StartupGate(content: @Composable () -> Unit) {
       denied = !access
       if (access) {
         library.reload()
-        completeIntro()
       }
     }
   val owner = LocalLifecycleOwner.current
@@ -164,10 +167,11 @@ internal fun StartupGate(content: @Composable () -> Unit) {
     // Prefetch runs off the UI thread. No player/decoder is created during onboarding.
     try {
       IconVectors.prepare(app.resources, style)
-      IconVectors.prepare(
-        app.resources,
-        if (style == IconStyle.Outline) IconStyle.Broken else IconStyle.Outline,
-      )
+      if (firstPreparation)
+        IconVectors.prepare(
+          app.resources,
+          if (style == IconStyle.Outline) IconStyle.Broken else IconStyle.Outline,
+        )
     } catch (cancelled: CancellationException) {
       throw cancelled
     } catch (_: Exception) {
@@ -186,16 +190,12 @@ internal fun StartupGate(content: @Composable () -> Unit) {
       }
     }
   }
-  val dataReady = (!access && !hasSelectedAccess) || state.loaded
-  val ready = introduced && prepared && interfaceReady && storageReady && dataReady && homeReady
+  val ready = introduced && prepared && interfaceReady && storageReady && homeReady
   LaunchedEffect(ready) {
     if (ready) {
       library.enteredHome = true
       thumbnails = emptyList()
-      preferences.edit {
-        putInt("prepared_version", BuildConfig.VERSION_CODE)
-        putBoolean("raster_warmup", renderHealthy)
-      }
+      preferences.edit { putInt("prepared_version", BuildConfig.VERSION_CODE) }
     }
   }
   val canReveal = (ready || library.enteredHome) && subtitleAccessReviewed
@@ -232,21 +232,23 @@ internal fun StartupGate(content: @Composable () -> Unit) {
         CompositionLocalProvider(LocalInterfacePreparation provides !showHome) {
           PreparedHome(
             preparing = !showHome,
-            captureAllowed = dataReady && foreground && !requesting,
+            captureAllowed = foreground && !requesting,
             captureKey = state.videos,
             onReady = { homeReady = true },
           ) {
             content()
           }
         }
-      if (!interfaceReady && prepared && foreground && !requesting)
+      if (!interfaceReady && prepared && introduced && subtitleAccessReviewed && !requesting)
         InterfaceWarmup(
           onReady = { report ->
+            preferences.edit {
+              putInt("startup_attempt_v2", preferences.getInt("startup_attempt_v2", 0) + 1)
+              if (report.rendered) putBoolean("startup_prepared_v2", true)
+            }
             library.interfacePrepared = true
             interfaceReady = true
-            renderHealthy = report.rendered
           },
-          onProgress = { warmupProgress = it },
           firstRun = firstPreparation,
           thumbnails = thumbnails,
         )
@@ -269,7 +271,7 @@ internal fun StartupGate(content: @Composable () -> Unit) {
         ) {
           StartupPage(
             showIntroduction = !introduced,
-            showSubtitleAccess = introduced && ready && !subtitleAccessReviewed,
+            showSubtitleAccess = introduced && !subtitleAccessReviewed,
             subtitlePermissionFailed = subtitlePermissionFailed,
             onSubtitleAllow = {
               if (Build.VERSION.SDK_INT >= 30) {
@@ -280,13 +282,6 @@ internal fun StartupGate(content: @Composable () -> Unit) {
             onSubtitleSkip = ::reviewSubtitleAccess,
             access = access,
             preparing = !ready,
-            progress =
-              (((if (interfaceReady) 1f else warmupProgress) * 18f +
-                  (if (prepared) 1f else 0f) +
-                  (if (storageReady) 1f else 0f) +
-                  (if (homeReady) 1f else 0f) +
-                  (if (dataReady) 1f else 0f)) / 22f)
-                .coerceIn(0f, 1f),
             requesting = requesting,
             denied = denied,
             onAllow = { if (access) completeIntro() else requestAccess() },
@@ -316,7 +311,6 @@ private fun StartupPage(
   onSubtitleSkip: () -> Unit,
   access: Boolean,
   preparing: Boolean,
-  progress: Float,
   requesting: Boolean,
   denied: Boolean,
   onAllow: () -> Unit,
@@ -324,144 +318,152 @@ private fun StartupPage(
   onSettings: () -> Unit,
 ) {
   val colors = MaterialTheme.colorScheme
-  Box(
-    Modifier.fillMaxSize()
-      .background(
-        androidx.compose.ui.graphics.Brush.verticalGradient(
-          listOf(colors.background, colors.surfaceContainerLow, colors.background)
+  val reduced = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
+  var page by rememberSaveable { mutableIntStateOf(if (showIntroduction) 0 else 2) }
+  val onboarding = showIntroduction || showSubtitleAccess
+  val stage = if (onboarding) page else 3
+  BackHandler(onboarding && page > 0) { page-- }
+  androidx.compose.animation.AnimatedContent(
+    targetState = stage,
+    transitionSpec = {
+      val duration = if (reduced) 0 else 240
+      val direction = if (targetState > initialState) 1 else -1
+      ((androidx.compose.animation.fadeIn(tween(duration)) +
+          androidx.compose.animation.slideInHorizontally(tween(duration)) {
+            direction * it / 12
+          }) togetherWith
+          (androidx.compose.animation.fadeOut(tween(duration)) +
+            androidx.compose.animation.slideOutHorizontally(tween(duration)) {
+              -direction * it / 12
+            }))
+        .using(
+          androidx.compose.animation.SizeTransform(
+            clip = true,
+            sizeAnimationSpec = { _, _ -> tween(0) },
+          )
         )
-      )
-      .safeDrawingPadding(),
-    contentAlignment = Alignment.Center,
-  ) {
-    Column(
-      Modifier.widthIn(max = 420.dp)
-        .fillMaxWidth()
-        .verticalScroll(rememberScrollState())
-        .padding(28.dp),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-      val reduced = live.mehiz.mpvkt.ui.motion.LocalReduceMotion.current
-      val handoff = LocalBrandHandoff.current
-      Box(Modifier.size(116.dp), contentAlignment = Alignment.Center) {
-        AppBrandMark(
-          Modifier.size(96.dp)
-            .onGloballyPositioned { handoff?.source = it.boundsInWindow() }
-            .graphicsLayer { alpha = if (handoff?.moving == true) 0f else 1f }
-        )
-      }
-      Text("MPV", style = MaterialTheme.typography.headlineMedium, color = colors.onBackground)
-      Text(
-        stringResource(
-          if (showIntroduction) R.string.mpv_welcome
-          else if (showSubtitleAccess) R.string.mpv_panel_subtitles
-          else R.string.update_loading_status
-        ),
-        style = MaterialTheme.typography.titleLarge,
-        color = colors.onBackground,
-        textAlign = TextAlign.Center,
-      )
-      if (showIntroduction) {
+    },
+    label = "startup_pages",
+  ) { shown ->
+    Box(Modifier.fillMaxSize().background(colors.background).safeDrawingPadding()) {
+      if (shown in 1..2)
+        IconButton({ page = shown - 1 }, Modifier.align(Alignment.TopStart)) {
+          Icon(Icons.AutoMirrored.ArrowBack, stringResource(R.string.mpv_back))
+        }
+      Column(
+        Modifier.align(Alignment.Center)
+          .widthIn(max = 420.dp)
+          .fillMaxWidth()
+          .verticalScroll(rememberScrollState())
+          .padding(horizontal = 28.dp, vertical = 100.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+      ) {
+        val handoff = LocalBrandHandoff.current
+        if (shown == 0 || shown == 3) {
+          Box(
+            Modifier.size(96.dp)
+              .onGloballyPositioned { if (shown == 3) handoff?.source = it.boundsInWindow() }
+              .graphicsLayer { alpha = if (handoff?.moving == true) 0f else 1f }
+          ) {
+            if (shown == 3 && preparing) LivingMark(Modifier.fillMaxSize())
+            else AppBrandMark(Modifier.fillMaxSize())
+          }
+        } else
+          Icon(
+            if (shown == 1) Icons.Movie else Icons.FolderOpen,
+            null,
+            Modifier.size(56.dp),
+            tint = colors.primary,
+          )
+        if (shown == 3) Text("MPV", style = MaterialTheme.typography.headlineMedium)
         Text(
-          stringResource(R.string.mpv_welcome_body),
-          style = MaterialTheme.typography.bodyLarge,
-          color = colors.onSurfaceVariant,
+          stringResource(
+            when (shown) {
+              0 -> R.string.mpv_welcome
+              1 -> R.string.mpv_onboard_videos
+              2 -> R.string.mpv_onboard_files
+              else -> R.string.update_loading_status
+            }
+          ),
+          style = MaterialTheme.typography.headlineSmall,
           textAlign = TextAlign.Center,
         )
-        Surface(shape = RoundedCornerShape(24.dp), color = colors.surfaceContainer) {
-          Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Icon(Icons.Folder, null, tint = colors.primary)
-            Text(
-              stringResource(
-                if (denied) R.string.mpv_permission_denied else R.string.mpv_welcome_access
-              ),
-              style = MaterialTheme.typography.bodyMedium,
-            )
-          }
-        }
-        Button(
-          onClick = onAllow,
-          enabled = !requesting,
-          modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-        ) {
-          Text(stringResource(if (access) R.string.mpv_get_started else R.string.mpv_allow))
-        }
-        if (denied)
-          TextButton(onClick = onSettings) { Text(stringResource(R.string.mpv_open_app_settings)) }
-        TextButton(onClick = onSkip, enabled = !requesting) {
-          Text(stringResource(R.string.mpv_not_now))
-        }
-      }
-      if (showSubtitleAccess) {
-        Surface(shape = RoundedCornerShape(24.dp), color = colors.surfaceContainer) {
-          Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Subtitles, null, tint = colors.primary)
-            Text(
-              stringResource(R.string.mpv_subtitle_storage_explanation),
-              style = MaterialTheme.typography.bodyMedium,
-            )
-            if (subtitlePermissionFailed)
-              Text(stringResource(R.string.mpv_subtitle_storage_failed), color = colors.error)
-            Button(onClick = onSubtitleAllow, modifier = Modifier.fillMaxWidth()) {
-              Text(stringResource(R.string.mpv_subtitle_storage_grant))
-            }
-            TextButton(
-              onClick = onSubtitleSkip,
-              modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) {
-              Text(stringResource(R.string.mpv_not_now))
-            }
-          }
-        }
-      }
-      if (!showIntroduction && !showSubtitleAccess)
         Text(
-          stringResource(R.string.update_loading_hint),
+          stringResource(
+            when (shown) {
+              0 -> R.string.mpv_onboard_welcome_body
+              1 -> R.string.mpv_onboard_videos_body
+              2 -> R.string.mpv_onboard_files_body
+              else -> R.string.update_loading_hint
+            }
+          ),
           style = MaterialTheme.typography.bodyMedium,
           color = colors.onSurfaceVariant,
           textAlign = TextAlign.Center,
         )
-      if (preparing) {
-        val animatedProgress by
-          androidx.compose.animation.core.animateFloatAsState(
-            progress,
-            tween(if (reduced) 0 else 240),
-            label = "startup_progress",
-          )
+        if (shown == 1 && denied)
+          TextButton(onSettings) { Text(stringResource(R.string.mpv_open_app_settings)) }
+        if (shown == 2 && subtitlePermissionFailed)
+          Text(stringResource(R.string.mpv_subtitle_storage_failed), color = colors.error)
+      }
+      if (shown < 3)
         Column(
+          Modifier.align(Alignment.BottomCenter)
+            .widthIn(max = 420.dp)
+            .fillMaxWidth()
+            .padding(24.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-          Row(Modifier.width(216.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            repeat(6) { segment ->
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(3) { dot ->
               Box(
-                Modifier.weight(1f)
-                  .height(3.dp)
+                Modifier.size(6.dp)
                   .clip(RoundedCornerShape(50))
-                  .background(colors.onSurface.copy(alpha = .08f))
-              ) {
-                Box(
-                  Modifier.fillMaxWidth((animatedProgress * 6f - segment).coerceIn(0f, 1f))
-                    .fillMaxHeight()
-                    .background(colors.primary)
-                )
-              }
+                  .background(if (dot == shown) colors.primary else colors.outlineVariant)
+              )
             }
           }
-          Text(
-            "${(progress * 100).toInt()}%",
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurfaceVariant,
-          )
+          Button(
+            onClick = {
+              if (shown != stage) return@Button
+              when (shown) {
+                0 -> page = 1
+                1 ->
+                  if (access) {
+                    page = 2
+                    onSkip()
+                  } else onAllow()
+                2 -> onSubtitleAllow()
+              }
+            },
+            enabled = !requesting,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+          ) {
+            Text(
+              stringResource(
+                when (shown) {
+                  0 -> R.string.mpv_get_started
+                  1 -> if (access) R.string.mpv_next else R.string.mpv_allow
+                  else -> R.string.mpv_subtitle_storage_grant
+                }
+              )
+            )
+          }
+          if (shown != 0)
+            TextButton(
+              {
+                if (shown == 1) {
+                  page = 2
+                  onSkip()
+                } else onSubtitleSkip()
+              },
+              enabled = !requesting,
+            ) {
+              Text(stringResource(R.string.mpv_not_now))
+            }
         }
-        if (showIntroduction)
-          Text(
-            stringResource(R.string.mpv_preparing),
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurfaceVariant,
-          )
-      }
     }
   }
 }

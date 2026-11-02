@@ -73,4 +73,10 @@
     <string name="mpv_internal_storage">التخزين الداخلي</string>
     <string name="mpv_header_gradient">تدرّج الرأس</string>
     <string name="mpv_header_gradient_summary">تدرّج ناعم عند الحافة السفلية للرؤوس في التطبيق.</string>
+    <string name="mpv_onboard_videos">مكتبة الفيديوهات</string>
+    <string name="mpv_onboard_files">الوصول إلى الملفات</string>
+    <string name="mpv_onboard_welcome_body">فيديوهاتك. بتجربة بسيطة.</string>
+    <string name="mpv_onboard_videos_body">اسمح بالوصول لعرض فيديوهات جهازك.</string>
+    <string name="mpv_onboard_files_body">اسمح بالوصول إلى الملفات والمجلدات المشتركة. تبقى مجلدات التطبيقات الخاصة محمية بواسطة Android. يمكنك إعداد هذا لاحقًا.</string>
+    <string name="mpv_next">التالي</string>
 </resources>

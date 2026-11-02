@@ -73,4 +73,10 @@
     <string name="mpv_internal_storage">Internal storage</string>
     <string name="mpv_header_gradient">Header gradient</string>
     <string name="mpv_header_gradient_summary">Soften the bottom edge of headers throughout the app.</string>
+    <string name="mpv_onboard_videos">Your video library</string>
+    <string name="mpv_onboard_files">File access</string>
+    <string name="mpv_onboard_welcome_body">Your videos. Simply played.</string>
+    <string name="mpv_onboard_videos_body">Allow access to find videos on your device.</string>
+    <string name="mpv_onboard_files_body">Allow access to shared files and folders. Android protects app-private folders. You can set this up later.</string>
+    <string name="mpv_next">Next</string>
 </resources>

@@ -50,7 +50,7 @@ fun ElasticSettingsScaffold(
               padding.calculateEndPadding(
                 androidx.compose.ui.platform.LocalLayoutDirection.current
               ),
-            bottom = padding.calculateBottomPadding() + 32.dp,
+            bottom = padding.calculateBottomPadding(),
           )
         )
       },

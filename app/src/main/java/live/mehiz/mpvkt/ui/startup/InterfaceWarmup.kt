@@ -97,15 +97,12 @@ internal fun InterfaceWarmup(
               withFrameNanos {}
               // Exercise forward and reverse frames. Animation time is real work, not an empty
               // hold.
-              val until =
-                withFrameNanos { it } +
-                  (if (reduceMotion) 32 else if (firstRun) 360 else 200) * 1_000_000L
-              do {
-                val now = withFrameNanos { it }
-              } while (now < until)
+              repeat(2) { withFrameNanos {} }
               try {
-                captureFrame(layer)
-                captures++
+                if (step == 2) {
+                  captureFrame(layer)
+                  captures++
+                }
               } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
               } catch (error: Exception) {
@@ -135,7 +132,7 @@ internal fun InterfaceWarmup(
       "MPV-startup",
       "Preparation scenes=$completeScenes captures=$captures elapsed=${android.os.SystemClock.elapsedRealtime() - startedAt}ms failure=$failure",
     )
-    ready(WarmupReport(completeScenes, captures, healthy && captures == 18, failure))
+    ready(WarmupReport(completeScenes, captures, healthy && captures == 6, failure))
   }
   // Full opacity inside a bounded texture. The startup page covers this sibling; explicit capture
   // forces rasterization even when window occlusion would otherwise omit the covered draw.
